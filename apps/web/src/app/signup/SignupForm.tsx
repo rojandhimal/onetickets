@@ -6,6 +6,7 @@ import screen from '@/components/screen.module.css';
 import { googleStartUrl, requestMagicLink } from '@/lib/auth-client';
 import type { FieldError, MagicLinkRequest } from '@/lib/contract';
 import { ORGANISER_NAME_MAX, validateSignup } from '@/lib/validation';
+import { SentPanel } from './SentPanel';
 import styles from './signup.module.css';
 
 type Step = 'form' | 'sent';
@@ -27,12 +28,10 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
 
   const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
-  const sentHeadingRef = useRef<HTMLHeadingElement>(null);
   const returningToForm = useRef(false);
 
-  // Move focus with the step change so screen reader and keyboard users follow along.
+  // Coming back from the Sent state, put focus where the person will type.
   useEffect(() => {
-    if (step === 'sent') sentHeadingRef.current?.focus();
     if (step === 'form' && returningToForm.current) emailRef.current?.focus();
   }, [step]);
 
@@ -72,34 +71,17 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
     }
   }
 
-  function useDifferentEmail() {
+  function backToForm() {
     returningToForm.current = true;
     setStep('form');
   }
 
   if (step === 'sent') {
     return (
-      <main className={`${screen.main} ${styles.sent}`}>
-        <div className={styles.sentIcon}>
-          <Icon name="mail" size={30} />
-        </div>
-        <div role="status">
-          <h2 ref={sentHeadingRef} tabIndex={-1} className={screen.display}>
-            Check your email
-          </h2>
-        </div>
-        <p>
-          We sent a sign-in link to <strong>{values.email.trim()}</strong>. It works for 15 minutes
-          on any device.
-        </p>
-        <button
-          type="button"
-          className={`${screen.textButton} ${styles.backButton}`}
-          onClick={useDifferentEmail}
-        >
-          Use a different email
-        </button>
-      </main>
+      <SentPanel
+        request={{ email: values.email.trim(), organiserName: values.organiserName.trim() }}
+        onUseDifferentEmail={backToForm}
+      />
     );
   }
 
@@ -108,10 +90,10 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
 
   return (
     <main className={screen.main}>
-      <form className={styles.form} onSubmit={onSubmit} noValidate>
+      <form className={styles.form} onSubmit={onSubmit} noValidate aria-busy={sending || undefined}>
         {banner && (
           <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
-            <Icon name="info" />
+            <Icon name="alert" />
             <p>{bannerText[banner]}</p>
           </div>
         )}
@@ -141,6 +123,7 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
           />
           {emailError && (
             <span id="su-email-error" className={styles.fieldError}>
+              <Icon name="alert" size={16} />
               {emailError}
             </span>
           )}
@@ -161,6 +144,7 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
           />
           {nameError && (
             <span id="su-org-error" className={styles.fieldError}>
+              <Icon name="alert" size={16} />
               {nameError}
             </span>
           )}
@@ -180,7 +164,14 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
         <div className={styles.spacer} />
 
         <button type="submit" className={screen.primaryButton} disabled={sending}>
-          {sending ? 'Sending your link…' : 'Email me a sign-in link'}
+          {sending ? (
+            <>
+              <span className={screen.spinner} aria-hidden="true" />
+              Sending link…
+            </>
+          ) : (
+            'Email me a sign-in link'
+          )}
         </button>
         <p className={styles.legal}>
           By continuing you agree to the <a href="/legal/organiser-terms">organiser terms</a> and{' '}

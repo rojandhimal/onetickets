@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { securityHeaders, verifyPageHeaders } from './src/lib/security-headers';
 
 // The browser only ever talks to /api on the web origin, so the session cookie stays
 // first-party. Next forwards those calls to the NestJS api.
@@ -8,6 +9,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   transpilePackages: ['@onetickets/shared'],
+  async headers() {
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Listed after the catch-all so its Referrer-Policy wins.
+      { source: '/auth/verify', headers: verifyPageHeaders },
+    ];
+  },
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${apiUrl}/:path*` }];
   },

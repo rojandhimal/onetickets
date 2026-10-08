@@ -17,6 +17,8 @@
   --line-button: #d4d4de;
   --line-divider: #e4e4ec;
   --error: #b91c1c;
+  --error-tint: #fdecec;
+  --success-ink: #0b5a3a;
 
   --font-display: var(--font-bricolage), 'Bricolage Grotesque', sans-serif;
   --font-body: var(--font-figtree), 'Figtree', sans-serif;

@@ -6,6 +6,12 @@ const paths = {
       <path d="M12 11v5M12 8v.01" />
     </>
   ),
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v4M12 16v.01" />
+    </>
+  ),
   mail: (
     <>
       <rect x="3" y="5" width="18" height="14" rx="2.5" />

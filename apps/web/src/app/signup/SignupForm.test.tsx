@@ -42,6 +42,7 @@ describe('SignupForm', () => {
     const email = screen.getByLabelText('Email');
     expect(email).toHaveAttribute('aria-invalid', 'true');
     expect(email).toHaveAccessibleDescription('Enter your email address');
+    expect(screen.getByLabelText('Organiser name')).not.toHaveAttribute('aria-invalid');
     expect(email).toHaveFocus();
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -80,6 +81,18 @@ describe('SignupForm', () => {
 
     expect(await screen.findByText("We can't send email to that address")).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('marks the form busy while sending, without disabling the label colour', async () => {
+    let finish: (r: Response) => void = () => {};
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise<Response>((r) => (finish = r))));
+    const { container } = render(<SignupForm initialError={null} />);
+    await fillAndSubmit('priya@printshed.com.au', 'The Print Shed');
+
+    expect(screen.getByRole('button', { name: 'Sending link…' })).toBeDisabled();
+    expect(container.querySelector('form')).toHaveAttribute('aria-busy', 'true');
+    finish(new Response(null, { status: 202 }));
+    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument();
   });
 
   it('explains rate limiting', async () => {

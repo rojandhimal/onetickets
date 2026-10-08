@@ -48,6 +48,7 @@
   font-weight: 600;
 }
 .field input {
+  scroll-margin-bottom: 96px; /* keep the focused field above the on-screen keyboard */
   height: 50px;
   padding: 0 14px;
   border-radius: var(--radius-control);
@@ -64,8 +65,14 @@
   color: var(--slate);
 }
 .fieldError {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   color: var(--error);
+}
+.fieldError > svg {
+  flex: none;
 }
 
 .spacer {
@@ -93,9 +100,6 @@
   align-items: center;
   justify-content: center;
 }
-.sent h2 {
-  font-size: 28px;
-}
 .sent h2:focus {
   outline: none;
 }
@@ -104,8 +108,14 @@
   line-height: 1.5;
   color: var(--ink-soft);
 }
-.backButton {
-  align-self: flex-start;
+.sentActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.sent p.resendStatus {
+  font-size: 14px;
+  color: var(--success-ink);
 }
 
 .heroHeader {

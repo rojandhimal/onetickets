@@ -1,3 +1,22 @@
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.viewSite {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+}
+.viewSite:hover {
+  color: var(--white);
+  text-decoration: underline;
+}
+
 .greeting {
   display: flex;
   flex-direction: column;

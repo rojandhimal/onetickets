@@ -19,7 +19,12 @@ export default async function OrganiserHomePage() {
     <div className={screen.screen}>
       <header className={screen.header}>
         <div className={screen.headerInner}>
-          <Logo />
+          <div className={styles.topRow}>
+            <Logo />
+            <a href="/" className={styles.viewSite}>
+              View site
+            </a>
+          </div>
           <div className={styles.greeting}>
             <span className={styles.orgName}>{session.organisation.name}</span>
             <h1 className={`${screen.display} ${screen.pageTitle}`}>
