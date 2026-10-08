@@ -10,3 +10,4 @@ export type {
   MemberDto,
   OrganisationDto,
 } from './api/organisations.js';
+export { REDACTED, isSensitiveKey, redact, redactString, stripQuery } from './redact.js';

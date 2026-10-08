@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
+import * as Sentry from '@sentry/nextjs';
 import { Logo } from '@/components/Logo';
+import { SentryContext } from '@/components/SentryContext';
 import screen from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
 import { isEventWizardEnabled } from '@/lib/flags';
@@ -17,10 +19,13 @@ export default async function OrganiserHomePage() {
   const organisation = session.organisation;
   if (!organisation) redirect('/organiser/setup');
   const wizardOn = isEventWizardEnabled();
+  Sentry.setUser({ id: session.user.id });
+  Sentry.setTag('organisation_id', session.organisation.id);
 
   // S0-3 only ships the empty state. The events list arrives with S1-1.
   return (
     <div className={screen.screen}>
+      <SentryContext userId={session.user.id} organisationId={session.organisation.id} />
       <header className={screen.header}>
         <div className={screen.headerInner}>
           <div className={styles.topRow}>

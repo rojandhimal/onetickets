@@ -2,13 +2,24 @@ type Header = { key: string; value: string };
 
 // Report-only for now: Next's inline bootstrap scripts need nonces before we can enforce.
 // Switch to Content-Security-Policy once the reports are clean (threat model T8, T10).
+// Browser errors go straight to Sentry's ingest host, so it has to be allowed to connect.
+function sentryOrigin(): string {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return '';
+  try {
+    return ` ${new URL(dsn).origin}`;
+  } catch {
+    return '';
+  }
+}
+
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self'${sentryOrigin()}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
