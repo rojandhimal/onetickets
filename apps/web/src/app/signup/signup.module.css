@@ -1,0 +1,127 @@
+.form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.googleButton {
+  height: 54px;
+  border-radius: var(--radius-button);
+  border: 1.5px solid var(--line-field);
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.googleButton:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--slate);
+  font-size: 14px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-button);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.field input {
+  height: 50px;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  border: 1.5px solid var(--line-field);
+  background: var(--white);
+  font-size: 16px;
+  color: var(--ink);
+}
+.field input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+.hint {
+  font-size: 13px;
+  color: var(--slate);
+}
+.fieldError {
+  font-size: 14px;
+  color: var(--error);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.legal {
+  text-align: center;
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.sent {
+  gap: 16px;
+  padding-top: 32px;
+}
+.sentIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: var(--indigo-tint);
+  color: var(--indigo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sent h2 {
+  font-size: 28px;
+}
+.sent h2:focus {
+  outline: none;
+}
+.sent p {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.backButton {
+  align-self: flex-start;
+}
+
+.heroHeader {
+  padding-bottom: 28px;
+  gap: 20px;
+}
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hero h1 {
+  font-size: 32px;
+}
+.hero p {
+  margin: 0;
+  color: var(--mist);
+  line-height: 1.45;
+}

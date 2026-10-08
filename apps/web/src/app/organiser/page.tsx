@@ -1,0 +1,74 @@
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { Icon } from '@/components/Icon';
+import { Logo } from '@/components/Logo';
+import screen from '@/components/screen.module.css';
+import { getSession } from '@/lib/session';
+import { welcomeLine } from '@/lib/greeting';
+import { EVENT_TEMPLATES, newEventHref } from '@/lib/templates';
+import styles from './organiser.module.css';
+
+export const metadata: Metadata = { title: 'Organiser home' };
+
+export default async function OrganiserHomePage() {
+  const session = await getSession();
+  if (!session) redirect('/signup');
+
+  // S0-3 only ships the empty state. The events list arrives with S1-1.
+  return (
+    <div className={screen.screen}>
+      <header className={screen.header}>
+        <div className={screen.headerInner}>
+          <Logo />
+          <div className={styles.greeting}>
+            <span className={styles.orgName}>{session.organisation.name}</span>
+            <h1 className={`${screen.display} ${screen.pageTitle}`}>
+              {welcomeLine(session.user.name)}
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      <main className={screen.main}>
+        <section className={styles.intro} aria-labelledby="no-events">
+          <h2 id="no-events">No events yet</h2>
+          <p className={screen.text}>
+            Pick a template to start. We&apos;ll fill in sensible defaults and you can change
+            anything.
+          </p>
+        </section>
+
+        <ul aria-label="Event templates" className={styles.templates}>
+          {EVENT_TEMPLATES.map((t) => (
+            <li key={t.id}>
+              <a href={newEventHref(t.id)} className={styles.template}>
+                <span className={`${styles.templateIcon} ${styles[t.id]}`}>
+                  <Icon name={t.icon} size={24} />
+                </span>
+                <span className={styles.templateText}>
+                  <strong>{t.name}</strong>
+                  <span>{t.description}</span>
+                </span>
+                <span className={styles.chevron}>
+                  <Icon name="chevron" />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <a href={newEventHref()} className={styles.blank}>
+          Start from a blank event
+        </a>
+
+        <section className={`${screen.notice} ${screen.noticeWarm}`} aria-label="Paid tickets">
+          <Icon name="info" />
+          <p>
+            Selling paid tickets? You&apos;ll add your ABN and bank details when you create your
+            first paid ticket. Free events never need them.
+          </p>
+        </section>
+      </main>
+    </div>
+  );
+}

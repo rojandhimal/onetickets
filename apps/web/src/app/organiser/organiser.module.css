@@ -1,0 +1,100 @@
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.orgName {
+  font-size: 15px;
+  color: var(--mist);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.intro h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.templates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.template {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  color: var(--ink);
+}
+.template:hover {
+  color: var(--ink);
+  border-color: var(--line-field);
+}
+
+.templateIcon {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: var(--radius-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Category tints pair with a dark ink of the same hue (design system). */
+.workshop {
+  background: #e6e3ff;
+  color: #2e2799;
+}
+.gig {
+  background: #ffe2b8;
+  color: #7a3e00;
+}
+.school-night {
+  background: #ffd9d4;
+  color: #8c1d12;
+}
+.meetup {
+  background: #d7f2e6;
+  color: #0b5a3a;
+}
+
+.templateText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.templateText strong {
+  font-size: 17px;
+}
+.templateText span {
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.chevron {
+  display: flex;
+  color: var(--slate);
+}
+
+.blank {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
