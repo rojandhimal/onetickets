@@ -9,7 +9,7 @@ import {
 } from '@onetickets/shared';
 import type { AppRequest, AuthContext, OrganisationContext } from './auth-context.js';
 import { notSignedIn } from './errors.js';
-import { OrganisationAccess } from './organisation-access.guard.js';
+import { OrganisationAccess, SignedIn } from './access.js';
 import { OrganisationsService } from './organisations.service.js';
 import { ZodBody } from './zod-body.pipe.js';
 
@@ -23,12 +23,14 @@ export class OrganisationsController {
   constructor(private readonly organisations: OrganisationsService) {}
 
   @Get('me/organisations')
+  @SignedIn()
   async mine(@Req() request: AppRequest): Promise<OrganisationDto[]> {
     return this.organisations.listFor(signedIn(request).userId);
   }
 
   @Post('organisations')
   @HttpCode(201)
+  @SignedIn()
   async create(
     @Req() request: AppRequest,
     @Body(new ZodBody(createOrganisationRequest)) body: CreateOrganisationRequest,
@@ -53,7 +55,7 @@ export class OrganisationsController {
     const organisation = request.organisation as OrganisationContext;
     return this.organisations.addMember(
       organisation.id,
-      { userId: signedIn(request).userId, role: organisation.role },
+      { ...signedIn(request), role: organisation.role },
       body.email,
       body.role,
     );

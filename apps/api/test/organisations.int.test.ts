@@ -10,7 +10,7 @@ import {
   IdentityModule,
   OrganisationAccess,
 } from '../src/modules/identity/index.js';
-import { seedUser, uniqueEmail } from './db.js';
+import { seedUser, uniqueEmail, withOwner } from './db.js';
 
 // Stands in for a payout screen until payouts exist (Sprint 7).
 @Controller()
@@ -18,6 +18,12 @@ class PayoutProbeController {
   @Get('organisations/:organisationId/payout-probe')
   @OrganisationAccess('managePayouts')
   probe() {
+    return { ok: true };
+  }
+
+  // Deliberately declares no access policy.
+  @Get('forgotten-route')
+  forgotten() {
     return { ok: true };
   }
 }
@@ -42,7 +48,7 @@ describe('organisations and roles API', () => {
 
   async function addMember(organisationId: string, role: string): Promise<string> {
     const email = uniqueEmail(role);
-    const response = await as(owner)
+    const response = await as(owner, { mfa: true })
       .post(`/organisations/${organisationId}/members`, { email, role })
       .expect(201);
     return response.body.userId as string;
@@ -67,6 +73,15 @@ describe('organisations and roles API', () => {
     await app.close();
   });
 
+  it('refuses a route that declares no access policy, even when signed in', async () => {
+    const response = await as(owner).get('/forgotten-route').expect(403);
+    expect(response.body.code).toBe('no_access_policy');
+  });
+
+  it('keeps health public', async () => {
+    await request(app.getHttpServer()).get('/health').expect(200);
+  });
+
   it('requires sign-in', async () => {
     const response = await request(app.getHttpServer()).get('/me/organisations').expect(401);
     expect(response.body.code).toBe('not_signed_in');
@@ -81,8 +96,8 @@ describe('organisations and roles API', () => {
   });
 
   it('rejects an empty organisation name', async () => {
-    const response = await as(owner).post('/organisations', { name: '   ' }).expect(400);
-    expect(response.body.code).toBe('invalid_request');
+    const response = await as(owner).post('/organisations', { name: '   ' }).expect(422);
+    expect(response.body).toMatchObject({ code: 'invalid_request', field: 'name' });
   });
 
   it('hides an organisation from non-members', async () => {
@@ -125,9 +140,40 @@ describe('organisations and roles API', () => {
     await as(admin)
       .post(`/organisations/${org.id}/members`, { email: uniqueEmail('d'), role: 'door_staff' })
       .expect(201);
-    await as(owner)
+    const noMfa = await as(owner)
+      .post(`/organisations/${org.id}/members`, { email: uniqueEmail('f'), role: 'finance' })
+      .expect(403);
+    expect(noMfa.body.code).toBe('mfa_required');
+    await as(owner, { mfa: true })
       .post(`/organisations/${org.id}/members`, { email: uniqueEmail('f'), role: 'finance' })
       .expect(201);
+  });
+
+  it('audit-logs organisation creation and every member added', async () => {
+    const { body: org } = await as(owner).post('/organisations', { name: 'Audit' }).expect(201);
+    const door = await addMember(org.id, 'door_staff');
+    const events = await withOwner(async (client) => {
+      const { rows } = await client.query(
+        `select action, actor_user_id, subject_user_id, detail from identity.audit_events
+          where organisation_id = $1 order by id`,
+        [org.id],
+      );
+      return rows;
+    });
+    expect(events).toEqual([
+      {
+        action: 'organisation.created',
+        actor_user_id: owner,
+        subject_user_id: owner,
+        detail: { name: 'Audit' },
+      },
+      {
+        action: 'member.added',
+        actor_user_id: owner,
+        subject_user_id: door,
+        detail: { role: 'door_staff' },
+      },
+    ]);
   });
 
   describe('payout screens', () => {

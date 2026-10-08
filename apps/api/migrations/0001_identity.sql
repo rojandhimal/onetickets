@@ -59,6 +59,25 @@ create table identity.memberships (
 );
 create index memberships_user_id_idx on identity.memberships (user_id);
 
+-- Who changed what in an organisation. Insert-only for the api.
+create table identity.audit_events (
+  id bigint generated always as identity primary key,
+  organisation_id uuid not null references identity.organisations (id) on delete cascade,
+  actor_user_id uuid references identity.users (id) on delete set null,
+  action text not null,
+  subject_user_id uuid references identity.users (id) on delete set null,
+  detail jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+create index audit_events_organisation_idx on identity.audit_events (organisation_id, created_at);
+
+alter table identity.audit_events enable row level security;
+alter table identity.audit_events force row level security;
+create policy audit_events_tenant on identity.audit_events to ot_app
+  using (organisation_id = identity.current_organisation_id())
+  with check (organisation_id = identity.current_organisation_id());
+create policy audit_events_worker on identity.audit_events to ot_worker using (true) with check (true);
+
 alter table identity.users enable row level security;
 alter table identity.users force row level security;
 alter table identity.organisations enable row level security;
@@ -132,4 +151,5 @@ grant execute on function identity.current_organisation_id(), identity.current_u
 grant execute on function identity.ensure_user(citext) to ot_app, ot_worker;
 grant select, insert, update on identity.users to ot_app;
 grant select, insert, update, delete on identity.organisations, identity.memberships to ot_app;
+grant select, insert on identity.audit_events to ot_app;
 grant select, insert, update, delete on all tables in schema identity to ot_worker;

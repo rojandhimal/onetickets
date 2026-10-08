@@ -67,4 +67,20 @@ export class MembershipsRepository {
     if (!rows[0]) return null;
     return { userId, email, role, joinedAt: rows[0].joinedAt };
   }
+
+  /** Records a change in the organisation's audit log (insert-only). */
+  async audit(
+    tx: pg.PoolClient,
+    organisationId: string,
+    actorUserId: string,
+    action: string,
+    subjectUserId: string | null,
+    detail: Record<string, unknown> = {},
+  ): Promise<void> {
+    await tx.query(
+      `insert into identity.audit_events (organisation_id, actor_user_id, action, subject_user_id, detail)
+       values ($1, $2, $3, $4, $5)`,
+      [organisationId, actorUserId, action, subjectUserId, detail],
+    );
+  }
 }

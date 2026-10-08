@@ -114,6 +114,40 @@ describe('row-level security across organisations', () => {
     ).rejects.toThrow(/row-level security/);
   });
 
+  it('does not carry one tenant into the next transaction on a pooled connection', async () => {
+    const single = new pg.Pool({ connectionString: appDatabaseUrl(), max: 1 });
+    try {
+      const first = await single.connect();
+      await first.query('begin');
+      await first.query("select set_config('app.organisation_id', $1, true)", [orgA]);
+      expect((await first.query('select id from identity.organisations')).rows).toEqual([
+        { id: orgA },
+      ]);
+      await first.query('commit');
+      first.release();
+
+      const second = await single.connect();
+      const { rows } = await second.query('select id from identity.organisations');
+      second.release();
+      expect(rows).toEqual([]);
+    } finally {
+      await single.end();
+    }
+  });
+
+  it('keeps audit events inside their organisation', async () => {
+    const seen = await asTenant({ organisationId: orgA, userId: aliceId }, async (client) => {
+      await expect(
+        client.query(
+          `insert into identity.audit_events (organisation_id, action) values ($1, 'forged')`,
+          [orgB],
+        ),
+      ).rejects.toThrow(/row-level security/);
+      return [];
+    });
+    expect(seen).toEqual([]);
+  });
+
   it("lists a user's own organisations without exposing other members", async () => {
     const seen = await asTenant({ userId: aliceId }, async (client) => ({
       organisations: (await client.query('select id from identity.organisations')).rows,

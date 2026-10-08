@@ -9,10 +9,14 @@ export class ZodBody<T extends z.ZodType> implements PipeTransform<unknown, z.in
   transform(value: unknown): z.infer<T> {
     const result = this.schema.safeParse(value);
     if (!result.success) {
-      const message = result.error.issues
-        .map((issue) => `${issue.path.join('.') || 'body'}: ${issue.message}`)
-        .join('; ');
-      throw new ApiError(HttpStatus.BAD_REQUEST, 'invalid_request', message);
+      const issue = result.error.issues[0];
+      const field = issue?.path.length ? String(issue.path[0]) : undefined;
+      throw new ApiError(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'invalid_request',
+        issue?.message ?? 'Invalid request.',
+        field,
+      );
     }
     return result.data;
   }

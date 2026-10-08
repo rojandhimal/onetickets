@@ -2,8 +2,8 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 /** An HTTP error with a stable `code` the web app can switch on (see ApiErrorBody). */
 export class ApiError extends HttpException {
-  constructor(status: HttpStatus, code: string, message: string) {
-    super({ statusCode: status, code, message }, status);
+  constructor(status: HttpStatus, code: string, message: string, field?: string) {
+    super({ statusCode: status, code, message, ...(field ? { field } : {}) }, status);
   }
 }
 
@@ -23,3 +23,6 @@ export const mfaRequired = () =>
     'mfa_required',
     'Confirm it is you with your second factor to continue.',
   );
+
+export const noAccessPolicy = () =>
+  new ApiError(HttpStatus.FORBIDDEN, 'no_access_policy', 'This route is not open to anyone yet.');
