@@ -19,6 +19,11 @@ describe('GET /health (real Postgres)', () => {
     await app.close();
   });
 
+  it('reports liveness without touching the database', async () => {
+    const response = await request(app.getHttpServer()).get('/health/live').expect(200);
+    expect(response.body).toEqual({ status: 'ok' });
+  });
+
   it('reports the database as up', async () => {
     const response = await request(app.getHttpServer()).get('/health').expect(200);
     expect(response.body).toEqual({ status: 'ok', database: 'up' });

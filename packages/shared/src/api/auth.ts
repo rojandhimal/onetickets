@@ -10,7 +10,7 @@ import type { OrganisationDto } from './organisations.js';
  *                                410 link_expired | link_used | link_invalid
  * GET  /auth/google/start?organiserName=&returnTo=  -> 302 to Google; the callback 302s to
  *                                WEB_URL + returnTo (relative paths only) with the cookie set,
- *                                or to /signup?error=google
+ *                                or to /signin?error=google | google_unverified | google_unavailable
  * GET  /me                       -> 200 Session, or 401 not_signed_in
  * POST /auth/sign-out            -> 204, session revoked server-side
  *
@@ -24,7 +24,10 @@ export const organiserNameSchema = z.string().trim().min(1).max(120);
 
 export const magicLinkRequest = z.object({
   email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
-  /** Sign-up form only. Used if the email is new; ignored for existing accounts. */
+  /**
+   * Sign-up form only. Names the first organisation if the email is new (otherwise the part
+   * before the @ is used); ignored for existing accounts.
+   */
   organiserName: organiserNameSchema.optional(),
 });
 export type MagicLinkRequest = z.infer<typeof magicLinkRequest>;
@@ -44,7 +47,7 @@ export interface SessionUser {
 
 export interface Session {
   user: SessionUser;
-  /** The organisation to show; null only for a user with no memberships yet. */
+  /** The organisation to show; null only if the user has lost every membership. */
   organisation: OrganisationDto | null;
   organisations: OrganisationDto[];
 }

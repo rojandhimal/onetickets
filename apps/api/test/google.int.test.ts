@@ -109,20 +109,20 @@ describe('Google sign-in', () => {
     await start();
     google.identity = { email: uniqueEmail('csrf'), emailVerified: true, name: null };
     const done = await callback(google.lastRequest!.state);
-    expect(done.headers.location).toBe(`${WEB}/signup?error=google`);
+    expect(done.headers.location).toBe(`${WEB}/signin?error=google`);
   });
 
   it('refuses a state that does not match the cookie', async () => {
     const { binding } = await start();
     const done = await callback('someone-elses-state', binding);
-    expect(done.headers.location).toBe(`${WEB}/signup?error=google`);
+    expect(done.headers.location).toBe(`${WEB}/signin?error=google`);
   });
 
   it('refuses an unverified Google email', async () => {
     const { binding } = await start();
     google.identity = { email: uniqueEmail('unverified'), emailVerified: false, name: null };
     const done = await callback(google.lastRequest!.state, binding);
-    expect(done.headers.location).toBe(`${WEB}/signup?error=google_unverified`);
+    expect(done.headers.location).toBe(`${WEB}/signin?error=google_unverified`);
   });
 
   it('works once per attempt', async () => {
@@ -130,13 +130,13 @@ describe('Google sign-in', () => {
     google.identity = { email: uniqueEmail('once'), emailVerified: true, name: null };
     const state = google.lastRequest!.state;
     expect((await callback(state, binding)).headers.location).toBe(`${WEB}/organiser`);
-    expect((await callback(state, binding)).headers.location).toBe(`${WEB}/signup?error=google`);
+    expect((await callback(state, binding)).headers.location).toBe(`${WEB}/signin?error=google`);
   });
 
   it('sends people back to sign-up when Google is not configured yet', async () => {
     google.configured = false;
     const { location } = await start();
-    expect(location).toBe(`${WEB}/signup?error=google_unavailable`);
+    expect(location).toBe(`${WEB}/signin?error=google_unavailable`);
   });
 
   it('only redirects to relative paths after sign-in', () => {

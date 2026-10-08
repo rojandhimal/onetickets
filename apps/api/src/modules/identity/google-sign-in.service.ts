@@ -53,7 +53,7 @@ export class GoogleSignInService {
   }
 
   private failure(error: string): { ok: false; redirect: string } {
-    return { ok: false, redirect: `${this.config.webUrl}/signup?error=${error}` };
+    return { ok: false, redirect: `${this.config.webUrl}/signin?error=${error}` };
   }
 
   async start(organiserName: unknown, returnTo: unknown): Promise<GoogleStart> {

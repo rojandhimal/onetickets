@@ -107,8 +107,8 @@ export class AuthService {
   }
 
   /**
-   * Finds or creates the user for a verified email. A user with no organisation yet gets one
-   * from the sign-up name; an existing organisation is never renamed or duplicated.
+   * Finds or creates the user for a verified email. A user with no organisation yet gets one,
+   * named from sign-up or after their email; an existing one is never renamed or duplicated.
    */
   private async signInUser(
     tx: pg.PoolClient,
@@ -120,12 +120,15 @@ export class AuthService {
     ]);
     const userId = rows[0]!.id;
     await setScope(tx, { userId });
-    if (organiserName && (await this.memberships.organisationsFor(tx, userId)).length === 0) {
+    if ((await this.memberships.organisationsFor(tx, userId)).length === 0) {
+      // No name yet (e.g. a new email on the sign-in form): use the part before the @.
+      // They can rename it later.
+      const name = organiserName ?? defaultOrganisationName(email);
       const organisationId = randomUUID();
       await setScope(tx, { userId, organisationId });
-      await this.memberships.createOrganisation(tx, organisationId, organiserName, userId);
+      await this.memberships.createOrganisation(tx, organisationId, name, userId);
       await this.memberships.audit(tx, organisationId, userId, 'organisation.created', userId, {
-        name: organiserName,
+        name,
       });
       await setScope(tx, { userId });
     }
@@ -151,4 +154,8 @@ export class AuthService {
       organisations,
     };
   }
+}
+
+export function defaultOrganisationName(email: string): string {
+  return email.split('@')[0]!.slice(0, 120) || 'My events';
 }

@@ -75,6 +75,12 @@ describe('sign-in API (S0-3)', () => {
     expect(me.body).toEqual(response.body);
   });
 
+  it('names a new organiser after their email when they sign in without a name', async () => {
+    const email = uniqueEmail('sam');
+    const { session } = await signIn(email);
+    expect(session.organisation).toMatchObject({ name: email.split('@')[0], role: 'owner' });
+  });
+
   it('stores only a hash of the link token', async () => {
     const email = uniqueEmail('hash');
     const token = await requestLink(email);
