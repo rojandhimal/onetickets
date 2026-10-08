@@ -1,4 +1,4 @@
-import type { FieldError, MagicLinkRequest, Session } from './contract';
+import type { FieldError, MagicLinkRequest } from './contract';
 
 export type RequestLinkResult =
   | { ok: true }
@@ -28,8 +28,8 @@ export async function requestMagicLink(input: MagicLinkRequest): Promise<Request
   return { ok: false, kind: 'failed' };
 }
 
-export type VerifyResult =
-  { ok: true; session: Session } | { ok: false; kind: 'expired' | 'failed' };
+// The session arrives as a cookie; the body isn't needed, so an empty one can't stall sign-in.
+export type VerifyResult = { ok: true } | { ok: false; kind: 'expired' | 'failed' };
 
 export async function verifyMagicLink(token: string): Promise<VerifyResult> {
   let res: Response;
@@ -42,7 +42,7 @@ export async function verifyMagicLink(token: string): Promise<VerifyResult> {
   } catch {
     return { ok: false, kind: 'failed' };
   }
-  if (res.ok) return { ok: true, session: (await res.json()) as Session };
+  if (res.ok) return { ok: true };
   if (res.status === 410 || res.status === 400) return { ok: false, kind: 'expired' };
   return { ok: false, kind: 'failed' };
 }

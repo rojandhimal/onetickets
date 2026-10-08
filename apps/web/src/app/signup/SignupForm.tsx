@@ -19,7 +19,14 @@ const bannerText: Record<Exclude<Banner, null>, string> = {
   failed: "We couldn't send the link. Check your connection and try again.",
 };
 
-export function SignupForm({ initialError }: { initialError: 'google' | 'link' | null }) {
+type Props = {
+  /** Sign-up asks for an organiser name; sign-in, for returning organisers, asks only for email. */
+  mode?: 'signup' | 'signin';
+  initialError: 'google' | 'link' | null;
+};
+
+export function SignupForm({ mode = 'signup', initialError }: Props) {
+  const isSignup = mode === 'signup';
   const [step, setStep] = useState<Step>('form');
   const [values, setValues] = useState<MagicLinkRequest>({ email: '', organiserName: '' });
   const [errors, setErrors] = useState<FieldError[]>([]);
@@ -46,8 +53,8 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (sending) return;
-    const input = { email: values.email.trim(), organiserName: values.organiserName.trim() };
-    const found = validateSignup(input);
+    const input = request();
+    const found = validateSignup(input, { requireName: isSignup });
     setErrors(found);
     if (found.length) {
       setBanner(null);
@@ -71,18 +78,18 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
     }
   }
 
+  function request(): MagicLinkRequest {
+    const email = values.email.trim();
+    return isSignup ? { email, organiserName: (values.organiserName ?? '').trim() } : { email };
+  }
+
   function backToForm() {
     returningToForm.current = true;
     setStep('form');
   }
 
   if (step === 'sent') {
-    return (
-      <SentPanel
-        request={{ email: values.email.trim(), organiserName: values.organiserName.trim() }}
-        onUseDifferentEmail={backToForm}
-      />
-    );
+    return <SentPanel request={request()} onUseDifferentEmail={backToForm} />;
   }
 
   const emailError = errorFor('email');
@@ -98,7 +105,10 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
           </div>
         )}
 
-        <a href={googleStartUrl(values.organiserName)} className={styles.googleButton}>
+        <a
+          href={googleStartUrl(isSignup ? (values.organiserName ?? '') : '')}
+          className={styles.googleButton}
+        >
           <GoogleMark />
           Continue with Google
         </a>
@@ -129,37 +139,41 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
           )}
         </div>
 
-        <div className={styles.field}>
-          <label htmlFor="su-org">Organiser name</label>
-          <input
-            ref={nameRef}
-            id="su-org"
-            name="organiserName"
-            autoComplete="organization"
-            maxLength={ORGANISER_NAME_MAX}
-            value={values.organiserName}
-            onChange={(e) => setValues((v) => ({ ...v, organiserName: e.target.value }))}
-            aria-invalid={nameError ? true : undefined}
-            aria-describedby={nameError ? 'su-org-error su-org-hint' : 'su-org-hint'}
-          />
-          {nameError && (
-            <span id="su-org-error" className={styles.fieldError}>
-              <Icon name="alert" size={16} />
-              {nameError}
-            </span>
-          )}
-          <span id="su-org-hint" className={styles.hint}>
-            Shown on your event pages. Your own name is fine.
-          </span>
-        </div>
+        {isSignup && (
+          <>
+            <div className={styles.field}>
+              <label htmlFor="su-org">Organiser name</label>
+              <input
+                ref={nameRef}
+                id="su-org"
+                name="organiserName"
+                autoComplete="organization"
+                maxLength={ORGANISER_NAME_MAX}
+                value={values.organiserName ?? ''}
+                onChange={(e) => setValues((v) => ({ ...v, organiserName: e.target.value }))}
+                aria-invalid={nameError ? true : undefined}
+                aria-describedby={nameError ? 'su-org-error su-org-hint' : 'su-org-hint'}
+              />
+              {nameError && (
+                <span id="su-org-error" className={styles.fieldError}>
+                  <Icon name="alert" size={16} />
+                  {nameError}
+                </span>
+              )}
+              <span id="su-org-hint" className={styles.hint}>
+                Shown on your event pages. Your own name is fine.
+              </span>
+            </div>
 
-        <div className={`${screen.notice} ${screen.noticeInfo}`}>
-          <Icon name="info" />
-          <p>
-            No ABN or bank details needed now. We&apos;ll ask for them only when you first sell paid
-            tickets.
-          </p>
-        </div>
+            <div className={`${screen.notice} ${screen.noticeInfo}`}>
+              <Icon name="info" />
+              <p>
+                No ABN or bank details needed now. We&apos;ll ask for them only when you first sell
+                paid tickets.
+              </p>
+            </div>
+          </>
+        )}
 
         <div className={styles.spacer} />
 
@@ -173,6 +187,17 @@ export function SignupForm({ initialError }: { initialError: 'google' | 'link' |
             'Email me a sign-in link'
           )}
         </button>
+        <p className={styles.switchMode}>
+          {isSignup ? (
+            <>
+              Already signed up? <a href="/signin">Sign in</a>
+            </>
+          ) : (
+            <>
+              New to OneTickets? <a href="/signup">Sign up</a>
+            </>
+          )}
+        </p>
         <p className={styles.legal}>
           By continuing you agree to the <a href="/legal/organiser-terms">organiser terms</a> and{' '}
           <a href="/legal/privacy">privacy policy</a>.

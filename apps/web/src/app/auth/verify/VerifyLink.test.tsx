@@ -50,7 +50,7 @@ describe('VerifyLink', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Send a new link' })).toHaveAttribute(
       'href',
-      '/signup',
+      '/signin',
     );
   });
 });

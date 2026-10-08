@@ -4,6 +4,7 @@ import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import screen from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
+import { isEventWizardEnabled } from '@/lib/flags';
 import { welcomeLine } from '@/lib/greeting';
 import { EVENT_TEMPLATES, newEventHref } from '@/lib/templates';
 import styles from './organiser.module.css';
@@ -12,7 +13,8 @@ export const metadata: Metadata = { title: 'Organiser home' };
 
 export default async function OrganiserHomePage() {
   const session = await getSession();
-  if (!session) redirect('/signup');
+  if (!session) redirect('/signin');
+  const wizardOn = isEventWizardEnabled();
 
   // S0-3 only ships the empty state. The events list arrives with S1-1.
   return (
@@ -38,15 +40,16 @@ export default async function OrganiserHomePage() {
         <section className={styles.intro} aria-labelledby="no-events">
           <h2 id="no-events">No events yet</h2>
           <p className={screen.text}>
-            Pick a template to start. We&apos;ll fill in sensible defaults and you can change
-            anything.
+            {wizardOn
+              ? "Pick a template to start. We'll fill in sensible defaults and you can change anything."
+              : "Creating events opens soon. You'll start from one of these templates."}
           </p>
         </section>
 
         <ul aria-label="Event templates" className={styles.templates}>
-          {EVENT_TEMPLATES.map((t) => (
-            <li key={t.id}>
-              <a href={newEventHref(t.id)} className={styles.template}>
+          {EVENT_TEMPLATES.map((t) => {
+            const content = (
+              <>
                 <span className={`${styles.templateIcon} ${styles[t.id]}`}>
                   <Icon name={t.icon} size={24} />
                 </span>
@@ -54,17 +57,33 @@ export default async function OrganiserHomePage() {
                   <strong>{t.name}</strong>
                   <span>{t.description}</span>
                 </span>
-                <span className={styles.chevron}>
-                  <Icon name="chevron" />
-                </span>
-              </a>
-            </li>
-          ))}
+              </>
+            );
+            return (
+              <li key={t.id}>
+                {wizardOn ? (
+                  <a href={newEventHref(t.id)} className={styles.template}>
+                    {content}
+                    <span className={styles.chevron}>
+                      <Icon name="chevron" />
+                    </span>
+                  </a>
+                ) : (
+                  <div className={`${styles.template} ${styles.templateSoon}`}>
+                    {content}
+                    <span className={styles.soonChip}>Coming soon</span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
 
-        <a href={newEventHref()} className={styles.blank}>
-          Start from a blank event
-        </a>
+        {wizardOn && (
+          <a href={newEventHref()} className={styles.blank}>
+            Start from a blank event
+          </a>
+        )}
 
         <section className={`${screen.notice} ${screen.noticeWarm}`} aria-label="Paid tickets">
           <Icon name="info" />

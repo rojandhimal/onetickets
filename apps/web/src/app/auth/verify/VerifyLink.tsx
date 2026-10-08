@@ -47,7 +47,7 @@ export function VerifyLink() {
           <p className={styles.text}>
             Sign-in links work once, for 15 minutes. Send yourself a new one and you&apos;ll be in.
           </p>
-          <a href="/signup" className={styles.primaryButton}>
+          <a href="/signin" className={styles.primaryButton}>
             Send a new link
           </a>
         </>
@@ -58,8 +58,8 @@ export function VerifyLink() {
           <p className={styles.text}>
             Check your connection, then open the link from your email again.
           </p>
-          <a href="/signup" className={styles.textButton}>
-            Back to sign up
+          <a href="/signin" className={styles.textButton}>
+            Back to sign in
           </a>
         </>
       )}

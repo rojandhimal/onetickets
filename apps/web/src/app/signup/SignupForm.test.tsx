@@ -106,4 +106,20 @@ describe('SignupForm', () => {
     render(<SignupForm initialError="google" />);
     expect(screen.getByRole('alert')).toHaveTextContent("Google sign-in didn't finish");
   });
+
+  it('sign-in mode asks only for email and sends no organiser name', async () => {
+    const fetch = mockFetch(202);
+    render(<SignupForm mode="signin" initialError={null} />);
+    expect(screen.queryByLabelText('Organiser name')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/signup');
+
+    await fillAndSubmit('priya@printshed.com.au', '');
+    const body = JSON.parse((fetch.mock.calls[0]?.[1] as RequestInit).body as string);
+    expect(body).toEqual({ email: 'priya@printshed.com.au' });
+  });
+
+  it('links returning organisers to sign in', () => {
+    render(<SignupForm initialError={null} />);
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/signin');
+  });
 });

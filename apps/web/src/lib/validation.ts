@@ -3,7 +3,7 @@ import type { FieldError, MagicLinkRequest } from './contract';
 export const ORGANISER_NAME_MAX = 80;
 
 // Deliberately loose: the api is the source of truth. This only catches typos early.
-export function validateSignup(input: MagicLinkRequest): FieldError[] {
+export function validateSignup(input: MagicLinkRequest, { requireName = true } = {}): FieldError[] {
   const errors: FieldError[] = [];
   const email = input.email.trim();
   if (!email) {
@@ -13,7 +13,8 @@ export function validateSignup(input: MagicLinkRequest): FieldError[] {
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push({ field: 'email', message: 'Add the part after the @, like gmail.com' });
   }
-  const name = input.organiserName.trim();
+  if (!requireName) return errors;
+  const name = (input.organiserName ?? '').trim();
   if (!name) {
     errors.push({
       field: 'organiserName',

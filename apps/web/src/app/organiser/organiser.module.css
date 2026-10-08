@@ -117,3 +117,17 @@
   font-weight: 700;
   font-size: 15px;
 }
+
+/* Until the S1-1 wizard ships the templates show but can't be opened. */
+.templateSoon:hover {
+  border-color: var(--line-divider);
+}
+.soonChip {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #e9eaf0;
+  color: var(--ink-soft);
+}

@@ -79,11 +79,24 @@
   flex: 1;
 }
 
-.legal {
+.legal,
+.switchMode {
   text-align: center;
   font-size: 13px;
   color: var(--slate);
   margin: 0;
+}
+.switchMode {
+  font-size: 15px;
+}
+/* Links inside running text need a non-colour cue (WCAG 1.4.1). */
+.legal a,
+.switchMode a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.switchMode a {
+  font-weight: 700;
 }
 
 .sent {
