@@ -29,8 +29,18 @@ pnpm format:check
 pnpm lint              # ESLint, module boundaries, and a self-test of the boundary rule
 pnpm typecheck
 pnpm test              # unit tests
-DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
 ```
+
+## Database
+
+Migrations are plain SQL in `apps/api/migrations`, applied in order by
+`pnpm --filter @onetickets/api migrate` with `MIGRATION_DATABASE_URL` (the schema owner). They must
+be backwards-compatible (expand, then contract).
+
+The api connects with `DATABASE_URL` as a login role granted `ot_app`, never as the owner or a
+superuser: every tenant table has row-level security keyed to the organisation set per transaction
+by `UnitOfWork`. Background jobs use a role granted `ot_worker`.
 
 ## Module boundaries
 

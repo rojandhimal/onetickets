@@ -55,7 +55,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
+      # Tests migrate and seed with this superuser, then run the api as an RLS-bound role.
+      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
