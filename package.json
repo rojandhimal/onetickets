@@ -1,16 +1,17 @@
 {
   "name": "onetickets",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "lint": "eslint . && pnpm lint:boundaries",
+    "lint": "eslint . && pnpm lint:boundaries && ./scripts/check-boundary-rule.sh",
     "lint:boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "pnpm -r --parallel typecheck",
+    "typecheck": "pnpm --filter @onetickets/shared build && pnpm -r --parallel typecheck",
     "test": "pnpm -r test",
     "test:integration": "pnpm -r test:integration",
     "build": "pnpm -r build"
