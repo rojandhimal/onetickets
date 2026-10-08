@@ -14,7 +14,8 @@
     "typecheck": "pnpm --filter @onetickets/shared build && pnpm -r --parallel typecheck",
     "test": "pnpm -r test",
     "test:integration": "pnpm -r test:integration",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "e2e": "pnpm --filter @onetickets/e2e e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

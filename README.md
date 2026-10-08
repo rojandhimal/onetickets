@@ -30,7 +30,11 @@ pnpm lint              # ESLint, module boundaries, and a self-test of the bound
 pnpm typecheck
 pnpm test              # unit tests
 DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+pnpm build && DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm e2e  # browser and accessibility tests
 ```
+
+E2E tests live in `e2e/` and run every page at 375 px and 1280 px with an axe check for WCAG 2.2 AA.
+Run `pnpm --filter @onetickets/e2e exec playwright install chromium` once first.
 
 ## Module boundaries
 
