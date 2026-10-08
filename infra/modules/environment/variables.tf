@@ -30,6 +30,11 @@ variable "api_hostname" {
   type = string
 }
 
+variable "email_domain" {
+  description = "Domain the app sends email from."
+  type        = string
+}
+
 variable "ingress_cidrs" {
   type    = list(string)
   default = ["0.0.0.0/0"]
@@ -56,7 +61,7 @@ variable "db_backup_retention_days" {
 
 variable "migrate_command" {
   type    = list(string)
-  default = ["node", "dist/migrate.js"]
+  default = ["node", "dist/database/migrate.js"]
 }
 
 variable "api_desired_count" {

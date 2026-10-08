@@ -1,8 +1,11 @@
-# RDS PostgreSQL 16 in the private subnets. The master password is generated
-# and rotated by RDS into Secrets Manager; nobody types it. A second secret
-# holds the password for the non-owner `app_user` role the API connects as, so
-# row-level security applies to it (architecture review fix 11). A migration
-# creates that role from the APP_DB_PASSWORD the migrate task receives.
+# RDS PostgreSQL 16 in the private subnets, plus two connection secrets:
+#   owner    the schema owner (RDS master). Only the migrate and db-roles
+#            tasks get it.
+#   app      the API's own login, `onetickets_app`, granted the `ot_app`
+#            group role the migrations create. It does not own the tables, so
+#            row-level security applies to it (architecture review fix 11).
+# Each secret holds username, password and a ready-made `url`, because the
+# API reads DATABASE_URL and migrations read MIGRATION_DATABASE_URL.
 
 terraform {
   required_providers {
@@ -76,10 +79,8 @@ resource "aws_db_instance" "this" {
   kms_key_id            = var.kms_key_arn
 
   db_name  = "onetickets"
-  username = "onetickets_admin"
-
-  manage_master_user_password   = true
-  master_user_secret_kms_key_id = var.kms_key_arn
+  username = "onetickets_owner"
+  password = random_password.owner.result
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.db.id]
@@ -108,22 +109,45 @@ resource "aws_db_instance" "this" {
   }
 }
 
-resource "random_password" "app_user" {
+locals {
+  # libpq semantics for node-postgres: encrypt, without verifying the RDS CA
+  # (which Node does not trust by default). Switch to verify-full once the
+  # image ships the RDS CA bundle.
+  url_params = "sslmode=require&uselibpqcompat=true"
+
+  logins = {
+    owner = { username = "onetickets_owner", password = random_password.owner.result }
+    app   = { username = "onetickets_app", password = random_password.app.result }
+  }
+}
+
+# Letters and digits only, so the passwords need no escaping in URLs or SQL.
+resource "random_password" "owner" {
   length  = 40
   special = false
 }
 
-resource "aws_secretsmanager_secret" "app_user" {
-  name                    = "${var.name}/app-user"
-  description             = "Credentials for the non-owner role the API uses"
+resource "random_password" "app" {
+  length  = 40
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "login" {
+  for_each = local.logins
+
+  name                    = "${var.name}/db-${each.key}"
+  description             = "Postgres login ${each.value.username}"
   kms_key_id              = var.kms_key_arn
   recovery_window_in_days = 7
 }
 
-resource "aws_secretsmanager_secret_version" "app_user" {
-  secret_id = aws_secretsmanager_secret.app_user.id
+resource "aws_secretsmanager_secret_version" "login" {
+  for_each = local.logins
+
+  secret_id = aws_secretsmanager_secret.login[each.key].id
   secret_string = jsonencode({
-    username = "app_user"
-    password = random_password.app_user.result
+    username = each.value.username
+    password = each.value.password
+    url      = "postgres://${each.value.username}:${each.value.password}@${aws_db_instance.this.address}:${aws_db_instance.this.port}/${aws_db_instance.this.db_name}?${local.url_params}"
   })
 }

@@ -43,26 +43,18 @@ variable "db_address" {
   type = string
 }
 
-variable "db_port" {
-  type = number
-}
-
-variable "db_name" {
+variable "db_owner_secret_arn" {
   type = string
 }
 
-variable "db_master_secret_arn" {
-  type = string
-}
-
-variable "db_app_user_secret_arn" {
+variable "db_app_secret_arn" {
   type = string
 }
 
 variable "migrate_command" {
   description = "Container command that applies database migrations and exits 0 on success."
   type        = list(string)
-  default     = ["node", "dist/migrate.js"]
+  default     = ["node", "dist/database/migrate.js"]
 }
 
 variable "api_health_check_path" {
@@ -125,4 +117,18 @@ variable "ecr_pull_account_ids" {
   description = "Other AWS accounts allowed to pull this environment's images (staging grants production)."
   type        = list(string)
   default     = []
+}
+
+variable "ses_identity_arn" {
+  type = string
+}
+
+variable "email_domain" {
+  type = string
+}
+
+variable "psql_image" {
+  description = "Image with psql, used by the db-roles task."
+  type        = string
+  default     = "public.ecr.aws/docker/library/postgres:16-alpine"
 }

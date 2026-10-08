@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy already-pushed images to one environment's ECS cluster:
-#   1. run database migrations as a one-off task and stop if they fail
+#   1. run database migrations, then the db-roles task, and stop if either fails
 #   2. roll each service onto a new task definition revision
 #   3. wait until every service is stable (ECS rolls back on its own if not)
 #
@@ -36,36 +36,42 @@ register_revision() {
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-echo "::group::Migrations"
-migrate_td="$(register_revision "${cluster}-migrate" "${images[api]}")"
-
 # Run in the same subnets and security group as the API service.
 network="$(aws ecs describe-services --cluster "$cluster" --services api \
   --query 'services[0].networkConfiguration' --output json)"
 
-task_arn="$(aws ecs run-task --cluster "$cluster" --task-definition "$migrate_td" \
-  --launch-type FARGATE --network-configuration "$network" \
-  --started-by "deploy-${GITHUB_RUN_ID:-manual}" \
-  --query 'tasks[0].taskArn' --output text)"
-echo "Started $task_arn"
+# Runs a one-off task to completion and fails the deploy if it exits non-zero.
+run_one_off() {
+  local name="$1" task_def="$2" task_arn result exit_code
+  echo "::group::$name"
+  task_arn="$(aws ecs run-task --cluster "$cluster" --task-definition "$task_def" \
+    --launch-type FARGATE --network-configuration "$network" \
+    --started-by "deploy-${GITHUB_RUN_ID:-manual}" \
+    --query 'tasks[0].taskArn' --output text)"
+  echo "Started $task_arn"
 
-# The waiter gives up after 10 minutes; a migration that long needs a human.
-aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+  # The waiter gives up after 10 minutes; a task that long needs a human.
+  aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
 
-result="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" \
-  --query 'tasks[0].{exit: containers[0].exitCode, reason: stoppedReason}' --output json)"
-exit_code="$(jq -r '.exit' <<<"$result")"
+  result="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" \
+    --query 'tasks[0].{exit: containers[0].exitCode, reason: stoppedReason}' --output json)"
+  exit_code="$(jq -r '.exit' <<<"$result")"
 
-task_id="${task_arn##*/}"
-aws logs get-log-events --log-group-name "/onetickets/${env_name}/migrate" \
-  --log-stream-name "migrate/migrate/${task_id}" --start-from-head \
-  --query 'events[].message' --output text 2>/dev/null || echo "(no migration logs found)"
-echo "::endgroup::"
+  aws logs get-log-events --log-group-name "/onetickets/${env_name}/${name}" \
+    --log-stream-name "${name}/${name}/${task_arn##*/}" --start-from-head \
+    --query 'events[].message' --output text 2>/dev/null || echo "(no logs found)"
+  echo "::endgroup::"
 
-if [[ "$exit_code" != "0" ]]; then
-  echo "::error::Migrations failed (exit code ${exit_code}): $(jq -r '.reason' <<<"$result"). Services were not updated."
-  exit 1
-fi
+  if [[ "$exit_code" != "0" ]]; then
+    echo "::error::$name failed (exit code ${exit_code}): $(jq -r '.reason' <<<"$result"). Services were not updated."
+    exit 1
+  fi
+}
+
+# Migrations first (they create the ot_app group role), then make sure the
+# API's login exists and belongs to it.
+run_one_off migrate "$(register_revision "${cluster}-migrate" "${images[api]}")"
+run_one_off db-roles "${cluster}-db-roles"
 
 for app in "${!images[@]}"; do
   echo "::group::Deploy $app"

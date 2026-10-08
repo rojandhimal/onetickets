@@ -93,9 +93,12 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid       = "EcsRunMigrations"
-    actions   = ["ecs:RunTask"]
-    resources = ["arn:aws:ecs:*:*:task-definition/${var.cluster_name}-migrate:*"]
+    sid     = "EcsRunMigrations"
+    actions = ["ecs:RunTask"]
+    resources = [
+      "arn:aws:ecs:*:*:task-definition/${var.cluster_name}-migrate:*",
+      "arn:aws:ecs:*:*:task-definition/${var.cluster_name}-db-roles:*",
+    ]
     condition {
       test     = "ArnEquals"
       variable = "ecs:cluster"
@@ -121,9 +124,12 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid       = "ReadMigrationLogs"
-    actions   = ["logs:GetLogEvents", "logs:FilterLogEvents"]
-    resources = ["arn:aws:logs:*:*:log-group:/onetickets/${var.environment}/migrate:*"]
+    sid     = "ReadMigrationLogs"
+    actions = ["logs:GetLogEvents", "logs:FilterLogEvents"]
+    resources = [
+      "arn:aws:logs:*:*:log-group:/onetickets/${var.environment}/migrate:*",
+      "arn:aws:logs:*:*:log-group:/onetickets/${var.environment}/db-roles:*",
+    ]
   }
 }
 

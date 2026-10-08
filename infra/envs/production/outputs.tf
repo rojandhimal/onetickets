@@ -25,3 +25,7 @@ output "private_subnet_ids" {
 output "task_security_group_id" {
   value = module.environment.task_security_group_id
 }
+
+output "email_dns_records" {
+  value = module.environment.email_dns_records
+}

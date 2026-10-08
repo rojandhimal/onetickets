@@ -6,6 +6,7 @@ module "environment" {
   web_hostname = "staging.${var.domain}"
   api_hostname = "api.staging.${var.domain}"
   alert_email  = var.alert_email
+  email_domain = "staging.${var.domain}"
 
   db_instance_class        = "db.t4g.small"
   db_backup_retention_days = 7

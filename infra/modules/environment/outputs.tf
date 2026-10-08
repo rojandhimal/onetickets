@@ -42,3 +42,7 @@ output "db_address" {
 output "db_instance_arn" {
   value = module.database.instance_arn
 }
+
+output "email_dns_records" {
+  value = module.email.dns_records
+}

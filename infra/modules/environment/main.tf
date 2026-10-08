@@ -103,10 +103,8 @@ module "app" {
   api_hostname           = var.api_hostname
   ingress_cidrs          = var.ingress_cidrs
   db_address             = module.database.address
-  db_port                = module.database.port
-  db_name                = module.database.db_name
-  db_master_secret_arn   = module.database.master_secret_arn
-  db_app_user_secret_arn = module.database.app_user_secret_arn
+  db_owner_secret_arn    = module.database.owner_secret_arn
+  db_app_secret_arn      = module.database.app_secret_arn
   migrate_command        = var.migrate_command
   api_desired_count      = var.api_desired_count
   api_max_count          = var.api_max_count
@@ -115,6 +113,15 @@ module "app" {
   deletion_protection    = var.deletion_protection
   enable_execute_command = var.enable_execute_command
   ecr_pull_account_ids   = var.ecr_pull_account_ids
+  ses_identity_arn       = module.email.identity_arn
+  email_domain           = var.email_domain
+}
+
+module "email" {
+  source = "../email"
+
+  domain             = var.email_domain
+  dmarc_report_email = var.alert_email
 }
 
 module "deploy_role" {

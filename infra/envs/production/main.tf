@@ -6,6 +6,7 @@ module "environment" {
   web_hostname = var.domain
   api_hostname = "api.${var.domain}"
   alert_email  = var.alert_email
+  email_domain = var.domain
 
   single_nat_gateway = false
 

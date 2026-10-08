@@ -19,12 +19,10 @@ data "aws_caller_identity" "current" {}
 locals {
   region = data.aws_region.current.region
 
-  # Shared by api and migrate: how the API finds Postgres. node-postgres reads
-  # the PG* variables when DATABASE_URL is unset.
-  db_environment = [
+  # How the db-roles task (plain psql) reaches Postgres as the owner.
+  psql_environment = [
     { name = "PGHOST", value = var.db_address },
-    { name = "PGPORT", value = tostring(var.db_port) },
-    { name = "PGDATABASE", value = var.db_name },
+    { name = "PGDATABASE", value = "onetickets" },
     { name = "PGSSLMODE", value = "require" },
   ]
 
@@ -36,14 +34,14 @@ locals {
       cpu               = var.api_cpu
       memory            = var.api_memory
       desired_count     = var.api_desired_count
-      environment = concat(local.db_environment, [
+      environment = [
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = "3001" },
         { name = "APP_ENV", value = var.environment },
-      ])
+        { name = "EMAIL_FROM_DOMAIN", value = var.email_domain },
+      ]
       secrets = [
-        { name = "PGUSER", valueFrom = "${var.db_app_user_secret_arn}:username::" },
-        { name = "PGPASSWORD", valueFrom = "${var.db_app_user_secret_arn}:password::" },
+        { name = "DATABASE_URL", valueFrom = "${var.db_app_secret_arn}:url::" },
       ]
       command = null
     }
@@ -145,7 +143,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "app" {
-  for_each = toset(["api", "web", "migrate"])
+  for_each = toset(["api", "web", "migrate", "db-roles"])
 
   name              = "/onetickets/${var.environment}/${each.key}"
   retention_in_days = var.log_retention_days
@@ -181,7 +179,7 @@ resource "aws_iam_role_policy_attachment" "execution" {
 data "aws_iam_policy_document" "execution_secrets" {
   statement {
     actions   = ["secretsmanager:GetSecretValue"]
-    resources = [var.db_app_user_secret_arn, var.db_master_secret_arn]
+    resources = [var.db_app_secret_arn, var.db_owner_secret_arn]
   }
   statement {
     actions   = ["kms:Decrypt"]
@@ -209,6 +207,10 @@ data "aws_iam_policy_document" "task" {
   statement {
     actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
     resources = [var.kms_key_arn]
+  }
+  statement {
+    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [var.ses_identity_arn]
   }
 }
 
@@ -406,9 +408,23 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# One-off task the deploy runs before updating services. Same image as the
-# API; connects as the owner role so it can change the schema and create
-# app_user with APP_DB_PASSWORD.
+# One-off tasks the deploy runs, in order, before updating services. Both
+# connect as the schema owner, which the API never sees.
+#
+# migrate:  the API image's migration command (MIGRATION_DATABASE_URL).
+# db-roles: plain psql that makes sure the API's login exists, has the current
+#           password and is a member of the ot_app group role the migrations
+#           create. Kept out of the app so the password never passes through
+#           app code or migration files.
+locals {
+  db_roles_sql = <<-SQL
+    SELECT format('CREATE ROLE %I LOGIN', :'app_user')
+     WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'app_user') \gexec
+    SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'app_user', :'app_password') \gexec
+    SELECT format('GRANT ot_app TO %I', :'app_user') \gexec
+  SQL
+}
+
 resource "aws_ecs_task_definition" "migrate" {
   family                   = "${var.name}-migrate"
   requires_compatibilities = ["FARGATE"]
@@ -428,11 +444,9 @@ resource "aws_ecs_task_definition" "migrate" {
     image       = "${aws_ecr_repository.app["api"].repository_url}:bootstrap"
     essential   = true
     command     = var.migrate_command
-    environment = concat(local.db_environment, [{ name = "APP_ENV", value = var.environment }])
+    environment = [{ name = "APP_ENV", value = var.environment }]
     secrets = [
-      { name = "PGUSER", valueFrom = "${var.db_master_secret_arn}:username::" },
-      { name = "PGPASSWORD", valueFrom = "${var.db_master_secret_arn}:password::" },
-      { name = "APP_DB_PASSWORD", valueFrom = "${var.db_app_user_secret_arn}:password::" },
+      { name = "MIGRATION_DATABASE_URL", valueFrom = "${var.db_owner_secret_arn}:url::" },
     ]
     logConfiguration = {
       logDriver = "awslogs"
@@ -444,9 +458,47 @@ resource "aws_ecs_task_definition" "migrate" {
     }
   }])
 
+  # CI registers new revisions with each release's image.
   lifecycle {
     ignore_changes = [container_definitions]
   }
+}
+
+resource "aws_ecs_task_definition" "db_roles" {
+  family                   = "${var.name}-db-roles"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.execution.arn
+  task_role_arn            = aws_iam_role.task.arn
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  container_definitions = jsonencode([{
+    name        = "db-roles"
+    image       = var.psql_image
+    essential   = true
+    command     = ["sh", "-c", "echo \"$SQL\" | psql --quiet --no-psqlrc -v ON_ERROR_STOP=1 -v app_user=\"$APP_DB_USER\" -v app_password=\"$APP_DB_PASSWORD\""]
+    environment = concat(local.psql_environment, [{ name = "SQL", value = local.db_roles_sql }])
+    secrets = [
+      { name = "PGUSER", valueFrom = "${var.db_owner_secret_arn}:username::" },
+      { name = "PGPASSWORD", valueFrom = "${var.db_owner_secret_arn}:password::" },
+      { name = "APP_DB_USER", valueFrom = "${var.db_app_secret_arn}:username::" },
+      { name = "APP_DB_PASSWORD", valueFrom = "${var.db_app_secret_arn}:password::" },
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.app["db-roles"].name
+        awslogs-region        = local.region
+        awslogs-stream-prefix = "db-roles"
+      }
+    }
+  }])
 }
 
 resource "aws_ecs_service" "app" {

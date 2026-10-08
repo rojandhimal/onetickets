@@ -10,11 +10,12 @@ Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`). Nothing here has 
 | `envs/{dev,staging,production}/` | One stack per environment. Each applies `modules/environment` into its own account, choosing sizes and hostnames.                                                                               |
 | `modules/environment/`           | One complete environment: KMS key, network, database, app, deploy role, alarms.                                                                                                                 |
 | `modules/network/`               | VPC over two availability zones, public and private subnets, NAT, S3 endpoint, rejected-traffic flow logs.                                                                                      |
-| `modules/database/`              | RDS PostgreSQL 16, encrypted, TLS enforced, RDS-managed owner password, and a separate `app_user` secret for the API.                                                                           |
-| `modules/app/`                   | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` task, private uploads bucket.                                                          |
+| `modules/database/`              | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                          |
+| `modules/app/`                   | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                          |
+| `modules/email/`                 | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                        |
 | `modules/github-deploy-role/`    | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                           |
 | `modules/alarms/`                | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage.                                                                                            |
-| `scripts/deploy.sh`              | Runs migrations, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                                               |
+| `scripts/deploy.sh`              | Runs migrations and `db-roles`, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                                |
 
 What differs between environments:
 
@@ -34,14 +35,16 @@ Following the architecture review, there is no Redis, SQS or read replica yet. B
 2. Merging to `main` runs CI again; when it passes, the Deploy workflow builds one image per app (`apps/<app>/Dockerfile`, tagged with the commit), pushes it to staging, runs migrations, and rolls staging onto it.
 3. The production job waits for an approval on the `production` GitHub environment. Once approved it copies the same images into production, runs migrations there, and rolls production.
 
-ECS replaces tasks only once the new ones pass health checks, and rolls back on its own if they don't. If migrations fail, services are not touched. Migrations must be backwards compatible (expand, then contract) so the old code keeps working while the new code rolls out.
+ECS replaces tasks only once the new ones pass health checks, and rolls back on its own if they don't. If migrations or `db-roles` fail, services are not touched. Migrations must be backwards compatible (expand, then contract) so the old code keeps working while the new code rolls out.
 
 ## What the app images must provide
 
 - `apps/api/Dockerfile` and `apps/web/Dockerfile`, built from the repository root, for `linux/amd64`.
 - The API listens on `PORT` (3001) and answers `GET /health` with 200. Web listens on 3000 and answers `GET /` with 200.
-- The API image contains a migration command; the default is `node dist/migrate.js` (change `migrate_command` in `modules/environment` if it differs). It runs as the database owner and receives `APP_DB_PASSWORD`. Its first migration must create the non-owner login role the API uses, for example `CREATE ROLE app_user LOGIN PASSWORD :'APP_DB_PASSWORD'` if missing, else `ALTER ROLE ... PASSWORD`, so row-level security applies to the API.
-- Database settings arrive as `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` and `PGSSLMODE=require`, which node-postgres reads when `DATABASE_URL` is unset. `APP_ENV` is `dev`, `staging` or `production`.
+- The API image contains its migration command, by default `node dist/database/migrate.js` with `apps/api/migrations` alongside `dist` (change `migrate_command` in `modules/environment` if it moves). It reads `MIGRATION_DATABASE_URL`, which is the schema owner.
+- The API reads `DATABASE_URL`, which logs in as `onetickets_app`. That role owns nothing and is a member of the `ot_app` group role the migrations create, so row-level security applies to it. After each migration run, the `db-roles` task (plain `psql`, owner credentials) creates the login if missing, sets its password from Secrets Manager and grants it `ot_app`. A worker login granted `ot_worker` gets added the same way when workers exist.
+- Connection URLs use `sslmode=require&uselibpqcompat=true`: traffic is encrypted, but the RDS certificate is not verified yet. Ship the RDS CA bundle in the image and switch to `verify-full` before launch.
+- `APP_ENV` is `dev`, `staging` or `production`. `EMAIL_FROM_DOMAIN` is the domain SES is set up to send from (for example `staging.<domain>`).
 
 ## What the owner must set up first
 
@@ -50,8 +53,12 @@ These need a person with a credit card and access to the company domain. Nothing
 1. **AWS management account.** Create one AWS account to be the management account (it will run no apps). Turn on MFA for the root user, then create an admin user in IAM Identity Center and stop using root.
 2. **Three email addresses** for the dev, staging and production accounts' root users. They must be unique; plus-addressing works (`aws+dev@yourdomain`).
 3. **An alerts email address** for budget and CloudWatch alarms.
-4. **The domain**, with its DNS hosted in Cloudflare (free plan is fine). Add the records Terraform prints: certificate validation CNAMEs (DNS only, not proxied) and CNAMEs from each hostname to the load balancer.
-5. **GitHub settings** on `rojandhimal/onetickets`:
+4. **The domain**, with its DNS hosted in Cloudflare (free plan is fine). After each environment's apply, add the records Terraform prints, all as "DNS only" (not proxied) unless noted:
+   - `certificate_validation_records`: CNAMEs that let AWS issue the HTTPS certificate.
+   - The web and API hostnames as CNAMEs to `load_balancer_dns_name` (these can be proxied).
+   - `email_dns_records`: three DKIM CNAMEs, an MX and an SPF TXT on `bounce.<sending domain>`, and a DMARC TXT on `_dmarc.<sending domain>`. Production sends from the domain itself, so if the domain already sends other email (Google Workspace, for example), set up that provider's SPF and DKIM first, because the DMARC policy is `p=quarantine`.
+5. **SES production access** in the production account (and staging if staging should email people outside the team). New SES accounts can only send to verified addresses until AWS approves a request in the SES console, which usually takes about a day.
+6. **GitHub settings** on `rojandhimal/onetickets`:
    - Make `main` the default branch (the Deploy workflow only triggers from the default branch).
    - Create environments `staging` and `production`; on `production`, add yourself as a required reviewer and restrict it to the `main` branch.
    - After the applies below, set these variables:
@@ -87,6 +94,8 @@ terraform apply
 ```
 
 The first apply of each environment pauses at the certificate until its validation CNAMEs are in Cloudflare; `terraform output certificate_validation_records` from another terminal shows them. Services have no image to run until the first deploy, so they show as unhealthy until then, which you can trigger from the Deploy workflow's "Run workflow" button once the GitHub variables are set.
+
+The database passwords are generated by Terraform, so they are also in the state files. The state bucket is encrypted and private; only admins should be able to read it.
 
 After the first `terraform init`, commit the generated `.terraform.lock.hcl` files with hashes for every platform the team uses:
 
