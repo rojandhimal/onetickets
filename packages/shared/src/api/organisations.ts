@@ -35,4 +35,6 @@ export interface ApiErrorBody {
   /** Stable machine-readable code, e.g. `mfa_required`, `not_a_member`. */
   code: string;
   message: string;
+  /** For 422 invalid_request: the first request field that failed. */
+  field?: string;
 }

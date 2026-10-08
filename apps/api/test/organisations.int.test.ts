@@ -39,7 +39,11 @@ describe('organisations and roles API', () => {
   // Sessions arrive with S0-3. Until then tests sign in with headers, test-only.
   function as(userId: string, { mfa = false } = {}) {
     const server = app.getHttpServer();
-    const headers = { 'x-test-user': userId, 'x-test-mfa': String(mfa) };
+    const headers = {
+      'x-test-user': userId,
+      'x-test-mfa': String(mfa),
+      origin: 'http://localhost:3000',
+    };
     return {
       get: (path: string) => request(server).get(path).set(headers),
       post: (path: string, body: object) => request(server).post(path).set(headers).send(body),

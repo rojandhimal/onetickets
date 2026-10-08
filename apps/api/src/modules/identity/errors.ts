@@ -26,3 +26,6 @@ export const mfaRequired = () =>
 
 export const noAccessPolicy = () =>
   new ApiError(HttpStatus.FORBIDDEN, 'no_access_policy', 'This route is not open to anyone yet.');
+
+export const invalidField = (field: string, message = 'Required.') =>
+  new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, 'invalid_request', message, field);
