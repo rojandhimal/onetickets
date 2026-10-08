@@ -69,6 +69,27 @@ export class AuthService {
     return { sessionToken: result.sessionToken, session: result.session };
   }
 
+  /**
+   * Signs in an email someone else has verified (Google). Same rules as a magic link; the
+   * display name fills in the user's name only if they have none.
+   */
+  async signInVerifiedEmail(
+    email: string,
+    organiserName: string | null,
+    displayName: string | null,
+  ): Promise<string> {
+    return this.uow.run({}, async (tx) => {
+      const userId = await this.signInUser(tx, email, organiserName?.trim().slice(0, 120) || null);
+      if (displayName) {
+        await tx.query('update identity.users set name = $2 where id = $1 and name is null', [
+          userId,
+          displayName,
+        ]);
+      }
+      return this.sessions.create(tx, userId);
+    });
+  }
+
   async me(auth: AuthContext): Promise<Session> {
     return this.uow.run({ userId: auth.userId }, (tx) => this.sessionFor(tx, auth.userId));
   }

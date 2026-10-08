@@ -5,6 +5,8 @@ import { AccessGuard } from './access.js';
 import { AUTH_CONFIG, loadAuthConfig } from './auth.config.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { GoogleOidc, OpenIdGoogleOidc } from './google-oidc.js';
+import { GoogleSignInService } from './google-sign-in.service.js';
 import { MagicLinksRepository } from './magic-links.repository.js';
 import { MembershipsRepository } from './memberships.repository.js';
 import { MfaService } from './mfa.service.js';
@@ -21,6 +23,8 @@ import { SessionsRepository } from './sessions.repository.js';
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
     AuthService,
+    { provide: GoogleOidc, useClass: OpenIdGoogleOidc },
+    GoogleSignInService,
     MagicLinksRepository,
     MembershipsRepository,
     MfaService,

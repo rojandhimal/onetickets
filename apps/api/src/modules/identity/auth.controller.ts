@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Query, Req, Res } from '@nestjs/common';
 import {
   magicLinkRequest,
   magicLinkVerify,
@@ -10,6 +10,7 @@ import {
   type Session,
   type TotpSetup,
 } from '@onetickets/shared';
+import { parseCookie } from 'cookie';
 import type { Response } from 'express';
 import { Public, SignedIn } from './access.js';
 import {
@@ -21,6 +22,7 @@ import {
 import type { AppRequest } from './auth-context.js';
 import { AuthService } from './auth.service.js';
 import { invalidField, notSignedIn } from './errors.js';
+import { GoogleSignInService } from './google-sign-in.service.js';
 import { MfaService } from './mfa.service.js';
 import { sessionToken } from './session.middleware.js';
 import { ZodBody } from './zod-body.pipe.js';
@@ -31,7 +33,60 @@ export class AuthController {
     @Inject(AUTH_CONFIG) private readonly config: AuthConfig,
     private readonly auth: AuthService,
     private readonly mfa: MfaService,
+    private readonly google: GoogleSignInService,
   ) {}
+
+  private setSessionCookie(response: Response, token: string): void {
+    response.cookie(sessionCookieName(this.config), token, {
+      httpOnly: true,
+      secure: this.config.secureCookies,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: SESSION_ABSOLUTE_MS,
+    });
+  }
+
+  private get oauthCookie(): string {
+    return this.config.secureCookies ? '__Host-ot_oauth' : 'ot_oauth';
+  }
+
+  @Get('auth/google/start')
+  @Public()
+  async googleStart(
+    @Res() response: Response,
+    @Query('organiserName') organiserName: unknown,
+    @Query('returnTo') returnTo: unknown,
+  ): Promise<void> {
+    const start = await this.google.start(organiserName, returnTo);
+    if (start.ok) {
+      response.cookie(this.oauthCookie, start.bindingToken, {
+        httpOnly: true,
+        secure: this.config.secureCookies,
+        // Lax lets the cookie ride Google's top-level redirect back to the callback.
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 10 * 60_000,
+      });
+    }
+    response.redirect(302, start.redirect);
+  }
+
+  @Get('auth/google/callback')
+  @Public()
+  async googleCallback(@Req() request: AppRequest, @Res() response: Response): Promise<void> {
+    const binding = request.headers.cookie
+      ? parseCookie(request.headers.cookie)[this.oauthCookie]
+      : undefined;
+    const finish = await this.google.finish(this.google.callbackUrl(request.originalUrl), binding);
+    response.clearCookie(this.oauthCookie, {
+      httpOnly: true,
+      secure: this.config.secureCookies,
+      sameSite: 'lax',
+      path: '/',
+    });
+    if (finish.ok) this.setSessionCookie(response, finish.sessionToken);
+    response.redirect(302, finish.redirect);
+  }
 
   @Post('auth/magic-link')
   @HttpCode(202)
@@ -55,13 +110,7 @@ export class AuthController {
       body.token,
       clientIp(request),
     );
-    response.cookie(sessionCookieName(this.config), sessionToken, {
-      httpOnly: true,
-      secure: this.config.secureCookies,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: SESSION_ABSOLUTE_MS,
-    });
+    this.setSessionCookie(response, sessionToken);
     return session;
   }
 

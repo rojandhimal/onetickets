@@ -75,3 +75,23 @@ create policy mfa_recovery_codes_self on identity.mfa_recovery_codes to ot_app
 create policy mfa_recovery_codes_worker on identity.mfa_recovery_codes to ot_worker
   using (true) with check (true);
 grant select, insert, update, delete on identity.mfa_recovery_codes to ot_app, ot_worker;
+
+-- Google sign-in in flight: state, PKCE verifier and nonce, bound to the browser by a cookie
+-- holding a random token whose hash is the key. Single use, 10 minutes.
+create table identity.oauth_states (
+  binding_hash bytea primary key,
+  state text not null,
+  code_verifier text not null,
+  nonce text not null,
+  organiser_name text check (length(btrim(organiser_name)) between 1 and 120),
+  return_to text not null,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table identity.oauth_states enable row level security;
+alter table identity.oauth_states force row level security;
+create policy oauth_states_app on identity.oauth_states to ot_app using (true) with check (true);
+create policy oauth_states_worker on identity.oauth_states to ot_worker using (true) with check (true);
+grant select, insert, update on identity.oauth_states to ot_app;
+grant select, insert, update, delete on identity.oauth_states to ot_worker;
