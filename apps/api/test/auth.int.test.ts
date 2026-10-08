@@ -194,7 +194,7 @@ describe('sign-in API (S0-3)', () => {
   });
 
   it('rate-limits link redemption per IP', async () => {
-    const attacker = '198.51.100.7';
+    const attacker = `2001:db8::${randomInt(1, 0xffff).toString(16)}:${randomInt(1, 0xffff).toString(16)}`;
     const guess = () =>
       post('/auth/magic-link/verify', { token: 'guess' }, { 'x-forwarded-for': attacker });
     for (let i = 0; i < 30; i++) await guess().expect(410);
