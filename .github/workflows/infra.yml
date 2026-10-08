@@ -1,0 +1,48 @@
+name: Infra
+
+# Checks Terraform on every change to infra/. Needs no AWS access: plans and
+# applies are run by a person until the accounts exist (see infra/README.md).
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+      - '.github/workflows/deploy.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Terraform format and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [organization, envs/dev, envs/staging, envs/production]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+      - name: Format
+        run: terraform fmt -check -recursive -diff infra
+      - name: Validate
+        working-directory: infra/${{ matrix.stack }}
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+  scripts:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck infra/scripts/*.sh

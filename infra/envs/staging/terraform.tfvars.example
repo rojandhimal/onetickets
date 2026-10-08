@@ -1,0 +1,4 @@
+account_id  = "111111111111"
+domain      = "onetickets.com.au"
+alert_email = "alerts@example.com"
+production_account_id = "333333333333"

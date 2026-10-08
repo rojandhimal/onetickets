@@ -8,3 +8,10 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+infra/envs/backend.hcl
+crash.log

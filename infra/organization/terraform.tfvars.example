@@ -1,0 +1,8 @@
+account_emails = {
+  dev        = "aws+dev@example.com"
+  staging    = "aws+staging@example.com"
+  production = "aws+production@example.com"
+}
+
+billing_alert_email = "you@example.com"
+monthly_budget_usd  = 600
