@@ -11,6 +11,9 @@ Event ticketing for Australian organisers. pnpm workspace monorepo:
 
 ## Getting started
 
+To run the whole app with one command and no developer tools, see
+[Run OneTickets on your computer](docs/run-locally.md).
+
 Needs Node 22 (`.nvmrc`), pnpm 10 (`corepack enable`) and Docker for Postgres.
 
 ```sh

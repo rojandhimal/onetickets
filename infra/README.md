@@ -1,6 +1,8 @@
 # Infrastructure
 
-Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`). Nothing here has been applied yet.
+Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`).
+
+**Status: later.** For now OneTickets runs on the owner's computer with `docker compose up` (see [docs/run-locally.md](../docs/run-locally.md)). Nothing here has been applied, and none of it needs an AWS account to merge: CI only runs `terraform fmt` and `validate`, and the Deploy and Staging power workflows do nothing until the `DEPLOY_ENABLED` repository variable is `true`. Staging and production are set up from this folder when the AWS accounts exist.
 
 ## Layout
 
@@ -83,6 +85,11 @@ These need a person with a credit card and access to the company domain. Nothing
      | `production` environment | `AWS_ACCOUNT_ID`      | production account id                         |
      | `production` environment | `STAGING_ACCOUNT_ID`  | staging account id                            |
      | `production` environment | `APP_URL`             | `https://<domain>`                            |
+
+8. **Sentry**, before any DSN goes into `SENTRY_WEB_DSN` (or an API DSN). Browsers send CSP reports straight to Sentry, so they skip the app's own scrubbing. In each Sentry project, under Settings > Security & Privacy:
+   - turn on Data Scrubber and Use Default Scrubbers
+   - turn on Prevent Storing of IP Addresses
+   - add `token`, `code`, `state` and `email` to Additional Sensitive Fields
 
 ## Applying, in order
 

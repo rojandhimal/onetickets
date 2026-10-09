@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // End-to-end tests run the built web and api against a real Postgres (DATABASE_URL).
-// Locally: `docker compose up -d`, `pnpm build`, then `pnpm e2e`.
+// Locally: `docker compose up -d postgres mailpit`, `pnpm build`, then `pnpm e2e`.
 const webUrl = 'http://localhost:3000';
 const apiUrl = 'http://localhost:3001';
 
