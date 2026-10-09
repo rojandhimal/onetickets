@@ -25,8 +25,8 @@ export const organiserNameSchema = z.string().trim().min(1).max(120);
 export const magicLinkRequest = z.object({
   email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
   /**
-   * Sign-up form only. Names the first organisation if the email is new (otherwise the part
-   * before the @ is used); ignored for existing accounts.
+   * Optional. Names the first organisation if the user has none; ignored otherwise. Without it a
+   * new user signs in with organisation: null and the web app asks for a name.
    */
   organiserName: organiserNameSchema.optional(),
 });
@@ -47,7 +47,7 @@ export interface SessionUser {
 
 export interface Session {
   user: SessionUser;
-  /** The organisation to show; null only if the user has lost every membership. */
+  /** The organisation to show; null until the user creates or joins one. */
   organisation: OrganisationDto | null;
   organisations: OrganisationDto[];
 }

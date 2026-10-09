@@ -79,7 +79,7 @@ export class AuthService {
     displayName: string | null,
   ): Promise<string> {
     return this.uow.run({}, async (tx) => {
-      const userId = await this.signInUser(tx, email, organiserName?.trim().slice(0, 120) || null);
+      const userId = await this.signInUser(tx, email, organiserName);
       if (displayName) {
         await tx.query('update identity.users set name = $2 where id = $1 and name is null', [
           userId,
@@ -107,8 +107,8 @@ export class AuthService {
   }
 
   /**
-   * Finds or creates the user for a verified email. A user with no organisation yet gets one,
-   * named from sign-up or after their email; an existing one is never renamed or duplicated.
+   * Finds or creates the user for a verified email. A user with no organisation gets one only if
+   * an organiser name came with the request; an existing one is never renamed or duplicated.
    */
   private async signInUser(
     tx: pg.PoolClient,
@@ -120,10 +120,9 @@ export class AuthService {
     ]);
     const userId = rows[0]!.id;
     await setScope(tx, { userId });
-    if ((await this.memberships.organisationsFor(tx, userId)).length === 0) {
-      // No name yet (e.g. a new email on the sign-in form): use the part before the @.
-      // They can rename it later.
-      const name = organiserName ?? defaultOrganisationName(email);
+    // Without a name, a new user gets no organisation yet: the web app asks for one.
+    const name = organiserName;
+    if (name && (await this.memberships.organisationsFor(tx, userId)).length === 0) {
       const organisationId = randomUUID();
       await setScope(tx, { userId, organisationId });
       await this.memberships.createOrganisation(tx, organisationId, name, userId);
@@ -154,8 +153,4 @@ export class AuthService {
       organisations,
     };
   }
-}
-
-export function defaultOrganisationName(email: string): string {
-  return email.split('@')[0]!.slice(0, 120) || 'My events';
 }

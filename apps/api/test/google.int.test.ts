@@ -125,6 +125,18 @@ describe('Google sign-in', () => {
     expect(done.headers.location).toBe(`${WEB}/signin?error=google_unverified`);
   });
 
+  it('creates no organisation for a new user without an organiser name', async () => {
+    const { binding } = await start();
+    google.identity = { email: uniqueEmail('noname'), emailVerified: true, name: 'Ana' };
+    const done = await callback(google.lastRequest!.state, binding);
+    const session = cookieValue(done.headers['set-cookie'] as unknown as string[], 'ot_session');
+    const me = await request(app.getHttpServer())
+      .get('/me')
+      .set('cookie', `ot_session=${session}`)
+      .expect(200);
+    expect(me.body).toMatchObject({ user: { name: 'Ana' }, organisation: null });
+  });
+
   it('works once per attempt', async () => {
     const { binding } = await start();
     google.identity = { email: uniqueEmail('once'), emailVerified: true, name: null };

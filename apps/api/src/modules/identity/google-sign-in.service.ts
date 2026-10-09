@@ -116,7 +116,7 @@ export class GoogleSignInService {
       if (!identity.emailVerified) return this.failure('google_unverified');
       const sessionToken = await this.auth.signInVerifiedEmail(
         identity.email,
-        flow.organiser_name ?? identity.name,
+        flow.organiser_name,
         identity.name,
       );
       return { ok: true, redirect: `${this.config.webUrl}${flow.return_to}`, sessionToken };
