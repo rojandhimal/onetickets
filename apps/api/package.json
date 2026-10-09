@@ -18,6 +18,7 @@
     "@nestjs/platform-express": "^12.1.2",
     "@onetickets/shared": "workspace:*",
     "cookie": "^2.0.1",
+    "nodemailer": "10.0.10",
     "openid-client": "^6.8.8",
     "otpauth": "^9.5.2",
     "pg": "^8.23.1",

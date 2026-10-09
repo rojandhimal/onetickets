@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConsoleMailer, Mailer, OutboxMailer, SesMailer } from './mailer.js';
+import { ConsoleMailer, Mailer, OutboxMailer, SesMailer, SmtpMailer } from './mailer.js';
 
 function mailerClass() {
   switch (process.env.MAIL_TRANSPORT) {
@@ -9,8 +9,10 @@ function mailerClass() {
       return ConsoleMailer;
     case 'ses':
       return SesMailer;
+    case 'smtp':
+      return SmtpMailer;
     default:
-      throw new Error(`MAIL_TRANSPORT must be 'ses', 'console' or 'outbox'`);
+      throw new Error(`MAIL_TRANSPORT must be 'ses', 'smtp', 'console' or 'outbox'`);
   }
 }
 
