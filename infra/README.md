@@ -40,11 +40,13 @@ ECS replaces tasks only once the new ones pass health checks, and rolls back on 
 ## What the app images must provide
 
 - `apps/api/Dockerfile` and `apps/web/Dockerfile`, built from the repository root, for `linux/amd64`.
-- The API listens on `PORT` (3001) and answers `GET /health` with 200. Web listens on 3000 and answers `GET /` with 200.
+- The API listens on `PORT` (3001) and answers `GET /health/live` with 200 without touching the database (the load balancer check). Web listens on 3000 and answers `GET /` with 200.
+- Web forwards `/api/*` to the API over the private network at `http://api.onetickets.internal:3001` (Cloud Map DNS, the same name in every environment). Next.js evaluates rewrites at build time, so the web Dockerfile must set `API_URL` to that address during `next build`; the task also receives it at runtime.
 - The API image contains its migration command, by default `node dist/database/migrate.js` with `apps/api/migrations` alongside `dist` (change `migrate_command` in `modules/environment` if it moves). It reads `MIGRATION_DATABASE_URL`, which is the schema owner.
 - The API reads `DATABASE_URL`, which logs in as `onetickets_app`. That role owns nothing and is a member of the `ot_app` group role the migrations create, so row-level security applies to it. After each migration run, the `db-roles` task (plain `psql`, owner credentials) creates the login if missing, sets its password from Secrets Manager and grants it `ot_app`. A worker login granted `ot_worker` gets added the same way when workers exist.
 - Connection URLs use `sslmode=require&uselibpqcompat=true`: traffic is encrypted, but the RDS certificate is not verified yet. Ship the RDS CA bundle in the image and switch to `verify-full` before launch.
-- `APP_ENV` is `dev`, `staging` or `production`. `EMAIL_FROM_DOMAIN` is the domain SES is set up to send from (for example `staging.<domain>`).
+- API environment set by Terraform: `APP_ENV` (`dev`, `staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=2` (load balancer plus the web rewrite; set `api_trust_proxy_hops` to 3 once Cloudflare proxies the hostnames).
+- API secrets from Secrets Manager: `DATABASE_URL`, `MFA_ENCRYPTION_KEY` (32 random bytes, base64, generated once per environment) and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (empty until filled in by hand, see below).
 
 ## What the owner must set up first
 
@@ -57,10 +59,11 @@ These need a person with a credit card and access to the company domain. Nothing
    - `certificate_validation_records`: CNAMEs that let AWS issue the HTTPS certificate.
    - The web and API hostnames as CNAMEs to `load_balancer_dns_name` (these can be proxied).
    - `email_dns_records`: three DKIM CNAMEs, an MX and an SPF TXT on `bounce.<sending domain>`, and a DMARC TXT on `_dmarc.<sending domain>`. Production sends from the domain itself, so if the domain already sends other email (Google Workspace, for example), set up that provider's SPF and DKIM first, because the DMARC policy is `p=quarantine`.
-5. **SES production access** in the production account (and staging if staging should email people outside the team). New SES accounts can only send to verified addresses until AWS approves a request in the SES console, which usually takes about a day.
-6. **GitHub settings** on `rojandhimal/onetickets`:
+5. **Google OAuth client** for organiser sign-in, in Google Cloud Console, with authorised redirect URI `https://<web hostname>/api/auth/google/callback` for each environment. After the apply, paste the client id and secret into the `onetickets-<env>/google-oauth` secret (JSON keys `client_id` and `client_secret`) in Secrets Manager; Terraform leaves the value alone after creating it.
+6. **SES production access** in the production account (and staging if staging should email people outside the team). New SES accounts can only send to verified addresses until AWS approves a request in the SES console, which usually takes about a day.
+7. **GitHub settings** on `rojandhimal/onetickets`:
    - Make `main` the default branch (the Deploy workflow only triggers from the default branch).
-   - Create environments `staging` and `production`; on `production`, add yourself as a required reviewer and restrict it to the `main` branch.
+   - Create environments `staging` and `production`, both restricted to the `main` branch (Deployment branches: selected branches, `main`). Each environment's AWS role trusts any job running in that environment, so without the branch rule any branch could deploy. On `production`, also add yourself as a required reviewer.
    - After the applies below, set these variables:
 
      | Where                    | Variable              | Value                                         |

@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -26,6 +30,9 @@ locals {
     { name = "PGSSLMODE", value = "require" },
   ]
 
+  internal_namespace = "onetickets.internal"
+  internal_api_url   = "http://api.${local.internal_namespace}:3001"
+
   services = {
     api = {
       port              = 3001
@@ -38,10 +45,16 @@ locals {
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = "3001" },
         { name = "APP_ENV", value = var.environment },
+        { name = "WEB_URL", value = "https://${var.web_hostname}" },
+        { name = "MAIL_TRANSPORT", value = "ses" },
         { name = "EMAIL_FROM_DOMAIN", value = var.email_domain },
+        { name = "TRUST_PROXY_HOPS", value = tostring(var.api_trust_proxy_hops) },
       ]
       secrets = [
         { name = "DATABASE_URL", valueFrom = "${var.db_app_secret_arn}:url::" },
+        { name = "MFA_ENCRYPTION_KEY", valueFrom = "${aws_secretsmanager_secret.api.arn}:mfa_encryption_key::" },
+        { name = "GOOGLE_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.google_oauth.arn}:client_id::" },
+        { name = "GOOGLE_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.google_oauth.arn}:client_secret::" },
       ]
       command = null
     }
@@ -56,7 +69,9 @@ locals {
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = "3000" },
         { name = "APP_ENV", value = var.environment },
-        { name = "API_URL", value = "https://${var.api_hostname}" },
+        # Private address of the API (Cloud Map), the same in every
+        # environment, so it can be baked into the image at build time.
+        { name = "API_URL", value = local.internal_api_url },
       ]
       secrets = []
       command = null
@@ -176,10 +191,53 @@ resource "aws_iam_role_policy_attachment" "execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# App secrets Terraform can generate. MFA_ENCRYPTION_KEY encrypts stored TOTP
+# seeds; rotating it means re-encrypting them, so it is generated once.
+resource "random_bytes" "mfa_encryption_key" {
+  length = 32
+}
+
+resource "aws_secretsmanager_secret" "api" {
+  name                    = "${var.name}/api"
+  description             = "Generated API secrets"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret_version" "api" {
+  secret_id = aws_secretsmanager_secret.api.id
+  secret_string = jsonencode({
+    mfa_encryption_key = random_bytes.mfa_encryption_key.base64
+  })
+}
+
+# Filled in by hand once the Google OAuth client exists (see infra/README.md).
+# Terraform creates it empty and never overwrites what is put there.
+resource "aws_secretsmanager_secret" "google_oauth" {
+  name                    = "${var.name}/google-oauth"
+  description             = "Google OAuth client for organiser sign-in"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret_version" "google_oauth" {
+  secret_id     = aws_secretsmanager_secret.google_oauth.id
+  secret_string = jsonencode({ client_id = "", client_secret = "" })
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
 data "aws_iam_policy_document" "execution_secrets" {
   statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [var.db_app_secret_arn, var.db_owner_secret_arn]
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      var.db_app_secret_arn,
+      var.db_owner_secret_arn,
+      aws_secretsmanager_secret.api.arn,
+      aws_secretsmanager_secret.google_oauth.arn,
+    ]
   }
   statement {
     actions   = ["kms:Decrypt"]
@@ -259,6 +317,37 @@ resource "aws_vpc_security_group_ingress_rule" "tasks_from_alb" {
   ip_protocol                  = "tcp"
   from_port                    = 3000
   to_port                      = 3001
+}
+
+# The web app forwards /api calls to the API directly over the private network.
+resource "aws_vpc_security_group_ingress_rule" "tasks_from_tasks" {
+  security_group_id            = aws_security_group.tasks.id
+  referenced_security_group_id = aws_security_group.tasks.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3001
+  to_port                      = 3001
+}
+
+resource "aws_service_discovery_private_dns_namespace" "internal" {
+  name = local.internal_namespace
+  vpc  = var.vpc_id
+}
+
+resource "aws_service_discovery_service" "api" {
+  name = "api"
+
+  dns_config {
+    namespace_id   = aws_service_discovery_private_dns_namespace.internal.id
+    routing_policy = "MULTIVALUE"
+
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+  }
+
+  # ECS reports task health to Cloud Map, so unhealthy tasks leave DNS.
+  health_check_custom_config {}
 }
 
 # Tasks call Postgres, AWS APIs and third parties (Stripe, Google).
@@ -531,6 +620,13 @@ resource "aws_ecs_service" "app" {
     target_group_arn = aws_lb_target_group.app[each.key].arn
     container_name   = each.key
     container_port   = each.value.port
+  }
+
+  dynamic "service_registries" {
+    for_each = each.key == "api" ? [1] : []
+    content {
+      registry_arn = aws_service_discovery_service.api.arn
+    }
   }
 
   lifecycle {

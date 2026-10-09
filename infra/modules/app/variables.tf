@@ -58,8 +58,15 @@ variable "migrate_command" {
 }
 
 variable "api_health_check_path" {
-  type    = string
-  default = "/health"
+  description = "Liveness only: a database blip must not make every task fail its load balancer check."
+  type        = string
+  default     = "/health/live"
+}
+
+variable "api_trust_proxy_hops" {
+  description = "Proxies in front of the API that append to X-Forwarded-For: the load balancer and the web app's /api rewrite. Add 1 when Cloudflare proxies the hostnames."
+  type        = number
+  default     = 2
 }
 
 variable "api_cpu" {

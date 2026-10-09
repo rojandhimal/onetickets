@@ -31,9 +31,16 @@ env:
 jobs:
   staging:
     name: Build and deploy to staging
+    # Only pushes to this repository's main, never a CI run from a pull request
+    # (a fork's branch can also be called main), and manual runs only from main.
     if: >-
       vars.DEPLOY_ENABLED == 'true' &&
-      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+      (
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+        (github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_repository.full_name == github.repository)
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
