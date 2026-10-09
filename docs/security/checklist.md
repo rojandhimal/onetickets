@@ -19,6 +19,8 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] Magic-link and other one-time tokens: at least 128 random bits, stored hashed, single use, short expiry (15 min for sign-in)
 - [ ] Tokens are exchanged by POST and removed from the URL; `Referrer-Policy: no-referrer` on the landing page; tokens never logged
 - [ ] Same response for known and unknown emails; rate limits on request and redemption
+- [ ] Per-IP limits can't be dodged with a spoofed `X-Forwarded-For`: `TRUST_PROXY_HOPS` matches the real proxy chain in every environment (0 locally, 1 behind the ALB, 2 with Cloudflare), and a test sends a spoofed header through the same path and still gets 429
+- [ ] Anything that sends email or SMS on an unauthenticated request has a global send cap as well as per-email and per-IP limits
 - [ ] Google sign-in uses `state` and PKCE, verifies the ID token and requires `email_verified`
 - [ ] Session cookie is `HttpOnly`, `Secure`, `SameSite=Lax` (`__Host-` prefix where possible), rotated on sign-in, revoked on sign-out, with idle and absolute timeouts
 - [ ] State-changing requests check `Origin`/`Sec-Fetch-Site` or a CSRF token
