@@ -16,10 +16,14 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 
 ## Environment variables
 
-| Variable               | Where it's read         | What it does                                                                                                  |
-| ---------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `API_URL`              | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time. |
-| `FEATURE_EVENT_WIZARD` | server, at request time | `true` makes the event templates on `/organiser` into links. Anything else shows them as "Coming soon".       |
+| Variable                                            | Where it's read         | What it does                                                                                                  |
+| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time. |
+| `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` makes the event templates on `/organiser` into links. Anything else shows them as "Coming soon".       |
+| `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                |
+| `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                            |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                      |
+| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | build time only         | Upload source maps to Sentry. Without a token, source maps aren't uploaded.                                   |
 
 ## Pages
 
@@ -61,6 +65,25 @@ session cookie stays first-party and the api needs no CORS. Next forwards `Origi
 - `Content-Security-Policy-Report-Only` (report-only until Next's inline scripts get nonces)
 - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, HSTS, `Permissions-Policy`
 - `Referrer-Policy: strict-origin-when-cross-origin`, and `no-referrer` on `/auth/verify`
+
+## Error tracking (Sentry)
+
+Sentry starts in `src/instrumentation.ts` (server) and `src/instrumentation-client.ts` (browser), with
+options from `src/lib/sentry-scrub.ts`. It is off unless `NEXT_PUBLIC_SENTRY_DSN` is set. Session
+replay is not enabled.
+
+Every event, span and breadcrumb is scrubbed in the app before it is sent
+([ADR 0003](../adr/0003-scrub-sentry-events-in-the-app.md)):
+
+- Only the request method and the URL without its query string are kept. Cookies, headers and bodies
+  are never collected, and the client IP is not inferred.
+- The user is identified by id only, with the organisation id as a tag. No email or name.
+- Strings pass through `redact()` from `@onetickets/shared`, which masks bearer tokens, magic-link and
+  OAuth parameters, Stripe keys, emails and Australian phone numbers.
+
+The environment comes from `APP_ENV` on the server and from the hostname in the browser
+(`dev.<domain>`, `staging.<domain>`, `<domain>`), so one image is promoted across environments.
+When a DSN is set, the report-only CSP also sends its violation reports to Sentry.
 
 ## Design system
 

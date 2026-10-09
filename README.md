@@ -24,7 +24,7 @@ To run the web app, see [docs/web/README.md](docs/web/README.md).
 
 ## Docs
 
-- [docs/web/README.md](docs/web/README.md): web pages, sign-in flow, environment variables, security headers
+- [docs/web/README.md](docs/web/README.md): web pages, sign-in flow, environment variables, security headers, error tracking
 - [docs/adr/](docs/adr/): architecture decision records
 
 ## Checks
