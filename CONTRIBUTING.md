@@ -62,7 +62,7 @@ A story is done when:
 ## Pull request description
 
 GitHub fills in [the template](.github/pull_request_template.md): Before, After, How, the story
-id, and a checklist that includes "Docs updated". Say how to test the change locally.
+id, how to test it locally, and a checklist that includes "Docs updated".
 
 ## Code conventions
 

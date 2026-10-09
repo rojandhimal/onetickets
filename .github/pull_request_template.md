@@ -4,6 +4,8 @@ After:
 
 How:
 
+How to test locally:
+
 Story: S0-x
 
 ## Checklist

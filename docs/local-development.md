@@ -77,7 +77,9 @@ The browser only talks to the web app. Next.js forwards `/api/*` to the api at `
 session cookie stays first-party.
 
 Signing in end to end needs the auth API (story S0-3), which is still being built. Until it is
-merged, the sign-up screens render but the magic-link step will not complete.
+merged, the sign-up screens render but the magic-link step will not complete, and opening
+`/organiser` returns a 500 (`GET /me failed with 404` from `apps/web/src/lib/session.ts`) instead
+of redirecting to sign-in.
 
 ## Environment variables
 
