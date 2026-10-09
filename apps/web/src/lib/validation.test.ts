@@ -1,45 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { welcomeLine } from './greeting';
-import { googleStartUrl } from './auth-client';
-import { ORGANISER_NAME_MAX, validateSignup } from './validation';
+import { ORGANISER_NAME_MAX, validateEmail, validateOrganiserName } from './validation';
 
-describe('validateSignup', () => {
-  it('accepts an email and organiser name', () => {
-    expect(
-      validateSignup({ email: 'priya@printshed.com.au', organiserName: 'The Print Shed' }),
-    ).toEqual([]);
+describe('validateEmail', () => {
+  it('accepts a normal address', () => {
+    expect(validateEmail(' priya@printshed.com.au ')).toBeNull();
   });
-
-  it('asks for both fields when empty', () => {
-    expect(validateSignup({ email: ' ', organiserName: '' }).map((e) => e.field)).toEqual([
-      'email',
-      'organiserName',
-    ]);
+  it('asks for an email when empty', () => {
+    expect(validateEmail(' ')).toBe('Enter your email address');
   });
-
   it('explains a missing domain the way the design system does', () => {
-    expect(validateSignup({ email: 'jordan@example', organiserName: 'J' })[0]?.message).toBe(
-      'Add the part after the @, like gmail.com',
-    );
-  });
-
-  it('caps the organiser name length', () => {
-    const [error] = validateSignup({
-      email: 'a@b.co',
-      organiserName: 'x'.repeat(ORGANISER_NAME_MAX + 1),
-    });
-    expect(error?.field).toBe('organiserName');
+    expect(validateEmail('jordan@example')).toBe('Add the part after the @, like gmail.com');
   });
 });
 
-describe('googleStartUrl', () => {
-  it('passes the organiser name when given', () => {
-    expect(googleStartUrl(' The Print Shed ')).toBe(
-      '/api/auth/google/start?organiserName=The%20Print%20Shed',
+describe('validateOrganiserName', () => {
+  it('accepts a name and rejects blank or overlong ones', () => {
+    expect(validateOrganiserName('The Print Shed')).toBeNull();
+    expect(validateOrganiserName('  ')).toMatch(/Enter an organiser name/);
+    expect(validateOrganiserName('x'.repeat(ORGANISER_NAME_MAX + 1))).toMatch(
+      /characters or fewer/,
     );
-  });
-  it('omits it when blank', () => {
-    expect(googleStartUrl('  ')).toBe('/api/auth/google/start');
   });
 });
 

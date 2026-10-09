@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
 import { requestMagicLink } from '@/lib/auth-client';
-import type { MagicLinkRequest } from '@/lib/contract';
 import styles from './signup.module.css';
 
 export const RESEND_AFTER_SECONDS = 30;
@@ -17,11 +16,11 @@ const resendError: Record<'rate-limited' | 'failed', string> = {
 };
 
 type Props = {
-  request: MagicLinkRequest;
+  email: string;
   onUseDifferentEmail: () => void;
 };
 
-export function SentPanel({ request, onUseDifferentEmail }: Props) {
+export function SentPanel({ email, onUseDifferentEmail }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(RESEND_AFTER_SECONDS);
   const [status, setStatus] = useState<ResendStatus>('idle');
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -39,7 +38,7 @@ export function SentPanel({ request, onUseDifferentEmail }: Props) {
 
   async function resend() {
     setStatus('sending');
-    const result = await requestMagicLink(request);
+    const result = await requestMagicLink(email);
     if (result.ok) setStatus('sent');
     else setStatus(result.kind === 'rate-limited' ? 'rate-limited' : 'failed');
     setSecondsLeft(RESEND_AFTER_SECONDS);
@@ -58,8 +57,7 @@ export function SentPanel({ request, onUseDifferentEmail }: Props) {
         </h2>
       </div>
       <p>
-        We sent a sign-in link to <strong>{request.email}</strong>. It works for 15 minutes on any
-        device.
+        We sent a sign-in link to <strong>{email}</strong>. It works for 15 minutes on any device.
       </p>
       <div className={styles.sentActions}>
         <button type="button" className={screen.textButton} onClick={onUseDifferentEmail}>

@@ -13,8 +13,14 @@ vi.mock('@sentry/nextjs', () => ({ setUser: vi.fn(), setTag: vi.fn() }));
 const { default: OrganiserHomePage } = await import('./page');
 
 const session: Session = {
-  user: { id: 'usr_7', email: 'priya@printshed.com.au', name: 'Priya Natarajan' },
-  organisation: { id: 'org_42', name: 'The Print Shed' },
+  user: {
+    id: 'usr_7',
+    email: 'priya@printshed.com.au',
+    name: 'Priya Natarajan',
+    mfaEnabled: false,
+  },
+  organisation: { id: 'org_42', name: 'The Print Shed', role: 'owner' },
+  organisations: [{ id: 'org_42', name: 'The Print Shed', role: 'owner' }],
 };
 
 beforeEach(() => {
@@ -28,6 +34,11 @@ describe('organiser home', () => {
   it('sends signed-out visitors to sign in', async () => {
     getSession.mockResolvedValue(null);
     await expect(OrganiserHomePage()).rejects.toThrow('redirect:/signin');
+  });
+
+  it('sends a new organiser with no organisation to name it first', async () => {
+    getSession.mockResolvedValue({ ...session, organisation: null, organisations: [] });
+    await expect(OrganiserHomePage()).rejects.toThrow('redirect:/organiser/setup');
   });
 
   it('greets the organiser and shows templates as coming soon while the wizard is off', async () => {

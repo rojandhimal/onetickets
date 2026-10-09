@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GoogleMark, Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
-import { googleStartUrl, requestMagicLink } from '@/lib/auth-client';
-import type { FieldError, MagicLinkRequest } from '@/lib/contract';
-import { ORGANISER_NAME_MAX, validateSignup } from '@/lib/validation';
+import { GOOGLE_START_URL, requestMagicLink } from '@/lib/auth-client';
+import { validateEmail } from '@/lib/validation';
 import { SentPanel } from './SentPanel';
 import styles from './signup.module.css';
 
@@ -20,7 +19,7 @@ const bannerText: Record<Exclude<Banner, null>, string> = {
 };
 
 type Props = {
-  /** Sign-up asks for an organiser name; sign-in, for returning organisers, asks only for email. */
+  /** Same form either way: everyone starts with just an email (PM decision, 8 Oct). */
   mode?: 'signup' | 'signin';
   initialError: 'google' | 'link' | null;
 };
@@ -28,13 +27,12 @@ type Props = {
 export function SignupForm({ mode = 'signup', initialError }: Props) {
   const isSignup = mode === 'signup';
   const [step, setStep] = useState<Step>('form');
-  const [values, setValues] = useState<MagicLinkRequest>({ email: '', organiserName: '' });
-  const [errors, setErrors] = useState<FieldError[]>([]);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [banner, setBanner] = useState<Banner>(initialError);
   const [sending, setSending] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
   const returningToForm = useRef(false);
 
   // Coming back from the Sent state, put focus where the person will type.
@@ -42,45 +40,34 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
     if (step === 'form' && returningToForm.current) emailRef.current?.focus();
   }, [step]);
 
-  const errorFor = (field: FieldError['field']) => errors.find((e) => e.field === field)?.message;
-
-  function focusFirst(found: FieldError[]) {
-    const first = found[0];
-    if (!first) return;
-    (first.field === 'email' ? emailRef : nameRef).current?.focus();
+  function showEmailError(message: string) {
+    setBanner(null);
+    setEmailError(message);
+    emailRef.current?.focus();
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (sending) return;
-    const input = request();
-    const found = validateSignup(input, { requireName: isSignup });
-    setErrors(found);
-    if (found.length) {
-      setBanner(null);
-      focusFirst(found);
+    const invalid = validateEmail(email);
+    if (invalid) {
+      showEmailError(invalid);
       return;
     }
+    setEmailError(null);
 
     setSending(true);
-    const result = await requestMagicLink(input);
+    const result = await requestMagicLink(email.trim());
     setSending(false);
 
     if (result.ok) {
       setBanner(null);
       setStep('sent');
-    } else if (result.kind === 'field') {
-      setBanner(null);
-      setErrors([result.error]);
-      focusFirst([result.error]);
+    } else if (result.kind === 'invalid') {
+      showEmailError(result.message);
     } else {
       setBanner(result.kind);
     }
-  }
-
-  function request(): MagicLinkRequest {
-    const email = values.email.trim();
-    return isSignup ? { email, organiserName: (values.organiserName ?? '').trim() } : { email };
   }
 
   function backToForm() {
@@ -89,11 +76,8 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
   }
 
   if (step === 'sent') {
-    return <SentPanel request={request()} onUseDifferentEmail={backToForm} />;
+    return <SentPanel email={email.trim()} onUseDifferentEmail={backToForm} />;
   }
-
-  const emailError = errorFor('email');
-  const nameError = errorFor('organiserName');
 
   return (
     <main className={screen.main}>
@@ -105,10 +89,7 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
           </div>
         )}
 
-        <a
-          href={googleStartUrl(isSignup ? (values.organiserName ?? '') : '')}
-          className={styles.googleButton}
-        >
+        <a href={GOOGLE_START_URL} className={styles.googleButton}>
           <GoogleMark />
           Continue with Google
         </a>
@@ -126,8 +107,8 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
             autoComplete="email"
             autoCapitalize="none"
             spellCheck={false}
-            value={values.email}
-            onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             aria-invalid={emailError ? true : undefined}
             aria-describedby={emailError ? 'su-email-error' : undefined}
           />
@@ -140,39 +121,13 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
         </div>
 
         {isSignup && (
-          <>
-            <div className={styles.field}>
-              <label htmlFor="su-org">Organiser name</label>
-              <input
-                ref={nameRef}
-                id="su-org"
-                name="organiserName"
-                autoComplete="organization"
-                maxLength={ORGANISER_NAME_MAX}
-                value={values.organiserName ?? ''}
-                onChange={(e) => setValues((v) => ({ ...v, organiserName: e.target.value }))}
-                aria-invalid={nameError ? true : undefined}
-                aria-describedby={nameError ? 'su-org-error su-org-hint' : 'su-org-hint'}
-              />
-              {nameError && (
-                <span id="su-org-error" className={styles.fieldError}>
-                  <Icon name="alert" size={16} />
-                  {nameError}
-                </span>
-              )}
-              <span id="su-org-hint" className={styles.hint}>
-                Shown on your event pages. Your own name is fine.
-              </span>
-            </div>
-
-            <div className={`${screen.notice} ${screen.noticeInfo}`}>
-              <Icon name="info" />
-              <p>
-                No ABN or bank details needed now. We&apos;ll ask for them only when you first sell
-                paid tickets.
-              </p>
-            </div>
-          </>
+          <div className={`${screen.notice} ${screen.noticeInfo}`}>
+            <Icon name="info" />
+            <p>
+              No ABN or bank details needed now. We&apos;ll ask for them only when you first sell
+              paid tickets.
+            </p>
+          </div>
         )}
 
         <div className={styles.spacer} />

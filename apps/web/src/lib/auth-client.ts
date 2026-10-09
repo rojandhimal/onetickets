@@ -1,55 +1,53 @@
-import type { FieldError, MagicLinkRequest } from './contract';
+import type { ApiError } from './contract';
 
-export type RequestLinkResult =
-  | { ok: true }
-  | { ok: false; kind: 'field'; error: FieldError }
-  | { ok: false; kind: 'rate-limited' }
-  | { ok: false; kind: 'failed' };
+type Failure =
+  { ok: false; kind: 'invalid'; message: string } | { ok: false; kind: 'rate-limited' | 'failed' };
 
-export async function requestMagicLink(input: MagicLinkRequest): Promise<RequestLinkResult> {
-  let res: Response;
+async function post(path: string, body: unknown): Promise<Response | null> {
   try {
-    res = await fetch('/api/auth/magic-link', {
+    return await fetch(`/api${path}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
     });
   } catch {
-    return { ok: false, kind: 'failed' };
+    return null;
   }
-  if (res.ok) return { ok: true };
+}
+
+async function failure(res: Response | null): Promise<Failure> {
+  if (!res) return { ok: false, kind: 'failed' };
   if (res.status === 429) return { ok: false, kind: 'rate-limited' };
   if (res.status === 422) {
-    const body = (await res.json().catch(() => null)) as FieldError | null;
-    if (body && (body.field === 'email' || body.field === 'organiserName')) {
-      return { ok: false, kind: 'field', error: body };
-    }
+    const body = (await res.json().catch(() => null)) as ApiError | null;
+    if (body?.message) return { ok: false, kind: 'invalid', message: body.message };
   }
   return { ok: false, kind: 'failed' };
+}
+
+export type RequestLinkResult = { ok: true } | Failure;
+
+export async function requestMagicLink(email: string): Promise<RequestLinkResult> {
+  const res = await post('/auth/magic-link', { email });
+  return res?.ok ? { ok: true } : failure(res);
 }
 
 // The session arrives as a cookie; the body isn't needed, so an empty one can't stall sign-in.
 export type VerifyResult = { ok: true } | { ok: false; kind: 'expired' | 'failed' };
 
 export async function verifyMagicLink(token: string): Promise<VerifyResult> {
-  let res: Response;
-  try {
-    res = await fetch('/api/auth/magic-link/verify', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token }),
-    });
-  } catch {
-    return { ok: false, kind: 'failed' };
-  }
+  const res = await post('/auth/magic-link/verify', { token });
+  if (!res) return { ok: false, kind: 'failed' };
   if (res.ok) return { ok: true };
-  if (res.status === 410 || res.status === 400) return { ok: false, kind: 'expired' };
+  if (res.status === 410) return { ok: false, kind: 'expired' };
   return { ok: false, kind: 'failed' };
 }
 
-export function googleStartUrl(organiserName: string): string {
-  const name = organiserName.trim();
-  return name
-    ? `/api/auth/google/start?organiserName=${encodeURIComponent(name)}`
-    : '/api/auth/google/start';
+export type CreateOrganisationResult = { ok: true } | Failure;
+
+export async function createOrganisation(name: string): Promise<CreateOrganisationResult> {
+  const res = await post('/organisations', { name });
+  return res?.ok ? { ok: true } : failure(res);
 }
+
+export const GOOGLE_START_URL = '/api/auth/google/start';

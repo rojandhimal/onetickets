@@ -14,6 +14,8 @@ export const metadata: Metadata = { title: 'Organiser home' };
 export default async function OrganiserHomePage() {
   const session = await getSession();
   if (!session) redirect('/signin');
+  const organisation = session.organisation;
+  if (!organisation) redirect('/organiser/setup');
   const wizardOn = isEventWizardEnabled();
 
   // S0-3 only ships the empty state. The events list arrives with S1-1.
@@ -28,7 +30,7 @@ export default async function OrganiserHomePage() {
             </a>
           </div>
           <div className={styles.greeting}>
-            <span className={styles.orgName}>{session.organisation.name}</span>
+            <span className={styles.orgName}>{organisation.name}</span>
             <h1 className={`${screen.display} ${screen.pageTitle}`}>
               {welcomeLine(session.user.name)}
             </h1>

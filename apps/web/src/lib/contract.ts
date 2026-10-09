@@ -1,45 +1,54 @@
-// Auth API contract the web app expects from apps/api (S0-3).
-// Proposed to BackendDev; move to @onetickets/shared once both sides agree.
+// Auth API contract agreed with BackendDev for S0-3. BackendDev moves these types to
+// @onetickets/shared (packages/shared/src/api/auth.ts) in the api PR; switch imports then.
 //
 // The browser calls these through the /api rewrite, so paths here have no /api prefix.
+// POSTs send Content-Type: application/json and come from the web origin (the api checks
+// Origin). Errors always have the ApiError shape.
 //
-// POST /auth/magic-link          body MagicLinkRequest   -> 202, no body, for known and unknown
-//                                 emails alike. 422 { field, message } for a bad email or name;
-//                                 429 when rate limited. organiserName is sent by sign-up and
-//                                 omitted by sign-in: the api uses it only when it creates a new
-//                                 organiser and ignores it for an existing one. A new organiser
-//                                 with no name gets the part of their email before the @.
-// POST /auth/magic-link/verify   body MagicLinkVerify    -> 200 and sets the session cookie
-//                                 410 when the link has expired or was already used
-// GET  /auth/google/start?organiserName=...              -> 302 to Google; the callback sets the
-//                                 session cookie and 302s to /organiser (or /signin?error=google).
-//                                 organiserName is optional: a new organiser without one gets
-//                                 their Google display name.
-// GET  /me                                               -> 200 Session, or 401 when signed out
+// POST /auth/magic-link          { email, organiserName? } -> 202 for known and unknown emails
+//                                 alike. organiserName is only used for a new email and is
+//                                 never sent by this web app: new organisers name their
+//                                 organisation after signing in (PM decision, 8 Oct).
+//                                 422 invalid_request (field), 429 rate_limited.
+//                                 Emails a link to ${WEB_URL}/auth/verify#token=..., single use,
+//                                 valid 15 minutes.
+// POST /auth/magic-link/verify   { token } -> 200 Session and sets the session cookie.
+//                                 410 link_expired | link_used | link_invalid.
+// GET  /auth/google/start         -> 302 to Google; the callback sets the cookie and 302s to
+//                                 /organiser, or to /signin?error=google.
+// GET  /me                        -> 200 Session, or 401 not_signed_in.
+// POST /organisations            { name } -> 201 Organisation. 422 invalid_request (field 'name').
+// POST /auth/sign-out            -> 204, revokes the session server-side.
 
 export type MagicLinkRequest = {
   email: string;
   organiserName?: string;
 };
 
-export type MagicLinkVerify = {
-  token: string;
+export type Role = 'owner' | 'admin' | 'finance' | 'door_staff';
+
+export type Organisation = {
+  id: string;
+  name: string;
+  role: Role;
 };
 
 export type Session = {
   user: {
     id: string;
     email: string;
-    /** From Google, or null for email sign-ups until they add one. */
+    /** From Google, or null for email sign-ups. */
     name: string | null;
+    mfaEnabled: boolean;
   };
-  organisation: {
-    id: string;
-    name: string;
-  };
+  /** The current organisation, or null for someone signed in with no organisation yet. */
+  organisation: Organisation | null;
+  organisations: Organisation[];
 };
 
-export type FieldError = {
-  field: keyof MagicLinkRequest;
+export type ApiError = {
+  statusCode: number;
+  code: string;
   message: string;
+  field?: string;
 };

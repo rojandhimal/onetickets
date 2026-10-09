@@ -1,30 +1,19 @@
-import type { FieldError, MagicLinkRequest } from './contract';
+// Deliberately loose: the api is the source of truth. These only catch typos early.
 
-export const ORGANISER_NAME_MAX = 80;
+export const ORGANISER_NAME_MAX = 120;
 
-// Deliberately loose: the api is the source of truth. This only catches typos early.
-export function validateSignup(input: MagicLinkRequest, { requireName = true } = {}): FieldError[] {
-  const errors: FieldError[] = [];
-  const email = input.email.trim();
-  if (!email) {
-    errors.push({ field: 'email', message: 'Enter your email address' });
-  } else if (!email.includes('@')) {
-    errors.push({ field: 'email', message: 'Add an @, like priya@example.com' });
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.push({ field: 'email', message: 'Add the part after the @, like gmail.com' });
-  }
-  if (!requireName) return errors;
-  const name = (input.organiserName ?? '').trim();
-  if (!name) {
-    errors.push({
-      field: 'organiserName',
-      message: 'Enter an organiser name. Your own name is fine',
-    });
-  } else if (name.length > ORGANISER_NAME_MAX) {
-    errors.push({
-      field: 'organiserName',
-      message: `Keep it to ${ORGANISER_NAME_MAX} characters or fewer`,
-    });
-  }
-  return errors;
+export function validateEmail(value: string): string | null {
+  const email = value.trim();
+  if (!email) return 'Enter your email address';
+  if (!email.includes('@')) return 'Add an @, like priya@example.com';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Add the part after the @, like gmail.com';
+  return null;
+}
+
+export function validateOrganiserName(value: string): string | null {
+  const name = value.trim();
+  if (!name) return 'Enter an organiser name. Your own name is fine';
+  if (name.length > ORGANISER_NAME_MAX)
+    return `Keep it to ${ORGANISER_NAME_MAX} characters or fewer`;
+  return null;
 }
