@@ -2,15 +2,26 @@ type Header = { key: string; value: string };
 
 // Report-only for now: Next's inline bootstrap scripts need nonces before we can enforce.
 // Switch to Content-Security-Policy once the reports are clean (threat model T8, T10).
-// Browser errors go straight to Sentry's ingest host, so it has to be allowed to connect.
-function sentryOrigin(): string {
+function parseDsn(): URL | null {
   const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-  if (!dsn) return '';
+  if (!dsn) return null;
   try {
-    return ` ${new URL(dsn).origin}`;
+    return new URL(dsn);
   } catch {
-    return '';
+    return null;
   }
+}
+
+/** Browser errors go straight to Sentry's ingest host, so it has to be allowed to connect. */
+export function sentryOrigin(dsn = parseDsn()): string {
+  return dsn ? ` ${dsn.origin}` : '';
+}
+
+/** Sentry's security endpoint collects CSP violation reports, so report-only tells us what to fix. */
+export function cspReportUri(dsn = parseDsn()): string | null {
+  const projectId = dsn?.pathname.replace(/^\/+/, '');
+  if (!dsn || !dsn.username || !projectId) return null;
+  return `${dsn.origin}/api/${projectId}/security/?sentry_key=${dsn.username}`;
 }
 
 const csp = [
@@ -24,6 +35,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
+  ...(cspReportUri() ? [`report-uri ${cspReportUri()}`] : []),
 ].join('; ');
 
 export const securityHeaders: Header[] = [

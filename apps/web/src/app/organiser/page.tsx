@@ -20,12 +20,12 @@ export default async function OrganiserHomePage() {
   if (!organisation) redirect('/organiser/setup');
   const wizardOn = isEventWizardEnabled();
   Sentry.setUser({ id: session.user.id });
-  Sentry.setTag('organisation_id', session.organisation.id);
+  Sentry.setTag('organisation_id', organisation.id);
 
   // S0-3 only ships the empty state. The events list arrives with S1-1.
   return (
     <div className={screen.screen}>
-      <SentryContext userId={session.user.id} organisationId={session.organisation.id} />
+      <SentryContext userId={session.user.id} organisationId={organisation.id} />
       <header className={screen.header}>
         <div className={screen.headerInner}>
           <div className={styles.topRow}>

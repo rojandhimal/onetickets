@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import nextConfig from '../../next.config';
+import { cspReportUri } from './security-headers';
 
 async function headersFor(path: string) {
   const rules = (await nextConfig.headers?.()) ?? [];
@@ -24,5 +25,16 @@ describe('security headers', () => {
 
   it('sends no referrer from the magic-link landing page', async () => {
     expect((await headersFor('/auth/verify')).get('Referrer-Policy')).toBe('no-referrer');
+  });
+});
+
+describe('cspReportUri', () => {
+  it('points CSP reports at the Sentry project from the DSN', () => {
+    expect(cspReportUri(new URL('https://abc123@o42.ingest.sentry.io/4507'))).toBe(
+      'https://o42.ingest.sentry.io/api/4507/security/?sentry_key=abc123',
+    );
+  });
+  it('is off without a DSN', () => {
+    expect(cspReportUri(null)).toBeNull();
   });
 });
