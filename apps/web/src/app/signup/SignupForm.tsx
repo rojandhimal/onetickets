@@ -9,10 +9,26 @@ import { SentPanel } from './SentPanel';
 import styles from './signup.module.css';
 
 type Step = 'form' | 'sent';
-type Banner = 'google' | 'link' | 'rate-limited' | 'failed' | null;
+export type InitialError = 'google' | 'google_unverified' | 'google_unavailable' | 'link';
+type Banner = InitialError | 'rate-limited' | 'failed' | null;
+
+const INITIAL_ERRORS: readonly InitialError[] = [
+  'google',
+  'google_unverified',
+  'google_unavailable',
+  'link',
+];
+
+/** Maps ?error= to a known message. Anything else is ignored, never echoed. */
+export function parseInitialError(value: string | undefined): InitialError | null {
+  return INITIAL_ERRORS.find((e) => e === value) ?? null;
+}
 
 const bannerText: Record<Exclude<Banner, null>, string> = {
   google: "Google sign-in didn't finish. Try again, or use your email instead.",
+  google_unverified:
+    "Google hasn't confirmed that email address yet. Verify it with Google, or use your email instead.",
+  google_unavailable: "Signing in with Google isn't available right now. Use your email instead.",
   link: 'That sign-in link has expired or was already used. Send yourself a new one.',
   'rate-limited': "You've asked for a few links in a row. Wait a minute, then try again.",
   failed: "We couldn't send the link. Check your connection and try again.",
@@ -21,7 +37,7 @@ const bannerText: Record<Exclude<Banner, null>, string> = {
 type Props = {
   /** Same form either way: everyone starts with just an email (PM decision, 8 Oct). */
   mode?: 'signup' | 'signin';
-  initialError: 'google' | 'link' | null;
+  initialError: InitialError | null;
 };
 
 export function SignupForm({ mode = 'signup', initialError }: Props) {

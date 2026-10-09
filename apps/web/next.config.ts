@@ -7,6 +7,8 @@ const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Self-contained server bundle for the Docker image (S0-2).
+  output: 'standalone',
   poweredByHeader: false,
   transpilePackages: ['@onetickets/shared'],
   async headers() {

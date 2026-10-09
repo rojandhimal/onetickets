@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
-import { SignupForm } from '../signup/SignupForm';
+import { parseInitialError, SignupForm } from '../signup/SignupForm';
 import local from '../signup/signup.module.css';
 
 export const metadata: Metadata = { title: 'Sign in' };
@@ -27,10 +27,7 @@ export default async function SigninPage({ searchParams }: Props) {
           </div>
         </div>
       </header>
-      <SignupForm
-        mode="signin"
-        initialError={error === 'google' ? 'google' : error === 'link' ? 'link' : null}
-      />
+      <SignupForm mode="signin" initialError={parseInitialError(error)} />
     </div>
   );
 }

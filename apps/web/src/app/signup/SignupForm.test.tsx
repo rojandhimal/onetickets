@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SignupForm } from './SignupForm';
+import { parseInitialError, SignupForm } from './SignupForm';
 
 function mockFetch(status: number, body?: unknown) {
   const fn = vi
@@ -116,5 +116,11 @@ describe('SignupForm', () => {
     unmount();
     render(<SignupForm mode="signin" initialError={null} />);
     expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/signup');
+  });
+
+  it('only accepts known error codes from the URL', () => {
+    expect(parseInitialError('google_unavailable')).toBe('google_unavailable');
+    expect(parseInitialError('<script>')).toBeNull();
+    expect(parseInitialError(undefined)).toBeNull();
   });
 });
