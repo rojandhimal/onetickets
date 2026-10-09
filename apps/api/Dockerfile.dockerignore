@@ -1,0 +1,10 @@
+# Used by BuildKit for apps/api/Dockerfile only.
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+.git
+infra

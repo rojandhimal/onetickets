@@ -1,6 +1,8 @@
 # Infrastructure
 
-Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`). Nothing here has been applied yet.
+Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`).
+
+**Status: later.** For now OneTickets runs on the owner's computer with `docker compose up` (see "Run OneTickets on your computer" in the root README). Nothing here has been applied, and none of it needs an AWS account to merge: CI only runs `terraform fmt` and `validate`, and the Deploy and Staging power workflows do nothing until the `DEPLOY_ENABLED` repository variable is `true`. Staging and production are set up from this folder when the AWS accounts exist.
 
 ## Layout
 
