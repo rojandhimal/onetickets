@@ -1,4 +1,4 @@
-import type { ApiError } from './contract';
+import type { ApiErrorBody } from '@onetickets/shared';
 
 type Failure =
   { ok: false; kind: 'invalid'; message: string } | { ok: false; kind: 'rate-limited' | 'failed' };
@@ -19,7 +19,7 @@ async function failure(res: Response | null): Promise<Failure> {
   if (!res) return { ok: false, kind: 'failed' };
   if (res.status === 429) return { ok: false, kind: 'rate-limited' };
   if (res.status === 422) {
-    const body = (await res.json().catch(() => null)) as ApiError | null;
+    const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
     if (body?.message) return { ok: false, kind: 'invalid', message: body.message };
   }
   return { ok: false, kind: 'failed' };
