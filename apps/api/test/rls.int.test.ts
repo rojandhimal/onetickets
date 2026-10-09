@@ -94,13 +94,19 @@ describe('row-level security across organisations', () => {
         `update identity.memberships set role = 'door_staff' where organisation_id = $1`,
         [orgB],
       );
-      const deleted = await client.query(
-        'delete from identity.memberships where organisation_id = $1',
-        [orgB],
-      );
-      return orgs.rowCount! + members.rowCount! + deleted.rowCount!;
+      return orgs.rowCount! + members.rowCount!;
     });
     expect(updated).toBe(0);
+  });
+
+  it('cannot delete organisations, memberships or audit events at all', async () => {
+    for (const table of ['organisations', 'memberships', 'audit_events']) {
+      await expect(
+        asTenant({ organisationId: orgA }, (client) =>
+          client.query(`delete from identity.${table}`),
+        ),
+      ).rejects.toThrow(/permission denied/);
+    }
   });
 
   it('cannot add itself to another organisation', async () => {

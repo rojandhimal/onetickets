@@ -59,10 +59,11 @@ create table identity.memberships (
 );
 create index memberships_user_id_idx on identity.memberships (user_id);
 
--- Who changed what in an organisation. Insert-only for the api.
+-- Who changed what in an organisation. Insert-only for every role, and it outlives nothing:
+-- an organisation with audit events cannot be deleted by accident.
 create table identity.audit_events (
   id bigint generated always as identity primary key,
-  organisation_id uuid not null references identity.organisations (id) on delete cascade,
+  organisation_id uuid not null references identity.organisations (id) on delete restrict,
   actor_user_id uuid references identity.users (id) on delete set null,
   action text not null,
   subject_user_id uuid references identity.users (id) on delete set null,
@@ -150,6 +151,8 @@ revoke all on function identity.ensure_user(citext) from public;
 grant execute on function identity.current_organisation_id(), identity.current_user_id() to ot_app, ot_worker;
 grant execute on function identity.ensure_user(citext) to ot_app, ot_worker;
 grant select, insert, update on identity.users to ot_app;
-grant select, insert, update, delete on identity.organisations, identity.memberships to ot_app;
-grant select, insert on identity.audit_events to ot_app;
-grant select, insert, update, delete on all tables in schema identity to ot_worker;
+-- No delete grants until a feature needs one (least privilege).
+grant select, insert, update on identity.organisations, identity.memberships to ot_app;
+grant select, insert on identity.audit_events to ot_app, ot_worker;
+grant select, insert, update on identity.users, identity.organisations, identity.memberships
+  to ot_worker;
