@@ -11,3 +11,5 @@ export type {
   OrganisationDto,
 } from './api/organisations.js';
 export { REDACTED, isSensitiveKey, redact, redactString, stripQuery } from './redact.js';
+export { scrubBreadcrumb, scrubEvent, scrubSpan } from './telemetry-scrub.js';
+export type { ScrubbableBreadcrumb, ScrubbableEvent, ScrubbableSpan } from './telemetry-scrub.js';

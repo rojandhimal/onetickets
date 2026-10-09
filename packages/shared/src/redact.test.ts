@@ -80,3 +80,44 @@ describe('stripQuery', () => {
     expect(stripQuery('/organiser')).toBe('/organiser');
   });
 });
+
+describe('isSensitiveKey', () => {
+  it('catches MFA, recovery, session and credential keys however they are written', () => {
+    const out = redact({
+      recoveryCodes: ['ABCD-EFGH'],
+      totpSecret: 'JBSWY3DPEHPK3PXP',
+      totp_uri: 'otpauth://totp/x',
+      mfaCode: '123456',
+      otp: '123456',
+      sessionToken: 's3cr3t',
+      session_id: 'sid_1',
+      'http.request.header.cookie': 'sid=abc',
+      'http.request.header.x-api-key': 'k_1',
+      'X-Auth-Token': 't_1',
+      new_password: 'hunter2',
+      contactEmail: 'x',
+    });
+    for (const value of Object.values(out)) expect(value).toBe(REDACTED);
+  });
+
+  it('keeps keys that only look similar', () => {
+    const out = redact({
+      statusCode: 500,
+      status_code: 500,
+      hostname: 'app.onetickets.au',
+      slotPosition: 3,
+      footprint: 'small',
+      'http.request.method': 'GET',
+      organisationId: 'org_42',
+    });
+    expect(out).toEqual({
+      statusCode: 500,
+      status_code: 500,
+      hostname: 'app.onetickets.au',
+      slotPosition: 3,
+      footprint: 'small',
+      'http.request.method': 'GET',
+      organisationId: 'org_42',
+    });
+  });
+});

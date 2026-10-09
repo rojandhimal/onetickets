@@ -78,12 +78,24 @@ Every event, span and breadcrumb is scrubbed in the app before it is sent
 - Only the request method and the URL without its query string are kept. Cookies, headers and bodies
   are never collected, and the client IP is not inferred.
 - The user is identified by id only, with the organisation id as a tag. No email or name.
-- Strings pass through `redact()` from `@onetickets/shared`, which masks bearer tokens, magic-link and
-  OAuth parameters, Stripe keys, emails and Australian phone numbers.
+- Values pass through `redact()` from `@onetickets/shared`. It masks keys that name a token, secret,
+  password, cookie, session, recovery code, MFA code or email, and scrubs bearer tokens, magic-link and
+  OAuth parameters, Stripe keys, emails and Australian phone numbers out of strings. The scrubbers
+  themselves are in `@onetickets/shared` too, so the api scrubs the same way.
 
 The environment comes from `APP_ENV` on the server and from the hostname in the browser
 (`dev.<domain>`, `staging.<domain>`, `<domain>`), so one image is promoted across environments.
 When a DSN is set, the report-only CSP also sends its violation reports to Sentry.
+
+### Sentry project setup
+
+CSP reports go straight from the browser to Sentry and skip the in-app scrubbers, so every Sentry
+project (one per app) must have these before its DSN is used:
+
+1. Settings > Security & Privacy: turn on **Data Scrubber** and **Use Default Scrubbers**.
+2. Same page: turn on **Prevent Storing of IP Addresses**.
+3. Same page, **Additional Sensitive Fields**: add `token`, `code`, `state` and `email`.
+4. Only then put the DSN in the `SENTRY_WEB_DSN` repository variable (see `infra/README.md`).
 
 ## Design system
 

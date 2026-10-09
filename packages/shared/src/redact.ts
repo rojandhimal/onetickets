@@ -4,42 +4,64 @@
 
 export const REDACTED = '[redacted]';
 
-// Keys whose values are always secret or personal, compared case-insensitively with - and _
-// stripped, so "set-cookie", "Set_Cookie" and "setCookie" all match.
-const SENSITIVE_KEYS = new Set(
-  [
-    'authorization',
-    'cookie',
-    'setcookie',
-    'password',
-    'token',
-    'accesstoken',
-    'refreshtoken',
-    'idtoken',
-    'magiclinktoken',
-    'secret',
-    'clientsecret',
-    'apikey',
-    'code',
-    'email',
-    'name',
-    'firstname',
-    'lastname',
-    'fullname',
-    'organisername',
-    'phone',
-    'address',
-    'ip',
-    'ipaddress',
-  ].map(normaliseKey),
-);
+// A key is sensitive when any dotted segment (so "http.request.header.cookie" is checked part by
+// part) contains one of these, compared case-insensitively with - and _ stripped. Substring
+// matching catches recoveryCodes, totpSecret, sessionToken, x-api-key and set-cookie.
+const SENSITIVE_PARTS = [
+  'token',
+  'secret',
+  'password',
+  'passwd',
+  'cookie',
+  'authorization',
+  'apikey',
+  'recovery',
+  'session',
+  'email',
+];
+
+// Too short to match as substrings ("slotPosition" contains "otp"), so these must be a whole word
+// of the key: mfaCode, otp and totp_uri match; footprint does not.
+const SENSITIVE_WORDS = new Set(['otp', 'totp', 'mfa']);
+
+// Short, ambiguous keys matched exactly, so statusCode, hostname and zipCode survive.
+const SENSITIVE_EXACT = new Set([
+  'code',
+  'name',
+  'firstname',
+  'lastname',
+  'fullname',
+  'username',
+  'organisername',
+  'phone',
+  'phonenumber',
+  'mobile',
+  'address',
+  'ip',
+  'ipaddress',
+]);
 
 function normaliseKey(key: string): string {
   return key.toLowerCase().replace(/[-_]/g, '');
 }
 
+function words(segment: string): string[] {
+  return segment
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/[\s_-]+/)
+    .filter(Boolean);
+}
+
 export function isSensitiveKey(key: string): boolean {
-  return SENSITIVE_KEYS.has(normaliseKey(key));
+  return key.split('.').some((segment) => {
+    const normalised = normaliseKey(segment);
+    return (
+      SENSITIVE_EXACT.has(normalised) ||
+      SENSITIVE_PARTS.some((part) => normalised.includes(part)) ||
+      words(segment).some((word) => SENSITIVE_WORDS.has(word))
+    );
+  });
 }
 
 const PATTERNS: Array<[RegExp, string]> = [
