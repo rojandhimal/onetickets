@@ -47,7 +47,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 3. `/organiser` calls `GET /me` on the server with that cookie. An organiser with no organisation is sent
    to `/organiser/setup` first.
 
-Google sign-in starts at `/api/auth/google/start`. When it fails, the api redirects back to `/signup`
+Google sign-in starts at `/api/auth/google/start` and returns to `/organiser`. When it fails, the api redirects back to `/signin`
 with `?error=google`, `google_unverified` or `google_unavailable`, and the form shows the matching message.
 
 The agreed request and response shapes are in `apps/web/src/lib/contract.ts`.
