@@ -8,7 +8,8 @@
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "migrate": "node src/database/migrate.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.2",
@@ -17,7 +18,8 @@
     "@onetickets/shared": "workspace:*",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@nestjs/testing": "^12.1.2",
