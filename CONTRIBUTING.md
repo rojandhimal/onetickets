@@ -42,7 +42,7 @@ pnpm test
 MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
 ```
 
-For UI changes, also run the e2e suite (see [testing](testing.md)).
+For UI changes, also run the e2e suite (see [testing](docs/testing.md)).
 
 ## Definition of Done
 
@@ -54,27 +54,21 @@ A story is done when:
 - UI works at 375 px wide, by keyboard and with a screen reader (WCAG 2.2 AA).
 - The module boundary rule passes.
 - Any change to money or inventory has a test of its database invariant.
-- The [security checklist](security/checklist.md) "Always" section is ticked, plus any section the
+- The [security checklist](docs/security/checklist.md) "Always" section is ticked, plus any section the
   story touches.
 - Unfinished features are behind a feature flag.
+- The docs the change affects are updated in the same PR (see below).
 
 ## Pull request description
 
-```md
-Before: what a user or developer sees today.
-
-After: what they see with this change.
-
-How: a short paragraph on the approach.
-
-Story: S0-x. Security checklist sections: Always, ...
-```
+GitHub fills in [the template](.github/pull_request_template.md): Before, After, How, the story
+id, and a checklist that includes "Docs updated". Say how to test the change locally.
 
 ## Code conventions
 
 - TypeScript everywhere, strict mode. Prettier formats; ESLint and dependency-cruiser lint.
 - Apps share code only through `packages/*`. Api modules talk only through each other's
-  `index.ts`. See [architecture](architecture.md).
+  `index.ts`. See [architecture](docs/architecture.md).
 - Money is whole cents (`Cents`), never floats.
 - Validate every request body on the server with the zod schemas in `packages/shared/src/api`.
 - SQL is parameterised. Never build SQL from strings.
@@ -84,9 +78,18 @@ Story: S0-x. Security checklist sections: Always, ...
 - Never commit secrets. `.env` files are git-ignored; `.env.example` holds names and local-only
   values.
 
-## Documentation
+## Every pull request updates its docs
 
-Update the docs in the same PR as the change that makes them wrong: a new environment variable goes
-in [local-development.md](local-development.md), a new module or endpoint in
-[architecture.md](architecture.md), a decision that changes how people build in
-[decisions.md](decisions.md).
+A PR with a user-visible or setup change and no doc update is not done. QA checks this as part of
+the Definition of Done, and the PR template has a "Docs updated" checkbox.
+
+| You changed                               | Update                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Setup, run steps, an environment variable | `README.md` and [local-development.md](docs/local-development.md)                             |
+| An endpoint                               | `docs/api/<module>.md`                                                                        |
+| How a module or app works                 | Its doc under `docs/` ([module template](docs/templates/module.md))                           |
+| Something on-call will need               | A runbook in `docs/runbooks/` ([runbook template](docs/templates/runbook.md))                 |
+| A choice someone will later question      | A new ADR in `docs/adr/` ([template](docs/adr/0000-template.md), [index](docs/adr/README.md)) |
+
+[docs/README.md](docs/README.md) shows where everything lives. If you're unsure, ask the Docs
+thread.

@@ -20,7 +20,7 @@ How OneTickets fits together today, and the rules that keep it that way as it gr
 Later sprints add Stripe Connect (payments and payouts), an email provider (magic links, tickets,
 receipts) and a key service for signing QR tickets. Locally these are replaced by Postgres in
 Docker, a local mail inbox and a local signing key; there is no LocalStack (see
-[decisions](decisions.md)).
+[ADR 0014](adr/0014-local-docker-staging-later.md)).
 
 ## Apps and packages
 
