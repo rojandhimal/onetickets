@@ -1,8 +1,9 @@
-# 1. Postgres row-level security for tenant isolation
+# 0004. Postgres row-level security for tenant isolation
 
-- Status: accepted
+- Status: Accepted
 - Date: 2026-10-09
 - Story: S0-4
+- Deciders: BackendDev, with the Security reviewer
 
 ## Context
 
@@ -21,7 +22,7 @@ Isolate tenants in the database as well as in the api:
 - An application guard that denies any route without an explicit access policy.
 - A test that fails if any module table is missing RLS, `FORCE` or an `ot_app` policy.
 
-## Alternatives considered
+## Options considered
 
 - **Application filtering only**: simplest, but one forgotten filter is a breach.
 - **Schema or database per tenant**: strong isolation, but migrations and connection pooling

@@ -48,7 +48,7 @@ superuser: every tenant table has row-level security keyed to the organisation s
 by `UnitOfWork`. Background jobs use a role granted `ot_worker`. See
 [docs/backend/tenancy-and-access.md](docs/backend/tenancy-and-access.md) before adding a table.
 
-More in [docs/](docs/README.md): API endpoints, how the api works, and decision records. Every api
+More in [docs/](docs/): API endpoints, how the api works, and decision records. Every api
 environment variable is in [docs/backend/environment.md](docs/backend/environment.md).
 
 ## Module boundaries
