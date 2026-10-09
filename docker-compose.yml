@@ -78,7 +78,9 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: '1025'
       EMAIL_FROM_DOMAIN: onetickets.local
-      TRUST_PROXY_HOPS: '1'
+      # Nothing in front adds X-Forwarded-For locally (the web rewrite passes it through), so
+      # trusting any hop would let clients spoof their IP past rate limits.
+      TRUST_PROXY_HOPS: '0'
       # Plain http on localhost, so the session cookie can't be Secure.
       SESSION_COOKIE_SECURE: 'false'
       # 32 zero bytes: a placeholder for local data only. Real environments generate their own
