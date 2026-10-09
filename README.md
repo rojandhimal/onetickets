@@ -1,31 +1,49 @@
 # OneTickets
 
-Event ticketing for Australian organisers. pnpm workspace monorepo:
+Event ticketing for Australian organisers: publish an event, sell or give away tickets, and check
+people in at the door with a phone. Think Eventbrite, built for small and mid-sized Australian
+events, with prices shown including GST and payouts through Stripe Connect.
 
-| Package           | What it is                                                   |
-| ----------------- | ------------------------------------------------------------ |
-| `apps/web`        | Next.js site for attendees and organisers                    |
-| `apps/api`        | NestJS API, one folder per module under `src/modules`        |
-| `apps/scanner`    | Mobile web scanner for door staff (Vite + React)             |
-| `packages/shared` | Types and helpers shared by every app (API contracts, money) |
+**Status:** Sprint 0 (foundations). Organiser sign-up and sign-in (magic link, Google, MFA),
+organisations and roles are in `main`. Public launch is planned for May 2027 in Sydney
+and Melbourne. See the [roadmap](docs/roadmap.md).
 
-## Getting started
+## What's in the repo
 
-To run the whole app with one command and no developer tools, see
-[Run OneTickets on your computer](docs/run-locally.md).
+This is a pnpm workspace monorepo.
 
-Needs Node 22 (`.nvmrc`), pnpm 10 (`corepack enable`) and Docker for Postgres.
+| Package           | What it is                                                          |
+| ----------------- | ------------------------------------------------------------------- |
+| `apps/web`        | Next.js site for attendees and organisers (port 3000)               |
+| `apps/api`        | NestJS API, one folder per module under `src/modules` (port 3001)   |
+| `apps/scanner`    | Mobile web scanner for door staff, Vite + React (port 3002), a stub |
+| `packages/shared` | Types and helpers every app uses (API contracts, roles, money)      |
+
+## Run it locally
+
+Everything runs on your own machine with Docker for now. There is no shared staging site yet;
+staging and production on AWS come later (see [environments](docs/environments.md)).
+
+To just try it, install Docker Desktop and run `docker compose up --build`, then open
+http://localhost:3000 (emails land in the test inbox at http://localhost:8025). Details, and how to
+share a demo link, are in [docs/local-development.md](docs/local-development.md#run-the-whole-app).
+
+To develop, you need Node 22 (see `.nvmrc`), pnpm 10 (`corepack enable`) and Docker Desktop.
 
 ```sh
 pnpm install
-docker compose up -d
+docker compose up -d postgres mailpit   # Postgres and the test inbox, not the web or api containers
 cp apps/api/.env.example apps/api/.env   # then set MFA_ENCRYPTION_KEY=$(openssl rand -base64 32)
+cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build
 ```
 
+Then migrate the database, create the api's login role and start the apps. The full steps, and
+what to do when something goes wrong, are in [docs/local-development.md](docs/local-development.md).
+
 ## Checks
 
-CI runs these on every pull request; run them locally before pushing.
+CI runs these on every pull request. Run them before you push.
 
 ```sh
 pnpm format:check
@@ -59,3 +77,17 @@ environment variable is in [docs/backend/environment.md](docs/backend/environmen
 Apps share code only through `packages/*`. Inside the api, a module may import another module
 only through its `index.ts`; see [apps/api/src/modules/README.md](apps/api/src/modules/README.md).
 `.dependency-cruiser.cjs` enforces both in CI.
+
+## Documentation
+
+| Doc                                              | Read it when                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------- |
+| [Running locally](docs/local-development.md)     | Running the whole app or developing, demo links, troubleshooting      |
+| [Architecture](docs/architecture.md)             | You need to know how the pieces fit and why                           |
+| [Contributing](CONTRIBUTING.md)                  | Opening a branch or pull request                                      |
+| [Web app](docs/web/README.md)                    | Working on the web app: pages, sign-in flow, env vars, error tracking |
+| [Testing](docs/testing.md)                       | Writing or running tests                                              |
+| [Security checklist](docs/security/checklist.md) | Touching auth, roles, personal data, money or secrets                 |
+| [Environments](docs/environments.md)             | Asking "where does this run?"                                         |
+| [Roadmap](docs/roadmap.md)                       | Asking "what's being built, and when?"                                |
+| [Decisions (ADRs)](docs/adr/README.md)           | Asking "why did we do it this way?"                                   |

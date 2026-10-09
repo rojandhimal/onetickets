@@ -2,7 +2,7 @@
 
 Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`).
 
-**Status: later.** For now OneTickets runs on the owner's computer with `docker compose up` (see [docs/run-locally.md](../docs/run-locally.md)). Nothing here has been applied, and none of it needs an AWS account to merge: CI only runs `terraform fmt` and `validate`, and the Deploy and Staging power workflows do nothing until the `DEPLOY_ENABLED` repository variable is `true`. Staging and production are set up from this folder when the AWS accounts exist.
+**Status: later.** For now OneTickets runs on the owner's computer with `docker compose up` (see [docs/local-development.md](../docs/local-development.md)). Nothing here has been applied, and none of it needs an AWS account to merge: CI only runs `terraform fmt` and `validate`, and the Deploy and Staging power workflows do nothing until the `DEPLOY_ENABLED` repository variable is `true`. Staging and production are set up from this folder when the AWS accounts exist.
 
 ## Layout
 
