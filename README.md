@@ -20,13 +20,6 @@ cp apps/api/.env.example apps/api/.env
 pnpm --filter @onetickets/shared build
 ```
 
-To run the web app, see [docs/web/README.md](docs/web/README.md).
-
-## Docs
-
-- [docs/web/README.md](docs/web/README.md): web pages, sign-in flow, environment variables, security headers, error tracking
-- [docs/adr/](docs/adr/): architecture decision records
-
 ## Checks
 
 CI runs these on every pull request; run them locally before pushing.
