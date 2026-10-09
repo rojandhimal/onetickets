@@ -23,7 +23,7 @@ pnpm --filter @onetickets/api test         # one package
 ## Integration tests
 
 Api endpoints, migrations and row-level security, against a real Postgres. They need Postgres
-running (`docker compose up -d postgres`) and the owner's connection string:
+running (`docker compose up -d postgres mailpit`) and the owner's connection string:
 
 ```sh
 MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration

@@ -1,34 +1,93 @@
-# Local development
+# Running OneTickets locally
 
-OneTickets runs entirely on your own machine for now. Postgres runs in Docker; the web app, api and
-scanner run with pnpm. There is no shared staging site yet (see [environments](environments.md)).
+OneTickets runs entirely on your own computer for now, with Docker. There is no shared staging site
+yet (see [ADR 0014](adr/0014-local-docker-staging-later.md) and [environments](environments.md)).
 
-> **Coming soon:** a one-command stack (`docker compose up --build` for web, api, Postgres,
-> migrations and a local mail inbox) is being built by DevOps and will be added to this page. Until
-> then, follow the steps below.
+There are two ways to run it:
 
-## What you need
+- **[Run the whole app](#run-the-whole-app)** with one command. No developer tools needed. Use this
+  to try OneTickets or demo it.
+- **[Develop](#develop)**: run Postgres and the test inbox in Docker, and the apps from source with
+  hot reload. Use this to change the code.
 
-| Tool           | Version       | How to get it                                 |
-| -------------- | ------------- | --------------------------------------------- |
-| Node.js        | 22 (`.nvmrc`) | `nvm install` in the repo root, or nodejs.org |
-| pnpm           | 10            | `corepack enable` (ships with Node)           |
-| Docker Desktop | any recent    | docker.com; it runs Postgres                  |
-| Git            | any recent    |                                               |
+## Run the whole app
 
-## First-time setup
+You don't need to be a developer for this. It runs the whole app (website, API, database and a
+test inbox) on your computer, with no AWS account.
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and open it. Wait
+   until it says Docker is running.
+2. Download the code. Either install [GitHub Desktop](https://desktop.github.com/) and clone
+   `rojandhimal/onetickets`, or in a terminal run
+   `git clone https://github.com/rojandhimal/onetickets.git`.
+3. Open a terminal in the `onetickets` folder (in GitHub Desktop: Repository, then Open in
+   Terminal) and run:
+
+   ```sh
+   docker compose up --build
+   ```
+
+   The first run downloads and builds everything and takes a few minutes. It's ready when the
+   messages slow down and you see `Nest application successfully started`. Leave the window open.
+
+4. Open these in your browser:
+
+   | Address                                        | What it is                                                                                         |
+   | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+   | [http://localhost:3000](http://localhost:3000) | OneTickets                                                                                         |
+   | [http://localhost:8025](http://localhost:8025) | Test inbox: every email the app sends lands here, including sign-in links. Nothing is really sent. |
+
+To stop, press Ctrl+C in the terminal, or click stop in Docker Desktop. Your data is kept for next
+time. To pick up new changes, pull the latest code (GitHub Desktop: Fetch origin, then Pull) and
+run `docker compose up --build` again. To wipe the database and start fresh, run
+`docker compose down -v`.
+
+There is nothing to copy or configure for this. The optional settings are in [`.env.example`](../.env.example).
+
+## Showing it to someone else
+
+Your computer can share the site with a temporary public link through
+[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/), which is free:
+
+1. Install `cloudflared` ([downloads](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/);
+   on a Mac with Homebrew: `brew install cloudflared`).
+2. With OneTickets running, open a second terminal and run
+   `cloudflared tunnel --url http://localhost:3000`. It prints an address ending in
+   `trycloudflare.com`. Anyone with that address can use the site while your computer is on and
+   the command is running.
+3. So that sign-in links in emails point at the public address, create a file named `.env` in the
+   `onetickets` folder containing `WEB_URL=https://<the address it printed>`. Then stop OneTickets
+   in the first terminal (Ctrl+C) and run `docker compose up` again.
+
+The address changes every time you start the tunnel, and it stops when your computer sleeps. Only
+the website is shared. Emails, including sign-in links, still go to your test inbox and not to the
+person, so either sign in yourself and walk them through it, or copy their sign-in link from the
+test inbox and send it to them. This is for demos only, not for selling real tickets.
+
+## Develop
+
+### What you need
+
+| Tool           | Version       | How to get it                                   |
+| -------------- | ------------- | ----------------------------------------------- |
+| Node.js        | 22 (`.nvmrc`) | `nvm install` in the repo root, or nodejs.org   |
+| pnpm           | 10            | `corepack enable` (ships with Node)             |
+| Docker Desktop | any recent    | docker.com; it runs Postgres and the test inbox |
+| Git            | any recent    |                                                 |
+
+### First-time setup
 
 From the repo root:
 
 ```sh
 pnpm install
-docker compose up -d postgres           # Postgres 16 on localhost:5432 (not web/api: they'd take ports 3000 and 3001)
+docker compose up -d postgres mailpit   # Postgres on :5432 and the test inbox on :8025, not web or api
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build  # the apps import the built shared package
 ```
 
-### Create the database schema
+#### Create the database schema
 
 Migrations run as the schema owner (`onetickets`, the Postgres superuser in Docker):
 
@@ -37,7 +96,7 @@ MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/oneticket
   pnpm --filter @onetickets/api migrate
 ```
 
-### Create the api's login role
+#### Create the api's login role
 
 The api must not connect as a superuser, because superusers skip row-level security. It connects
 as `onetickets_app`, a login role that only has the `ot_app` group role. Create it once:
@@ -57,7 +116,7 @@ SQL
 
 Run migrations before this step: they create `ot_app`.
 
-## Running the apps
+### Running the apps
 
 Use one terminal per app.
 
@@ -70,6 +129,8 @@ node --env-file=apps/api/.env apps/api/dist/main.js
 pnpm --filter @onetickets/web dev
 
 # scanner on http://localhost:3002 (a placeholder until Sprint 3)
+
+# test inbox (emails the api sends) on http://localhost:8025
 pnpm --filter @onetickets/scanner dev
 ```
 
@@ -81,7 +142,7 @@ merged, the sign-up screens render but the magic-link step will not complete, an
 `/organiser` returns a 500 (`GET /me failed with 404` from `apps/web/src/lib/session.ts`) instead
 of redirecting to sign-in.
 
-## Environment variables
+### Environment variables
 
 | Variable                 | Used by     | Local value                                                          |
 | ------------------------ | ----------- | -------------------------------------------------------------------- |
@@ -96,7 +157,7 @@ The api's full list, including the sign-in settings, is in
 
 Never commit a real secret. `.env` files are git-ignored, and CI scans every change for secrets.
 
-## Day to day
+### Day to day
 
 ```sh
 pnpm format            # fix formatting
@@ -110,7 +171,7 @@ Add a migration by creating the next numbered file in `apps/api/migrations` (for
 `0002_catalogue.sql`) and running the migrate command again. Each file runs once, in its own
 transaction.
 
-## Troubleshooting
+### Troubleshooting
 
 **`DATABASE_URL is not set` when starting the api.** Start it with `--env-file=apps/api/.env` as
 above; the api does not load `.env` by itself.

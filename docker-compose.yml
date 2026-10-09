@@ -1,5 +1,15 @@
-# Local Postgres matching CI (no LocalStack, see infra/README.md). `docker compose up -d`, then copy apps/api/.env.example to apps/api/.env.
-# Bound to localhost only so the default password is not reachable from the network.
+# The whole app on one machine: `docker compose up --build`, then open http://localhost:3000.
+# Emails (magic links) land in Mailpit at http://localhost:8025 instead of being sent.
+# See docs/local-development.md.
+#
+# Developers running the api or web with pnpm can start just the dependencies:
+#   docker compose up -d postgres mailpit
+#
+# Every port is bound to 127.0.0.1, so nothing here is reachable from the network,
+# including the default passwords.
+
+name: onetickets
+
 services:
   postgres:
     image: postgres:16
@@ -11,6 +21,102 @@ services:
       - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'onetickets', '-d', 'onetickets']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # Applies apps/api/migrations as the schema owner, then exits.
+  migrate:
+    image: onetickets-api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ['node', 'dist/database/migrate.js']
+    environment:
+      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@postgres:5432/onetickets
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Creates the api's login and grants it ot_app, the same SQL the AWS deploy runs.
+  db-roles:
+    image: postgres:16
+    environment:
+      PGHOST: postgres
+      PGUSER: onetickets
+      PGPASSWORD: onetickets
+      PGDATABASE: onetickets
+    command:
+      - sh
+      - -c
+      - |
+        psql -v ON_ERROR_STOP=1 -v app_user=onetickets_app -v app_password=onetickets_app <<'SQL'
+        SELECT format('CREATE ROLE %I LOGIN', :'app_user') WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'app_user') \gexec
+        SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'app_user', :'app_password') \gexec
+        SELECT format('GRANT ot_app TO %I', :'app_user') \gexec
+        SQL
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api:
+    image: onetickets-api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      # The image defaults to production, which refuses the local mail and cookie settings below.
+      NODE_ENV: development
+      PORT: '3001'
+      APP_ENV: local
+      DATABASE_URL: postgres://onetickets_app:onetickets_app@postgres:5432/onetickets
+      # Links in emails point here. Set WEB_URL in .env to a public address when demoing.
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      MAIL_TRANSPORT: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      EMAIL_FROM_DOMAIN: onetickets.local
+      # Nothing in front adds X-Forwarded-For locally (the web rewrite passes it through), so
+      # trusting any hop would let clients spoof their IP past rate limits.
+      TRUST_PROXY_HOPS: '0'
+      # Plain http on localhost, so the session cookie can't be Secure.
+      SESSION_COOKIE_SECURE: 'false'
+      # 32 zero bytes: a placeholder for local data only. Real environments generate their own
+      # in Secrets Manager.
+      MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      # GOOGLE_CLIENT_ID is left unset, so Google sign-in stays off.
+    ports:
+      - '127.0.0.1:3001:3001'
+    networks:
+      default:
+        # The web image is built to reach the api at this name, as in AWS.
+        aliases: [api.onetickets.internal]
+    depends_on:
+      db-roles:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+
+  web:
+    image: onetickets-web
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      API_URL: http://api.onetickets.internal:3001
+      FEATURE_EVENT_WIZARD: ${FEATURE_EVENT_WIZARD:-false}
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      api:
+        condition: service_started
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - '127.0.0.1:8025:8025'
 
 volumes:
   pgdata:

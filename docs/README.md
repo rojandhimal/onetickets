@@ -4,7 +4,7 @@ Start with the [README](../README.md). This folder holds everything else.
 
 | Path                                         | What lives there                                                                        | Owner             |
 | -------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------- |
-| [local-development.md](local-development.md) | Setting up and running everything on your machine                                       | Docs, DevOps      |
+| [local-development.md](local-development.md) | Running the whole app with one command, or developing from source                       | Docs, DevOps      |
 | [architecture.md](architecture.md)           | How the apps, modules and database fit together                                         | Docs              |
 | [testing.md](testing.md)                     | Test layers, commands and rules                                                         | QA                |
 | [environments.md](environments.md)           | Local, CI, staging and production                                                       | DevOps            |

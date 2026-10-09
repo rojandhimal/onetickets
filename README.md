@@ -24,11 +24,15 @@ This is a pnpm workspace monorepo.
 Everything runs on your own machine with Docker for now. There is no shared staging site yet;
 staging and production on AWS come later (see [environments](docs/environments.md)).
 
-You need Node 22 (see `.nvmrc`), pnpm 10 (`corepack enable`) and Docker Desktop.
+To just try it, install Docker Desktop and run `docker compose up --build`, then open
+http://localhost:3000 (emails land in the test inbox at http://localhost:8025). Details, and how to
+share a demo link, are in [docs/local-development.md](docs/local-development.md#run-the-whole-app).
+
+To develop, you need Node 22 (see `.nvmrc`), pnpm 10 (`corepack enable`) and Docker Desktop.
 
 ```sh
 pnpm install
-docker compose up -d postgres           # Postgres 16
+docker compose up -d postgres mailpit   # Postgres and the test inbox
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build
@@ -74,7 +78,7 @@ only through its `index.ts`; see [apps/api/src/modules/README.md](apps/api/src/m
 
 | Doc                                              | Read it when                                                          |
 | ------------------------------------------------ | --------------------------------------------------------------------- |
-| [Local development](docs/local-development.md)   | Setting up your machine, running the apps, troubleshooting            |
+| [Running locally](docs/local-development.md)     | Running the whole app or developing, demo links, troubleshooting      |
 | [Architecture](docs/architecture.md)             | You need to know how the pieces fit and why                           |
 | [Contributing](CONTRIBUTING.md)                  | Opening a branch or pull request                                      |
 | [Web app](docs/web/README.md)                    | Working on the web app: pages, sign-in flow, env vars, error tracking |
