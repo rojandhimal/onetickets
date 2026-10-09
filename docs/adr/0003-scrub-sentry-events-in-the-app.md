@@ -26,9 +26,11 @@ The web app removes data before Sentry sends anything:
   `@onetickets/shared`, so the web app and the api scrub identically.
 
 - CSP violation reports carry the page URL with its query string, the referrer and the blocked URL.
-  Browsers post them to our own `/csp-report`, not to Sentry. It keeps only the path of each URL,
-  drops `script-sample`, runs the rest through `redact()` and forwards the report from the server,
-  so Sentry never sees the reporter's IP address.
+  Browsers post them to our own `/csp-report`, not to Sentry. Because anyone can post there, it
+  rebuilds each report from an allowlist of fields (short strings and numbers only, URLs cut to
+  scheme, host and path, directives checked against known names), drops anything else, caps how
+  many it forwards per minute, and forwards from the server so Sentry never sees the reporter's
+  IP address.
 
 Every Sentry project must also have these settings, as a second layer behind the app and for
 anything sent before a scrubber existed:
@@ -45,5 +47,6 @@ These steps are in the Sentry setup checklist in `docs/web/README.md`.
 - Some useful context (query strings, request bodies) is never available in Sentry.
 - New fields we want in Sentry have to be added to the allowlist on purpose, with a test.
 - A new Sentry project isn't ready until the settings above are on.
-- The web app runs one extra endpoint, `/csp-report`. It accepts at most 16 KB, drops anything
-  that isn't a CSP report, and always answers 204.
+- The web app runs one extra unauthenticated endpoint, `/csp-report`. It accepts at most 16 KB of
+  `application/csp-report` or JSON, forwards at most 60 reports a minute per instance with a
+  2-second timeout, and always answers 204. Cloudflare rate-limits it per client (SEC-10).

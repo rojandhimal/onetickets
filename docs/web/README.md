@@ -86,9 +86,9 @@ Every event, span and breadcrumb is scrubbed in the app before it is sent
 
 The environment comes from `APP_ENV` on the server and from the hostname in the browser
 (`dev.<domain>`, `staging.<domain>`, `<domain>`), so one image is promoted across environments.
-When a DSN is set, the report-only CSP sends violation reports to `/csp-report`. That route keeps
-only the path of each URL in the report, redacts the rest and forwards it to Sentry's security
-endpoint from the server.
+When a DSN is set, the report-only CSP sends violation reports to `/csp-report`. That route rebuilds
+each report from an allowlist of fields, keeps only the scheme, host and path of each URL, and
+forwards it to Sentry's security endpoint from the server.
 
 ### Sentry project setup
 

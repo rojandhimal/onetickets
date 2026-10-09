@@ -65,6 +65,71 @@ describe('POST /csp-report', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('caps a streamed body with no content-length', async () => {
+    const big = new TextEncoder().encode('x'.repeat(4096));
+    let sent = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        sent += 1;
+        if (sent > 100) controller.close();
+        else controller.enqueue(big);
+      },
+    });
+    const res = await POST(
+      // duplex is required by Node for a streamed body but missing from the DOM RequestInit type.
+      new Request('http://localhost:3000/csp-report', {
+        method: 'POST',
+        headers: { 'content-type': 'application/csp-report' },
+        body,
+        duplex: 'half',
+      } as RequestInit),
+    );
+    expect(res.status).toBe(204);
+    expect(sent).toBeLessThan(10);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('gives up on Sentry after a timeout', async () => {
+    await post(JSON.stringify(report));
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('keeps only known fields, as short primitives', async () => {
+    await post(
+      JSON.stringify({
+        'csp-report': {
+          'violated-directive': 'script-src',
+          'effective-directive': 'URGENT: rotate keys at https://evil.example',
+          'document-uri': 'https://onetickets.au/' + 'a'.repeat(2000),
+          'blocked-uri': 'javascript:alert(1)',
+          'line-number': 12,
+          'column-number': '7',
+          disposition: 'report',
+          anything: 'phishing text',
+          nested: { 'document-uri': 'https://x.test' },
+        },
+      }),
+    );
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    const sent = JSON.parse(String(init.body))['csp-report'];
+    expect(Object.keys(sent).sort()).toEqual([
+      'blocked-uri',
+      'disposition',
+      'document-uri',
+      'line-number',
+      'violated-directive',
+    ]);
+    expect(sent['document-uri'].length).toBeLessThanOrEqual(512);
+    expect(sent['blocked-uri']).toBe('javascript');
+  });
+
+  it('drops reports without a known directive and other content types', async () => {
+    await post(JSON.stringify({ 'csp-report': { 'violated-directive': 'URGENT rotate keys' } }));
+    await post(JSON.stringify(report), { 'content-type': 'text/plain' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('does nothing without a DSN', async () => {
     vi.stubEnv('NEXT_PUBLIC_SENTRY_DSN', '');
     expect((await post(JSON.stringify(report))).status).toBe(204);
