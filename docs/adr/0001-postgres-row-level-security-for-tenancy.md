@@ -1,4 +1,4 @@
-# 0004. Postgres row-level security for tenant isolation
+# 1. Postgres row-level security for tenant isolation
 
 - Status: accepted
 - Date: 2026-10-09

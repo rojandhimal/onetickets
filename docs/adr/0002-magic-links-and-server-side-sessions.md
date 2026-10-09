@@ -1,4 +1,4 @@
-# 0005. Magic links and server-side sessions
+# 2. Magic links and server-side sessions
 
 - Status: accepted
 - Date: 2026-10-09
@@ -14,7 +14,7 @@ lost, and Security asked for single-use, 15-minute links that never appear in lo
 
 - **Email magic links, with Google as an option.** The token is 256 random bits; only its SHA-256
   hash is stored. It works once, for 15 minutes, and a newer link replaces older ones. It travels in
-  the URL fragment and is redeemed by POST, so it never reaches access logs or `Referer` (the web side of this is ADR 0001).
+  the URL fragment and is redeemed by POST, so it never reaches access logs or `Referer`.
 - **Opaque server-side sessions** in Postgres, not JWTs. The cookie holds a random token; the table
   holds its hash, expiry and the time of the last MFA check. Idle timeout 7 days, absolute 30 days.
 - **Cookie and CSRF**: `__Host-` prefixed, HttpOnly, SameSite=Lax; every state-changing request
