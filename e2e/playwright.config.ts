@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // End-to-end tests run the built web and api against a real Postgres (DATABASE_URL).
-// Locally: `docker compose up -d`, `pnpm build`, then `pnpm e2e`.
+// Locally: `docker compose up -d postgres mailpit`, `pnpm build`, then `pnpm e2e`.
 const webUrl = 'http://localhost:3000';
 const apiUrl = 'http://localhost:3001';
 
@@ -30,7 +30,15 @@ export default defineConfig({
       command: 'pnpm --filter @onetickets/api start',
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
-      env: { PORT: '3001' },
+      env: {
+        PORT: '3001',
+        WEB_URL: webUrl,
+        SESSION_COOKIE_SECURE: 'false',
+        MAIL_TRANSPORT: 'console',
+        TRUST_PROXY_HOPS: '0',
+        // A fixed test-only key: 32 bytes, base64.
+        MFA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+      },
     },
     {
       command: 'pnpm --filter @onetickets/web start',

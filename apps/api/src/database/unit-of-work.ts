@@ -21,10 +21,7 @@ export class UnitOfWork {
     const client = await this.pool.connect();
     try {
       await client.query('begin');
-      await client.query(
-        "select set_config('app.organisation_id', $1, true), set_config('app.user_id', $2, true)",
-        [scope.organisationId ?? '', scope.userId ?? ''],
-      );
+      await setScope(client, scope);
       const result = await work(client);
       await client.query('commit');
       return result;
@@ -35,4 +32,15 @@ export class UnitOfWork {
       client.release();
     }
   }
+}
+
+/**
+ * Changes who the current transaction acts for, e.g. after sign-in finds the user or a new
+ * organisation is created. Like run(), the setting ends with the transaction.
+ */
+export async function setScope(tx: pg.PoolClient, scope: TenantScope): Promise<void> {
+  await tx.query(
+    "select set_config('app.organisation_id', $1, true), set_config('app.user_id', $2, true)",
+    [scope.organisationId ?? '', scope.userId ?? ''],
+  );
 }
