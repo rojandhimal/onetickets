@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail } from './db.js';
+import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
 
 // S0-4: Postgres row-level security blocks reads across organisations. Runs as the real app
 // role (see db.ts), so a pass here means the policies hold for the api itself.
@@ -35,6 +35,33 @@ describe('row-level security across organisations', () => {
     bobId = await seedUser(uniqueEmail('bob'));
     orgA = await seedOrganisation('Org A', [{ userId: aliceId, role: 'owner' }]);
     orgB = await seedOrganisation('Org B', [{ userId: bobId, role: 'owner' }]);
+    await withOwner((client) =>
+      client.query(
+        `insert into identity.audit_events (organisation_id, action) values ($1, 'seed'), ($2, 'seed')`,
+        [orgA, orgB],
+      ),
+    );
+  });
+
+  it('puts every table in a module schema behind forced RLS with an ot_app policy', async () => {
+    const unprotected = await withOwner(async (client) => {
+      const { rows } = await client.query<{ name: string }>(
+        `select n.nspname || '.' || c.relname as name
+           from pg_class c join pg_namespace n on n.oid = c.relnamespace
+          where c.relkind in ('r', 'p')
+            and n.nspname not in ('public', 'pg_catalog', 'information_schema')
+            and n.nspname not like 'pg_%'
+            and (not c.relrowsecurity
+                 or not c.relforcerowsecurity
+                 or not exists (
+                   select 1 from pg_policy p
+                    where p.polrelid = c.oid
+                      and 'ot_app'::regrole::oid = any (p.polroles)))
+          order by 1`,
+      );
+      return rows.map((row) => row.name);
+    });
+    expect(unprotected).toEqual([]);
   });
 
   afterAll(async () => {
@@ -57,6 +84,16 @@ describe('row-level security across organisations', () => {
     expect(seen.organisations).toEqual([{ id: orgA }]);
     expect(seen.memberships).toEqual([{ organisation_id: orgA }]);
     expect(seen.users).toEqual([{ id: aliceId }]);
+  });
+
+  it("reads only the current organisation's audit events", async () => {
+    const organisations = await asTenant({ organisationId: orgA }, async (client) => {
+      const { rows } = await client.query<{ organisation_id: string }>(
+        'select distinct organisation_id from identity.audit_events',
+      );
+      return rows.map((row) => row.organisation_id);
+    });
+    expect(organisations).toEqual([orgA]);
   });
 
   it('returns nothing when asked for another organisation by id', async () => {
