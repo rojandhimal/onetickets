@@ -1,6 +1,7 @@
 # NestJS api, built from the repository root:
 #   docker build -f apps/api/Dockerfile .
-# The image also carries the migrations: `node dist/database/migrate.js`.
+# The image also carries the migrations: `node dist/database/migrate.js` reads
+# /app/migrations. `files` in apps/api/package.json decides what `pnpm deploy` copies.
 
 FROM node:22-alpine AS build
 RUN corepack enable
@@ -17,8 +18,7 @@ COPY packages/shared packages/shared
 COPY apps/api apps/api
 RUN pnpm --filter @onetickets/shared build \
  && pnpm --filter @onetickets/api build \
- && pnpm --filter @onetickets/api deploy --prod --legacy /out \
- && cd /out && rm -rf src test Dockerfile* tsconfig*.json vitest*.ts .env.example
+ && pnpm --filter @onetickets/api deploy --prod --legacy /out
 
 FROM node:22-alpine
 ENV NODE_ENV=production \
