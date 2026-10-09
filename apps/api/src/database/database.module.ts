@@ -4,7 +4,7 @@ import { PG_POOL } from './tokens.js';
 import { UnitOfWork } from './unit-of-work.js';
 
 export { PG_POOL } from './tokens.js';
-export { UnitOfWork, type TenantScope } from './unit-of-work.js';
+export { setScope, UnitOfWork, type TenantScope } from './unit-of-work.js';
 
 @Global()
 @Module({

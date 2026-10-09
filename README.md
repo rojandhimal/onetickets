@@ -18,8 +18,8 @@ Needs Node 22 (`.nvmrc`), pnpm 10 (`corepack enable`) and Docker for Postgres.
 
 ```sh
 pnpm install
-docker compose up -d postgres mailpit   # just the database and test inbox
-cp apps/api/.env.example apps/api/.env
+docker compose up -d
+cp apps/api/.env.example apps/api/.env   # then set MFA_ENCRYPTION_KEY=$(openssl rand -base64 32)
 pnpm --filter @onetickets/shared build
 ```
 
@@ -48,7 +48,11 @@ be backwards-compatible (expand, then contract).
 
 The api connects with `DATABASE_URL` as a login role granted `ot_app`, never as the owner or a
 superuser: every tenant table has row-level security keyed to the organisation set per transaction
-by `UnitOfWork`. Background jobs use a role granted `ot_worker`.
+by `UnitOfWork`. Background jobs use a role granted `ot_worker`. See
+[docs/backend/tenancy-and-access.md](docs/backend/tenancy-and-access.md) before adding a table.
+
+More in [docs/](docs/): API endpoints, how the api works, and decision records. Every api
+environment variable is in [docs/backend/environment.md](docs/backend/environment.md).
 
 ## Module boundaries
 

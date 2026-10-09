@@ -6,6 +6,14 @@ import { HealthService, type HealthReport } from './health.service.js';
 export class HealthController {
   constructor(private readonly health: HealthService) {}
 
+  /** Process is up. For the load balancer, so a database blip does not drain every task. */
+  @Get('live')
+  @Public()
+  live(): { status: 'ok' } {
+    return { status: 'ok' };
+  }
+
+  /** Process is up and the database answers. */
   @Get()
   @Public()
   async get(): Promise<HealthReport> {
