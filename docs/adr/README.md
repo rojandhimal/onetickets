@@ -28,6 +28,7 @@ Rules:
 | [0012](0012-free-tickets-before-paid.md)                      | Free tickets first, with one fulfilment path                               | Accepted | PM           |
 | [0013](0013-aws-sydney-ecs-terraform.md)                      | AWS Sydney on ECS Fargate and RDS, managed by Terraform                    | Accepted | DevOps       |
 | [0014](0014-local-docker-staging-later.md)                    | Local development with Docker; staging later; no LocalStack                | Accepted | DevOps       |
+| 0015                                                          | Magic links and opaque server-side sessions for sign-in                    | Accepted | BackendDev   |
 
-0001 to 0004 are in open pull requests from FrontendDev and BackendDev and get links when they
-merge.
+0001 to 0004 and 0015 are in open pull requests (FrontendDev's #9, BackendDev's #10) and get links
+when they merge. The next free number is 0016.

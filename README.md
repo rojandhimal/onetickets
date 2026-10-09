@@ -72,13 +72,14 @@ only through its `index.ts`; see [apps/api/src/modules/README.md](apps/api/src/m
 
 ## Documentation
 
-| Doc                                              | Read it when                                               |
-| ------------------------------------------------ | ---------------------------------------------------------- |
-| [Local development](docs/local-development.md)   | Setting up your machine, running the apps, troubleshooting |
-| [Architecture](docs/architecture.md)             | You need to know how the pieces fit and why                |
-| [Contributing](CONTRIBUTING.md)                  | Opening a branch or pull request                           |
-| [Testing](docs/testing.md)                       | Writing or running tests                                   |
-| [Security checklist](docs/security/checklist.md) | Touching auth, roles, personal data, money or secrets      |
-| [Environments](docs/environments.md)             | Asking "where does this run?"                              |
-| [Roadmap](docs/roadmap.md)                       | Asking "what's being built, and when?"                     |
-| [Decisions (ADRs)](docs/adr/README.md)           | Asking "why did we do it this way?"                        |
+| Doc                                              | Read it when                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------- |
+| [Local development](docs/local-development.md)   | Setting up your machine, running the apps, troubleshooting            |
+| [Architecture](docs/architecture.md)             | You need to know how the pieces fit and why                           |
+| [Contributing](CONTRIBUTING.md)                  | Opening a branch or pull request                                      |
+| [Web app](docs/web/README.md)                    | Working on the web app: pages, sign-in flow, env vars, error tracking |
+| [Testing](docs/testing.md)                       | Writing or running tests                                              |
+| [Security checklist](docs/security/checklist.md) | Touching auth, roles, personal data, money or secrets                 |
+| [Environments](docs/environments.md)             | Asking "where does this run?"                                         |
+| [Roadmap](docs/roadmap.md)                       | Asking "what's being built, and when?"                                |
+| [Decisions (ADRs)](docs/adr/README.md)           | Asking "why did we do it this way?"                                   |
