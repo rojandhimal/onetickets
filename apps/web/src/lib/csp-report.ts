@@ -1,4 +1,4 @@
-import { redactString, stripQuery } from '@onetickets/shared';
+import { stripQuery } from '@onetickets/shared';
 
 // /csp-report is unauthenticated, so anything in a report could have been written by anyone.
 // Only the fields a real browser sends survive, as short primitives, so the route can't be used
@@ -36,7 +36,6 @@ const NUMBER_FIELDS = new Set(['status-code', 'line-number', 'column-number']);
 const DISPOSITIONS = new Set(['enforce', 'report']);
 
 const MAX_STRING = 512;
-const MAX_POLICY = 2048;
 
 export const MAX_CSP_REPORT_BYTES = 16 * 1024;
 
@@ -51,10 +50,10 @@ function scrubUrl(value: string): string | null {
   }
 }
 
+// Only the directive name is kept: older browsers append the policy text, which we already know.
 function scrubDirective(value: string): string | null {
   const name = value.split(' ', 1)[0] ?? '';
-  if (!DIRECTIVES.has(name) || !/^[a-z-]+( .*)?$/.test(value)) return null;
-  return redactString(value).slice(0, MAX_STRING);
+  return DIRECTIVES.has(name) ? name : null;
 }
 
 function scrubField(key: string, value: unknown): string | number | null {
@@ -63,7 +62,6 @@ function scrubField(key: string, value: unknown): string | number | null {
   if (URL_FIELDS.has(key)) return scrubUrl(value);
   if (DIRECTIVE_FIELDS.has(key)) return scrubDirective(value);
   if (key === 'disposition') return DISPOSITIONS.has(value) ? value : null;
-  if (key === 'original-policy') return redactString(value).slice(0, MAX_POLICY);
   return null;
 }
 

@@ -65,7 +65,7 @@ export async function POST(request: Request): Promise<Response> {
       headers: {
         'content-type': 'application/csp-report',
         // Sentry reads the browser and OS from this; it is not personal on its own.
-        'user-agent': request.headers.get('user-agent') ?? '',
+        'user-agent': (request.headers.get('user-agent') ?? '').slice(0, 256),
       },
       body: JSON.stringify(report),
       signal: AbortSignal.timeout(FORWARD_TIMEOUT_MS),

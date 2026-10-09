@@ -52,7 +52,6 @@ describe('POST /csp-report', () => {
       referrer: 'https://mail.example.test/inbox',
       'blocked-uri': 'https://evil.example/x.js',
       'violated-directive': 'script-src',
-      'original-policy': "default-src 'self'",
     });
   });
 
@@ -99,7 +98,7 @@ describe('POST /csp-report', () => {
     await post(
       JSON.stringify({
         'csp-report': {
-          'violated-directive': 'script-src',
+          'violated-directive': "script-src 'self' https://evil.example",
           'effective-directive': 'URGENT: rotate keys at https://evil.example',
           'document-uri': 'https://onetickets.au/' + 'a'.repeat(2000),
           'blocked-uri': 'javascript:alert(1)',
@@ -122,6 +121,7 @@ describe('POST /csp-report', () => {
     ]);
     expect(sent['document-uri'].length).toBeLessThanOrEqual(512);
     expect(sent['blocked-uri']).toBe('javascript');
+    expect(sent['violated-directive']).toBe('script-src');
   });
 
   it('drops reports without a known directive and other content types', async () => {
