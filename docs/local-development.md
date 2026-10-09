@@ -3,9 +3,10 @@
 OneTickets runs entirely on your own machine for now. Postgres runs in Docker; the web app, api and
 scanner run with pnpm. There is no shared staging site yet (see [environments](environments.md)).
 
-> **Coming soon:** a one-command stack (`docker compose up` for web, api, Postgres, migrations and
-> a local mail inbox) is being built by DevOps. When it lands, this page will
-> lead with it. Until then, follow the steps below.
+> **Just want to see it running?** Follow [run-locally.md](run-locally.md): install Docker
+> Desktop, clone, and `docker compose up --build` starts web, api, Postgres, migrations and a local
+> mail inbox in one go. This page is for developing: Postgres in Docker, apps from source with hot
+> reload.
 
 ## What you need
 
@@ -22,7 +23,7 @@ From the repo root:
 
 ```sh
 pnpm install
-docker compose up -d                    # starts Postgres 16 on localhost:5432
+docker compose up -d postgres           # Postgres 16 on localhost:5432 (not web/api: they'd take ports 3000 and 3001)
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build  # the apps import the built shared package
