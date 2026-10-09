@@ -8,7 +8,7 @@ module "environment" {
   alert_email  = var.alert_email
   email_domain = var.domain
 
-  single_nat_gateway = false
+  nat_gateways = 2
 
   # Sized for launch traffic; resize from the Sprint 9 load test.
   db_instance_class        = "db.t4g.medium"

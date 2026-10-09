@@ -16,8 +16,8 @@ data "aws_availability_zones" "available" {
 
 locals {
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
-  # One NAT gateway per AZ in production; one shared NAT elsewhere to save cost.
-  nat_count = var.single_nat_gateway ? 1 : length(local.azs)
+  # 0: no NAT (tasks run in public subnets), 1: shared, 2: one per AZ.
+  nat_count = min(var.nat_gateways, length(local.azs))
 }
 
 resource "aws_vpc" "this" {
@@ -89,9 +89,13 @@ resource "aws_route_table" "private" {
   count  = length(local.azs)
   vpc_id = aws_vpc.this.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.this[var.single_nat_gateway ? 0 : count.index].id
+  # Without NAT the private subnets (database only) have no internet route.
+  dynamic "route" {
+    for_each = local.nat_count > 0 ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.this[count.index % local.nat_count].id
+    }
   }
 
   tags = { Name = "${var.name}-private-${local.azs[count.index]}" }

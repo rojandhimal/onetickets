@@ -34,3 +34,7 @@ variable "cluster_name" {
 variable "cluster_arn" {
   type = string
 }
+
+variable "db_instance_arn" {
+  type = string
+}

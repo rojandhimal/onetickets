@@ -1,10 +1,10 @@
 variable "environment" {
-  description = "dev, staging or production. Also the GitHub environment name."
+  description = "staging or production. Also the GitHub environment name."
   type        = string
 
   validation {
-    condition     = contains(["dev", "staging", "production"], var.environment)
-    error_message = "environment must be dev, staging or production."
+    condition     = contains(["staging", "production"], var.environment)
+    error_message = "environment must be staging or production."
   }
 }
 
@@ -17,9 +17,51 @@ variable "vpc_cidr" {
   type = string
 }
 
-variable "single_nat_gateway" {
+variable "nat_gateways" {
+  description = "0, 1 or 2. With 0, app tasks run in public subnets with public IPs."
+  type        = number
+  default     = 1
+}
+
+variable "use_spot" {
+  description = "Run services on Fargate Spot."
+  type        = bool
+  default     = false
+}
+
+variable "container_insights" {
   type    = bool
   default = true
+}
+
+variable "power_schedule" {
+  description = "Turn the environment off out of hours (Sydney time). null keeps it on all the time and enables API autoscaling instead."
+  type = object({
+    wake_hour  = number
+    sleep_hour = number
+    days       = string
+  })
+  default = null
+}
+
+variable "api_cpu" {
+  type    = number
+  default = 512
+}
+
+variable "api_memory" {
+  type    = number
+  default = 1024
+}
+
+variable "web_cpu" {
+  type    = number
+  default = 512
+}
+
+variable "web_memory" {
+  type    = number
+  default = 1024
 }
 
 variable "web_hostname" {

@@ -112,6 +112,14 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["arn:aws:ecs:*:*:task/${var.cluster_name}/*"]
   }
 
+  # Deploys wake a scheduled environment out of hours; the Staging power
+  # workflow wakes it or puts it to sleep.
+  statement {
+    sid       = "PowerDatabase"
+    actions   = ["rds:DescribeDBInstances", "rds:StartDBInstance", "rds:StopDBInstance"]
+    resources = [var.db_instance_arn]
+  }
+
   statement {
     sid       = "PassTaskRoles"
     actions   = ["iam:PassRole"]

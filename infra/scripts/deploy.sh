@@ -36,6 +36,14 @@ register_revision() {
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
+# An environment that sleeps out of hours (staging) is woken first: its
+# database must be up for migrations, and a deploy should leave it running.
+# The next scheduled sleep turns it off again.
+if [[ "$(aws ecs describe-services --cluster "$cluster" --services api \
+  --query 'services[0].desiredCount' --output text)" == "0" ]]; then
+  "$(dirname "$0")/power.sh" "$env_name" up
+fi
+
 # Run in the same subnets and security group as the API service.
 network="$(aws ecs describe-services --cluster "$cluster" --services api \
   --query 'services[0].networkConfiguration' --output json)"

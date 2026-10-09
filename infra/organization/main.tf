@@ -1,5 +1,5 @@
 # Runs once, in the AWS Organizations management account, with an admin
-# identity. Creates the three workload accounts and the Terraform state bucket
+# identity. Creates the staging and production accounts and the Terraform state bucket
 # that every environment stack uses. See infra/README.md for the order.
 
 terraform {

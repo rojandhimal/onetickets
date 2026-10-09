@@ -23,8 +23,8 @@ output "certificate_validation_records" {
   value = module.app.certificate_validation_records
 }
 
-output "private_subnet_ids" {
-  value = module.network.private_subnet_ids
+output "task_subnet_ids" {
+  value = module.app.task_subnet_ids
 }
 
 output "task_security_group_id" {

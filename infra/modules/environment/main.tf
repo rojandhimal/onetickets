@@ -1,5 +1,5 @@
 # One complete OneTickets environment in one AWS account. The env roots under
-# infra/envs only choose sizes and names; everything else is the same in dev,
+# infra/envs only choose sizes and names; everything else is the same in
 # staging and production so staging is a faithful rehearsal.
 
 terraform {
@@ -70,9 +70,14 @@ data "aws_iam_policy_document" "kms" {
 module "network" {
   source = "../network"
 
-  name               = local.name
-  cidr_block         = var.vpc_cidr
-  single_nat_gateway = var.single_nat_gateway
+  name         = local.name
+  cidr_block   = var.vpc_cidr
+  nat_gateways = var.nat_gateways
+}
+
+locals {
+  # Without NAT, tasks need public IPs to reach AWS APIs and the internet.
+  tasks_public = !module.network.has_nat
 }
 
 module "database" {
@@ -97,7 +102,15 @@ module "app" {
   environment            = var.environment
   vpc_id                 = module.network.vpc_id
   public_subnet_ids      = module.network.public_subnet_ids
-  private_subnet_ids     = module.network.private_subnet_ids
+  task_subnet_ids        = local.tasks_public ? module.network.public_subnet_ids : module.network.private_subnet_ids
+  assign_public_ip       = local.tasks_public
+  use_spot               = var.use_spot
+  container_insights     = var.container_insights
+  enable_autoscaling     = var.power_schedule == null
+  api_cpu                = var.api_cpu
+  api_memory             = var.api_memory
+  web_cpu                = var.web_cpu
+  web_memory             = var.web_memory
   kms_key_arn            = aws_kms_key.main.arn
   web_hostname           = var.web_hostname
   api_hostname           = var.api_hostname
@@ -115,6 +128,20 @@ module "app" {
   ecr_pull_account_ids   = var.ecr_pull_account_ids
   ses_identity_arn       = module.email.identity_arn
   email_domain           = var.email_domain
+}
+
+module "power_schedule" {
+  source = "../schedule"
+  count  = var.power_schedule == null ? 0 : 1
+
+  name            = local.name
+  cluster_name    = module.app.cluster_name
+  service_arns    = module.app.service_arns
+  db_instance_id  = module.database.instance_id
+  db_instance_arn = module.database.instance_arn
+  wake_hour       = var.power_schedule.wake_hour
+  sleep_hour      = var.power_schedule.sleep_hour
+  days            = var.power_schedule.days
 }
 
 module "email" {
@@ -135,6 +162,7 @@ module "deploy_role" {
   pass_role_arns             = [module.app.execution_role_arn, module.app.task_role_arn]
   cluster_name               = module.app.cluster_name
   cluster_arn                = module.app.cluster_arn
+  db_instance_arn            = module.database.instance_arn
 }
 
 module "alarms" {

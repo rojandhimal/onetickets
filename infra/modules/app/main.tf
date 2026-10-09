@@ -154,8 +154,13 @@ resource "aws_ecs_cluster" "this" {
 
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = var.container_insights ? "enabled" : "disabled"
   }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "this" {
+  cluster_name       = aws_ecs_cluster.this.name
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 }
 
 resource "aws_cloudwatch_log_group" "app" {
@@ -598,7 +603,13 @@ resource "aws_ecs_service" "app" {
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.app[each.key].arn
   desired_count   = each.value.desired_count
-  launch_type     = "FARGATE"
+
+  # Spot tasks cost about 70% less and can be reclaimed with two minutes'
+  # notice; ECS starts a replacement. Fine for staging, not for production.
+  capacity_provider_strategy {
+    capacity_provider = var.use_spot ? "FARGATE_SPOT" : "FARGATE"
+    weight            = 1
+  }
 
   enable_execute_command            = var.enable_execute_command
   health_check_grace_period_seconds = 60
@@ -612,9 +623,9 @@ resource "aws_ecs_service" "app" {
   }
 
   network_configuration {
-    subnets          = var.private_subnet_ids
+    subnets          = var.task_subnet_ids
     security_groups  = [aws_security_group.tasks.id]
-    assign_public_ip = false
+    assign_public_ip = var.assign_public_ip
   }
 
   load_balancer {
@@ -634,10 +645,12 @@ resource "aws_ecs_service" "app" {
     ignore_changes = [task_definition, desired_count]
   }
 
-  depends_on = [aws_lb_listener_rule.app]
+  depends_on = [aws_lb_listener_rule.app, aws_ecs_cluster_capacity_providers.this]
 }
 
 resource "aws_appautoscaling_target" "api" {
+  count = var.enable_autoscaling ? 1 : 0
+
   service_namespace  = "ecs"
   resource_id        = "service/${aws_ecs_cluster.this.name}/${aws_ecs_service.app["api"].name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -646,11 +659,13 @@ resource "aws_appautoscaling_target" "api" {
 }
 
 resource "aws_appautoscaling_policy" "api_cpu" {
+  count = var.enable_autoscaling ? 1 : 0
+
   name               = "${var.name}-api-cpu"
   policy_type        = "TargetTrackingScaling"
-  service_namespace  = aws_appautoscaling_target.api.service_namespace
-  resource_id        = aws_appautoscaling_target.api.resource_id
-  scalable_dimension = aws_appautoscaling_target.api.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.api[0].service_namespace
+  resource_id        = aws_appautoscaling_target.api[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.api[0].scalable_dimension
 
   target_tracking_scaling_policy_configuration {
     target_value       = 60

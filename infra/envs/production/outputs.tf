@@ -18,8 +18,8 @@ output "certificate_validation_records" {
   value = module.environment.certificate_validation_records
 }
 
-output "private_subnet_ids" {
-  value = module.environment.private_subnet_ids
+output "task_subnet_ids" {
+  value = module.environment.task_subnet_ids
 }
 
 output "task_security_group_id" {

@@ -22,8 +22,12 @@ output "task_security_group_id" {
   value = aws_security_group.tasks.id
 }
 
-output "private_subnet_ids" {
-  value = var.private_subnet_ids
+output "task_subnet_ids" {
+  value = var.task_subnet_ids
+}
+
+output "service_arns" {
+  value = { for k, s in aws_ecs_service.app : k => s.id }
 }
 
 output "execution_role_arn" {

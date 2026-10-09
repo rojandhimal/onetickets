@@ -15,8 +15,31 @@ variable "public_subnet_ids" {
   type = list(string)
 }
 
-variable "private_subnet_ids" {
-  type = list(string)
+variable "task_subnet_ids" {
+  description = "Subnets the app tasks run in: private when the VPC has NAT, public otherwise."
+  type        = list(string)
+}
+
+variable "assign_public_ip" {
+  description = "Give tasks public IPs, so they reach ECR, Secrets Manager and SES without a NAT gateway. Inbound is still only from the load balancer."
+  type        = bool
+  default     = false
+}
+
+variable "use_spot" {
+  type    = bool
+  default = false
+}
+
+variable "container_insights" {
+  type    = bool
+  default = true
+}
+
+variable "enable_autoscaling" {
+  description = "Scale the API on CPU. Off where a schedule sets the task count, so the two don't fight."
+  type        = bool
+  default     = true
 }
 
 variable "kms_key_arn" {

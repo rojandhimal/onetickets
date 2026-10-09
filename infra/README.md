@@ -4,28 +4,35 @@ Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`). Nothing here has 
 
 ## Layout
 
-| Path                             | What it is                                                                                                                                                                                      |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `organization/`                  | Run once in the AWS Organizations management account. Creates the dev, staging and production accounts, the Terraform state bucket, an organization-wide CloudTrail and a monthly budget alert. |
-| `envs/{dev,staging,production}/` | One stack per environment. Each applies `modules/environment` into its own account, choosing sizes and hostnames.                                                                               |
-| `modules/environment/`           | One complete environment: KMS key, network, database, app, deploy role, alarms.                                                                                                                 |
-| `modules/network/`               | VPC over two availability zones, public and private subnets, NAT, S3 endpoint, rejected-traffic flow logs.                                                                                      |
-| `modules/database/`              | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                          |
-| `modules/app/`                   | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                          |
-| `modules/email/`                 | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                        |
-| `modules/github-deploy-role/`    | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                           |
-| `modules/alarms/`                | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage.                                                                                            |
-| `scripts/deploy.sh`              | Runs migrations and `db-roles`, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                                |
+| Path                          | What it is                                                                                                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `organization/`               | Run once in the AWS Organizations management account. Creates the staging and production accounts, the Terraform state bucket, an organization-wide CloudTrail and a monthly budget alert. |
+| `envs/{staging,production}/`  | One stack per environment. Each applies `modules/environment` into its own account, choosing sizes and hostnames.                                                                          |
+| `modules/environment/`        | One complete environment: KMS key, network, database, app, deploy role, alarms.                                                                                                            |
+| `modules/network/`            | VPC over two availability zones, public and private subnets, NAT, S3 endpoint, rejected-traffic flow logs.                                                                                 |
+| `modules/database/`           | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                     |
+| `modules/app/`                | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                     |
+| `modules/email/`              | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                   |
+| `modules/github-deploy-role/` | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                      |
+| `modules/alarms/`             | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage.                                                                                       |
+| `modules/schedule/`           | Staging's out-of-hours schedule: stops the database and scales the services to zero overnight and at weekends.                                                                             |
+| `scripts/deploy.sh`           | Runs migrations and `db-roles`, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                           |
+| `scripts/power.sh`            | Wakes staging up (or puts it to sleep) outside the schedule. Used by the Staging power workflow and by `deploy.sh` when staging is asleep.                                                 |
 
 What differs between environments:
 
-|                     | dev                                 | staging                                     | production                                                    |
-| ------------------- | ----------------------------------- | ------------------------------------------- | ------------------------------------------------------------- |
-| Web / API host      | `dev.<domain>` / `api.dev.<domain>` | `staging.<domain>` / `api.staging.<domain>` | `<domain>` / `api.<domain>`                                   |
-| Database            | `db.t4g.micro`                      | `db.t4g.small`                              | `db.t4g.medium`, Multi-AZ, 14-day backups copied to Melbourne |
-| NAT gateways        | 1                                   | 1                                           | 2 (one per AZ)                                                |
-| API tasks           | 1 to 2                              | 1 to 2                                      | 2 to 6                                                        |
-| Deletion protection | off                                 | off                                         | on                                                            |
+|                     | staging                                             | production                                                    |
+| ------------------- | --------------------------------------------------- | ------------------------------------------------------------- |
+| Web / API host      | `staging.<domain>` / `api.staging.<domain>`         | `<domain>` / `api.<domain>`                                   |
+| Database            | `db.t4g.micro`, 1-day backups                       | `db.t4g.medium`, Multi-AZ, 14-day backups copied to Melbourne |
+| NAT gateways        | none (tasks run in public subnets with public IPs)  | 2 (one per AZ)                                                |
+| Tasks               | 1 each of API and web, smallest size, Fargate Spot  | API 2 to 6, web 2, on-demand                                  |
+| Hours               | Mon to Fri 7:00 to 22:00 Sydney time, off otherwise | always on                                                     |
+| Deletion protection | off                                                 | on                                                            |
+
+There is no dev AWS account. Development runs locally with docker compose (see "Local development" below).
+
+Outside staging's hours the database is stopped and both services are at zero tasks. A deploy wakes staging first if it is asleep. To use it in the evening or at a weekend, run the **Staging power** workflow with `up`; the schedule puts it back to sleep at the next 22:00 (or run it with `down`). Staging's tasks are in public subnets, but their security group only accepts traffic from the load balancer, and the database stays in private subnets with no internet route.
 
 Following the architecture review, there is no Redis, SQS or read replica yet. Background jobs use a Postgres-backed queue inside the API image, and production is resized after the Sprint 9 load test.
 
@@ -45,7 +52,7 @@ ECS replaces tasks only once the new ones pass health checks, and rolls back on 
 - The API image contains its migration command, by default `node dist/database/migrate.js` with `apps/api/migrations` alongside `dist` (change `migrate_command` in `modules/environment` if it moves). It reads `MIGRATION_DATABASE_URL`, which is the schema owner.
 - The API reads `DATABASE_URL`, which logs in as `onetickets_app`. That role owns nothing and is a member of the `ot_app` group role the migrations create, so row-level security applies to it. After each migration run, the `db-roles` task (plain `psql`, owner credentials) creates the login if missing, sets its password from Secrets Manager and grants it `ot_app`. A worker login granted `ot_worker` gets added the same way when workers exist.
 - Connection URLs use `sslmode=require&uselibpqcompat=true`: traffic is encrypted, but the RDS certificate is not verified yet. Ship the RDS CA bundle in the image and switch to `verify-full` before launch.
-- API environment set by Terraform: `APP_ENV` (`dev`, `staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=1` (the load balancer appends the client address; the web rewrite forwards it unchanged). Set `api_trust_proxy_hops` to 2 once Cloudflare proxies the hostnames: too high a count lets clients spoof their IP past rate limits.
+- API environment set by Terraform: `APP_ENV` (`staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=1` (the load balancer appends the client address; the web rewrite forwards it unchanged). Set `api_trust_proxy_hops` to 2 once Cloudflare proxies the hostnames: too high a count lets clients spoof their IP past rate limits.
 - API secrets from Secrets Manager: `DATABASE_URL`, `MFA_ENCRYPTION_KEY` (32 random bytes, base64, generated once per environment) and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (empty until filled in by hand, see below).
 
 ## What the owner must set up first
@@ -53,7 +60,7 @@ ECS replaces tasks only once the new ones pass health checks, and rolls back on 
 These need a person with a credit card and access to the company domain. Nothing else is needed from the owner to apply.
 
 1. **AWS management account.** Create one AWS account to be the management account (it will run no apps). Turn on MFA for the root user, then create an admin user in IAM Identity Center and stop using root.
-2. **Three email addresses** for the dev, staging and production accounts' root users. They must be unique; plus-addressing works (`aws+dev@yourdomain`).
+2. **Two email addresses** for the staging and production accounts' root users. They must be unique; plus-addressing works (`aws+staging@yourdomain`).
 3. **An alerts email address** for budget and CloudWatch alarms.
 4. **The domain**, with its DNS hosted in Cloudflare (free plan is fine). After each environment's apply, add the records Terraform prints, all as "DNS only" (not proxied) unless noted:
    - `certificate_validation_records`: CNAMEs that let AWS issue the HTTPS certificate.
@@ -88,7 +95,7 @@ cp terraform.tfvars.example terraform.tfvars   # fill in emails
 terraform init && terraform apply
 # then uncomment the backend block in main.tf and: terraform init -migrate-state
 
-# 2. Each environment (dev and staging first; production needs staging's account id)
+# 2. Each environment (staging first; production needs staging's account id)
 cd ../envs
 cp backend.hcl.example backend.hcl             # bucket from `terraform output state_bucket`
 cd staging
@@ -107,6 +114,20 @@ After the first `terraform init`, commit the generated `.terraform.lock.hcl` fil
 terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
 ```
 
+## Local development
+
+Local development and CI use docker compose (Postgres) rather than an AWS account or LocalStack:
+
+- LocalStack's free tier is for non-commercial use only, and it does not include SES API v2, which the API sends mail through, or RDS and ECS.
+- Email uses a local transport (`MAIL_TRANSPORT` other than `ses`) so nothing is sent.
+- Ticket QR signing should sit behind an interface with a local Ed25519 key for development and tests, and AWS KMS (which supports Ed25519 signing in Sydney) in staging and production. Staging is where the real KMS and SES paths are tested.
+
 ## Rough monthly cost
 
-From list prices in Sydney, before Cloudflare, Sentry and email: dev about US$90, staging about US$110, production about US$330 (mostly NAT gateways, the load balancers and the Multi-AZ database). This is an estimate, not a quote. Dev can be scaled to zero when nobody is using it.
+From list prices in Sydney, before Cloudflare, Sentry and email. This is an estimate, not a quote.
+
+| Environment | About      | Main costs                                                                                                         |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| staging     | US$45-50   | Load balancer (~US$21, runs all the time), public IPv4 addresses (~US$9), database and tasks only in working hours |
+| production  | US$330     | NAT gateways, load balancer, Multi-AZ database                                                                     |
+| total       | US$375-380 | The organization budget alert is set at US$450.                                                                    |
