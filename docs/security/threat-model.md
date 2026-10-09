@@ -6,14 +6,14 @@ Scope: the MVP (Sprints 0 to 10). Method: STRIDE per area, ranked by impact x li
 
 ## What we are protecting
 
-| Asset | Why it matters |
-|---|---|
-| Money flows (Stripe Connect charges, refunds, payouts) | Direct financial loss to organisers, buyers or OneTickets |
-| Ticket validity (signed QR, check-in state) | Fake or duplicated tickets get people into venues; real buyers turned away |
-| Inventory (sold + held <= capacity) | Oversell breaks trust and Consumer Law |
-| Organiser accounts and roles | Takeover lets an attacker redirect payouts, refund, or read attendee data |
-| Attendee personal data (names, emails, orders) | Privacy Act 1988 and the Notifiable Data Breaches scheme apply |
-| Signing keys, Stripe keys, AWS credentials | Compromise of any one breaks a whole control above |
+| Asset                                                  | Why it matters                                                             |
+| ------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Money flows (Stripe Connect charges, refunds, payouts) | Direct financial loss to organisers, buyers or OneTickets                  |
+| Ticket validity (signed QR, check-in state)            | Fake or duplicated tickets get people into venues; real buyers turned away |
+| Inventory (sold + held <= capacity)                    | Oversell breaks trust and Consumer Law                                     |
+| Organiser accounts and roles                           | Takeover lets an attacker redirect payouts, refund, or read attendee data  |
+| Attendee personal data (names, emails, orders)         | Privacy Act 1988 and the Notifiable Data Breaches scheme apply             |
+| Signing keys, Stripe keys, AWS credentials             | Compromise of any one breaks a whole control above                         |
 
 ## Actors
 
@@ -36,24 +36,24 @@ Scope: the MVP (Sprints 0 to 10). Method: STRIDE per area, ranked by impact x li
 
 Likelihood and impact are H/M/L. "Story" is where the control should land as acceptance criteria. Items marked **NEW** are not in the backlog today and are proposed to PM.
 
-| # | Risk | L | I | Control | Sprint / story |
-|---|---|---|---|---|---|
-| T1 | Organiser account takeover (phished magic link, stolen session, Google account linking) then payout redirect or mass refund | M | H | Single-use, short-lived magic links; HttpOnly session cookies; step-up MFA on money and role actions; 48 h payout hold on email change | S0-3, S0-4, S7-1 |
-| T2 | Cross-organisation data leak through a missing `organisation_id` filter (IDOR) | M | H | Deny-by-default guards plus RLS that actually bites (non-owner role, `FORCE`, `SET LOCAL`), cross-tenant test as the app role | S0-4 |
-| T3 | Card testing: bots use cheap paid tickets to validate stolen cards, causing disputes and Stripe account risk | H | H | Turnstile and rate limits on PaymentIntent creation, Radar rules, per-IP/per-email order limits **from Sprint 4**, not Sprint 9 | S4-3 **NEW** (backlog has it in S9-2) |
-| T4 | Forged Stripe webhook marks an order paid | M | H | Verify `Stripe-Signature` on the raw body, reject old timestamps, re-fetch the PaymentIntent before fulfilling | S4-4 **NEW** (make explicit) |
-| T5 | Copied QR (screenshot shared or resold) admits several people | H | M | Signed token proves authenticity only; one active check-in per ticket (partial unique index); amber on repeat; offline duplicates flagged after sync; rotating codes later | S2-3, S3-2, S3-3 |
-| T6 | Forged QR token | L | H | Ed25519 (or P-256) signature, per-event key in KMS, key id in token, scanner holds public key only, revocation list | S2-3, S3-3 |
-| T7 | Lost or stolen door-staff phone leaks attendee list | M | M | Download names only for manual search, minimal fields, wipe at event end and on session revoke, short-lived event-scoped scanner session | S3-1, S3-3, S3-4 |
-| T8 | Stored XSS in organiser-authored event content runs on public event pages and steals buyer sessions | M | H | Sanitise rich text server-side with an allowlist, strict CSP, no `dangerouslySetInnerHTML` of raw input, image URLs via our own upload | S1-1, S1-3 **NEW** |
-| T9 | Scam or fraudulent events (sell tickets to nothing, then cash out) | M | H | Post-event payouts, first-event review over A$10,000, dispute freeze, prohibited-events policy, takedown in admin console | S5-5, S7-1, S7-4, S10-2 |
-| T10 | Secrets or tokens leaked in logs, Sentry, URLs or the repo | M | H | PII and secret scrubbing in logs and Sentry, magic-link tokens never logged, `Referrer-Policy`, secret scanning in CI | S0-1, S0-5 |
-| T11 | CI or dependency compromise reaches production | L | H | GitHub OIDC to AWS (no long-lived keys), actions pinned by SHA, lockfile enforced, dependency audit, prod deploy needs approval | S0-1, S0-2 |
-| T12 | Email spoofing of OneTickets (phishing organisers and buyers) | M | M | SPF, DKIM and DMARC (`p=quarantine` then `reject`) on the sending domain | S0-2 **NEW** |
-| T13 | Oversell or hold abuse (bots hold all stock, then release) | M | M | Conditional `UPDATE`, per-order limits, no hold renewal while waiting room is on, Turnstile on queue entry | S2-1, S9-1, S9-2 |
-| T14 | Admin console abuse or takeover | L | H | SSO and MFA, least-privilege staff roles, append-only audit log, no silent impersonation | S7-4 |
-| T15 | Buyer order and ticket enumeration (guess order or ticket ids, read others' tickets) | M | M | Random (UUID v4 / ULID with randomness) ids, buyer access only via signed magic link or session bound to the order email, buyer RLS role | S2-2, S2-4 |
-| T16 | Refund abuse: refund after check-in, or refunds sent somewhere other than the original card | L | M | Refunds only to original payment method (Stripe default), step-up MFA above a threshold, audit log, refunded tickets revoked | S5-3 |
+| #   | Risk                                                                                                                        | L   | I   | Control                                                                                                                                                                    | Sprint / story                        |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | --- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| T1  | Organiser account takeover (phished magic link, stolen session, Google account linking) then payout redirect or mass refund | M   | H   | Single-use, short-lived magic links; HttpOnly session cookies; step-up MFA on money and role actions; 48 h payout hold on email change                                     | S0-3, S0-4, S7-1                      |
+| T2  | Cross-organisation data leak through a missing `organisation_id` filter (IDOR)                                              | M   | H   | Deny-by-default guards plus RLS that actually bites (non-owner role, `FORCE`, `SET LOCAL`), cross-tenant test as the app role                                              | S0-4                                  |
+| T3  | Card testing: bots use cheap paid tickets to validate stolen cards, causing disputes and Stripe account risk                | H   | H   | Turnstile and rate limits on PaymentIntent creation, Radar rules, per-IP/per-email order limits **from Sprint 4**, not Sprint 9                                            | S4-3 **NEW** (backlog has it in S9-2) |
+| T4  | Forged Stripe webhook marks an order paid                                                                                   | M   | H   | Verify `Stripe-Signature` on the raw body, reject old timestamps, re-fetch the PaymentIntent before fulfilling                                                             | S4-4 **NEW** (make explicit)          |
+| T5  | Copied QR (screenshot shared or resold) admits several people                                                               | H   | M   | Signed token proves authenticity only; one active check-in per ticket (partial unique index); amber on repeat; offline duplicates flagged after sync; rotating codes later | S2-3, S3-2, S3-3                      |
+| T6  | Forged QR token                                                                                                             | L   | H   | Ed25519 (or P-256) signature, per-event key in KMS, key id in token, scanner holds public key only, revocation list                                                        | S2-3, S3-3                            |
+| T7  | Lost or stolen door-staff phone leaks attendee list                                                                         | M   | M   | Download names only for manual search, minimal fields, wipe at event end and on session revoke, short-lived event-scoped scanner session                                   | S3-1, S3-3, S3-4                      |
+| T8  | Stored XSS in organiser-authored event content runs on public event pages and steals buyer sessions                         | M   | H   | Sanitise rich text server-side with an allowlist, strict CSP, no `dangerouslySetInnerHTML` of raw input, image URLs via our own upload                                     | S1-1, S1-3 **NEW**                    |
+| T9  | Scam or fraudulent events (sell tickets to nothing, then cash out)                                                          | M   | H   | Post-event payouts, first-event review over A$10,000, dispute freeze, prohibited-events policy, takedown in admin console                                                  | S5-5, S7-1, S7-4, S10-2               |
+| T10 | Secrets or tokens leaked in logs, Sentry, URLs or the repo                                                                  | M   | H   | PII and secret scrubbing in logs and Sentry, magic-link tokens never logged, `Referrer-Policy`, secret scanning in CI                                                      | S0-1, S0-5                            |
+| T11 | CI or dependency compromise reaches production                                                                              | L   | H   | GitHub OIDC to AWS (no long-lived keys), actions pinned by SHA, lockfile enforced, dependency audit, prod deploy needs approval                                            | S0-1, S0-2                            |
+| T12 | Email spoofing of OneTickets (phishing organisers and buyers)                                                               | M   | M   | SPF, DKIM and DMARC (`p=quarantine` then `reject`) on the sending domain                                                                                                   | S0-2 **NEW**                          |
+| T13 | Oversell or hold abuse (bots hold all stock, then release)                                                                  | M   | M   | Conditional `UPDATE`, per-order limits, no hold renewal while waiting room is on, Turnstile on queue entry                                                                 | S2-1, S9-1, S9-2                      |
+| T14 | Admin console abuse or takeover                                                                                             | L   | H   | SSO and MFA, least-privilege staff roles, append-only audit log, no silent impersonation                                                                                   | S7-4                                  |
+| T15 | Buyer order and ticket enumeration (guess order or ticket ids, read others' tickets)                                        | M   | M   | Random (UUID v4 / ULID with randomness) ids, buyer access only via signed magic link or session bound to the order email, buyer RLS role                                   | S2-2, S2-4                            |
+| T16 | Refund abuse: refund after check-in, or refunds sent somewhere other than the original card                                 | L   | M   | Refunds only to original payment method (Stripe default), step-up MFA above a threshold, audit log, refunded tickets revoked                                               | S5-3                                  |
 
 ## Area detail
 
@@ -62,6 +62,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 **Threats:** magic-link interception or reuse, token leakage in logs and Referer headers, account enumeration, credential-less brute force on the email OTP/link endpoint, Google account linking to the wrong account, session theft via XSS, CSRF on cookie-authenticated endpoints.
 
 **Requirements (Sprint 0 review checklist for S0-3):**
+
 - Magic-link token: at least 128 bits from a CSPRNG, stored only as a hash, single use, expires in 15 minutes or less, invalidated when a newer link is issued.
 - The link lands on a page that exchanges the token by `POST`, then redirects to a clean URL. The token never appears in server logs, Sentry, OTel spans or analytics; `Referrer-Policy: no-referrer` on that page.
 - Same response and timing for known and unknown emails ("If that email is registered, we've sent a link").
@@ -81,6 +82,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 **Threats:** IDOR across organisations, privilege escalation by a member granting themselves owner or finance, door staff reaching money, RLS bypassed by the owning role or a pooled connection carrying the previous tenant.
 
 **Requirements (Sprint 0 review checklist for S0-4):**
+
 - Deny by default: every controller route declares the roles allowed; a route with no declaration fails a test.
 - The organisation id comes from the server-side session membership, never from a request body or header the client controls. A path parameter organisation id is checked against membership.
 - RLS per architecture review fix 11: app connects as a non-owner role (or tables use `FORCE ROW LEVEL SECURITY`); tenant set with `SET LOCAL app.organisation_id` inside each transaction; separate roles and policies for buyer paths and workers, no bypass flag.
@@ -94,6 +96,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 **Threats:** card testing, forged or replayed webhooks, price tampering, double fulfilment, refund abuse, payout redirection, dispute losses, platform seen as merchant of record (architecture review fix 1).
 
 **Requirements:**
+
 - Card data never touches our servers: Stripe Payment Element only (SAQ A). CSP restricts scripts to our origin and Stripe.
 - Price is computed server-side by the one pricing function; the client sends ticket type ids and quantities only.
 - PaymentIntent created server-side with an idempotency key; amount, currency, `application_fee_amount`, `on_behalf_of` and `transfer_data` set by the server.
@@ -109,6 +112,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 **Threats:** forged tickets, copied tickets, key theft, PII in the code, revoked tickets still scanning.
 
 **Requirements:**
+
 - Token payload: version, key id, event id, ticket id (random), issued-at. No name or email. Compact encoding (CBOR or base45) to keep the QR small.
 - Signature: Ed25519 with a per-event key in KMS if KMS supports it in ap-southeast-2; otherwise ECDSA P-256 in KMS (preferred over holding Ed25519 private keys in Secrets Manager, since KMS never exports the key). Confirm before Sprint 2.
 - Only the signing worker's IAM role may call `kms:Sign` on ticket keys; the API cannot.
@@ -122,6 +126,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 **Threats:** offline duplicate admission across gates, lost device with attendee data, malicious door staff, tampered local check-in history, replayed sync uploads.
 
 **Requirements:**
+
 - The scanner downloads the public key, ticket ids and revocation list; names only on request for manual search, limited to first name and last initial plus a hashed email for exact-match lookup where possible (architecture review note).
 - Local data wiped at event end, on sign-out, and on remote session revocation at next contact.
 - Sync uploads are authenticated with the scanner session, idempotent per scan id, and the server, not the device, is the source of truth for "already admitted".
@@ -131,6 +136,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 ### 6. Personal data and logging (S0-5, S6-4, S10-2)
 
 **Requirements (Sprint 0 review checklist for S0-5):**
+
 - A single redaction layer used by the logger, Sentry `beforeSend`/`beforeBreadcrumb`, and OTel attribute processing: emails, names, phone numbers, addresses, IPs (truncate), `Authorization`, `Cookie`, `Set-Cookie`, magic-link and OAuth tokens, Stripe keys and client secrets.
 - Request and response bodies are not sent to Sentry by default; URLs have query strings stripped or tokens redacted.
 - Sentry Session Replay off, or with all text and inputs masked.
@@ -149,15 +155,15 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 
 ## Decisions made in review (Sprint 0)
 
-| Date | Decision | Where |
-|---|---|---|
-| 2026-10-09 | CI runs gitleaks and `pnpm audit --prod --audit-level=high` on every PR and weekly; Dependabot updates actions and npm weekly; actions pinned by SHA | #3 |
-| 2026-10-09 | Deploy workflows run only from `main` (manual dispatch on `main`, or a `push` CI run in this repository), never from a fork PR's `workflow_run` | #4 |
-| 2026-10-09 | The api trusts exactly one proxy hop for the client IP (`TRUST_PROXY_HOPS=1`), because the Next rewrite forwards `X-Forwarded-For` unchanged | #4 |
-| 2026-10-09 | Staging tasks may run in public subnets without NAT, inbound only from the load balancer; production keeps private subnets and one NAT per AZ | #4 |
-| 2026-10-09 | App database roles have no `delete` grants until a feature needs one; audit events are insert-only and block deleting their organisation (`on delete restrict`) | #6 |
-| 2026-10-09 | Step-up MFA is a server-side timestamp valid for 15 minutes; every sign-in starts a new unverified session | #6, S0-3 |
-| 2026-10-09 | Web responses carry security headers (CSP, HSTS, frame-ancestors none, nosniff, referrer policy) from one shared module | #2 |
+| Date       | Decision                                                                                                                                                        | Where    |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 2026-10-09 | CI runs gitleaks and `pnpm audit --prod --audit-level=high` on every PR and weekly; Dependabot updates actions and npm weekly; actions pinned by SHA            | #3       |
+| 2026-10-09 | Deploy workflows run only from `main` (manual dispatch on `main`, or a `push` CI run in this repository), never from a fork PR's `workflow_run`                 | #4       |
+| 2026-10-09 | The api trusts exactly one proxy hop for the client IP (`TRUST_PROXY_HOPS=1`), because the Next rewrite forwards `X-Forwarded-For` unchanged                    | #4       |
+| 2026-10-09 | Staging tasks may run in public subnets without NAT, inbound only from the load balancer; production keeps private subnets and one NAT per AZ                   | #4       |
+| 2026-10-09 | App database roles have no `delete` grants until a feature needs one; audit events are insert-only and block deleting their organisation (`on delete restrict`) | #6       |
+| 2026-10-09 | Step-up MFA is a server-side timestamp valid for 15 minutes; every sign-in starts a new unverified session                                                      | #6, S0-3 |
+| 2026-10-09 | Web responses carry security headers (CSP, HSTS, frame-ancestors none, nosniff, referrer policy) from one shared module                                         | #2       |
 
 Follow-ups agreed: pending invites the invitee must accept before membership exists (from #6); ALB ingress limited to Cloudflare ranges and database TLS `verify-full` before Sprint 4 (from #4).
 
