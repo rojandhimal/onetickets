@@ -30,7 +30,15 @@ export default defineConfig({
       command: 'pnpm --filter @onetickets/api start',
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
-      env: { PORT: '3001' },
+      env: {
+        PORT: '3001',
+        WEB_URL: webUrl,
+        SESSION_COOKIE_SECURE: 'false',
+        MAIL_TRANSPORT: 'console',
+        TRUST_PROXY_HOPS: '1',
+        // A fixed test-only key: 32 bytes, base64.
+        MFA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+      },
     },
     {
       command: 'pnpm --filter @onetickets/web start',
