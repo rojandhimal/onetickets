@@ -1,9 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import type { MfaCode, RecoveryCodes, TotpSetup } from '@onetickets/shared';
 import { Secret, TOTP } from 'otpauth';
 import type pg from 'pg';
 import { UnitOfWork } from '../../database/database.module.js';
+import { Mailer } from '../notifications/index.js';
 import { AUTH_CONFIG, type AuthConfig } from './auth.config.js';
 import { ApiError } from './errors.js';
 import { RateLimiter } from './rate-limiter.js';
@@ -18,10 +19,13 @@ const invalidCode = () =>
 /** Authenticator-app MFA: enrolment, recovery codes and step-up checks. */
 @Injectable()
 export class MfaService {
+  private readonly logger = new Logger(MfaService.name);
+
   constructor(
     @Inject(AUTH_CONFIG) private readonly config: AuthConfig,
     private readonly uow: UnitOfWork,
     private readonly limiter: RateLimiter,
+    private readonly mailer: Mailer,
   ) {}
 
   /** Starts enrolment with a new secret. Replaces an unconfirmed one. */
@@ -46,7 +50,7 @@ export class MfaService {
   /** Confirms enrolment with a first code and returns one-time recovery codes. */
   async confirm(userId: string, code: string): Promise<RecoveryCodes> {
     await this.limitAttempts(userId);
-    return this.uow.run({ userId }, async (tx) => {
+    const { email, recoveryCodes } = await this.uow.run({ userId }, async (tx) => {
       const user = await this.user(tx, userId);
       if (user.mfa_enabled || !user.totp_secret_enc) throw invalidCode();
       await this.acceptTotp(tx, userId, user, code);
@@ -62,8 +66,32 @@ export class MfaService {
           [userId, hashToken(recoveryCode)],
         );
       }
-      return { recoveryCodes };
+      return { email: user.email, recoveryCodes };
     });
+    await this.notifyEnrolled(email);
+    return { recoveryCodes };
+  }
+
+  /**
+   * Tells the account owner an authenticator was added, so someone holding a stolen session
+   * cannot enrol their own quietly. Enrolment has already committed, so a mail failure is
+   * logged rather than losing the user's recovery codes.
+   */
+  private async notifyEnrolled(email: string): Promise<void> {
+    try {
+      await this.mailer.send({
+        to: email,
+        subject: 'An authenticator app was added to your OneTickets account',
+        text: [
+          'An authenticator app was just added to your OneTickets account. You will now be asked',
+          'for a code before payouts, exports and other sensitive changes.',
+          '',
+          "If this wasn't you, contact OneTickets support straight away.",
+        ].join('\n'),
+      });
+    } catch (error) {
+      this.logger.error(`MFA enrolment notice failed: ${(error as Error).name}`);
+    }
   }
 
   /** Checks a code for step-up. Throws if it does not match; a recovery code is used up. */

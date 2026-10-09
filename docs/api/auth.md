@@ -49,7 +49,8 @@ cookie is first-party. Every error is `ApiErrorBody` (`{ statusCode, code, messa
 | `POST /auth/sign-out` | 204; the session is revoked server-side |
 
 The session cookie is `__Host-ot_session` (`ot_session` on local http): HttpOnly, SameSite=Lax.
-It expires after 7 days without use and 30 days after sign-in, whichever is first.
+It expires after 7 days without use and 30 days after sign-in, whichever is first. Signing in again
+on the same browser revokes its previous session.
 
 ## MFA (authenticator app)
 
@@ -60,5 +61,6 @@ It expires after 7 days without use and 30 days after sign-in, whichever is firs
 | `POST /auth/mfa/verify`     | `{ code }` or `{ recoveryCode }` | 204; the session counts as verified for 15 min |
 
 Errors: 409 `mfa_already_enabled` (setup), 409 `mfa_not_enabled` (verify), 422 `invalid_code`.
-Each code works once, and there are 10 attempts per user every 15 minutes. Paying out, granting
+Turning MFA on emails the account address, so an enrolment by someone else does not go
+unnoticed. Each code works once, and there are 10 attempts per user every 15 minutes. Paying out, granting
 owner or finance, and bulk export answer 403 `mfa_required` without a check in the last 15 minutes.

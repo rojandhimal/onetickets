@@ -208,6 +208,14 @@ describe('sign-in API (S0-3)', () => {
     expect(me.body.code).toBe('not_signed_in');
   });
 
+  it('revokes the previous session when the same browser signs in again', async () => {
+    const email = uniqueEmail('again');
+    const first = await signIn(email, 'Again');
+    const token = await requestLink(email);
+    await post('/auth/magic-link/verify', { token }, { cookie: first.cookie }).expect(200);
+    await request(app.getHttpServer()).get('/me').set('cookie', first.cookie).expect(401);
+  });
+
   it('ends idle sessions', async () => {
     const { cookie, session } = await signIn(uniqueEmail('idle'), 'Idle');
     await withOwner((client) =>
@@ -242,6 +250,9 @@ describe('sign-in API (S0-3)', () => {
         { cookie: owner.cookie },
       ).expect(200);
       expect(confirm.body.recoveryCodes).toHaveLength(10);
+      expect(outbox.lastTo(owner.session.user.email)?.subject).toBe(
+        'An authenticator app was added to your OneTickets account',
+      );
 
       await grant().expect(201);
       const me = await request(app.getHttpServer()).get('/me').set('cookie', owner.cookie);

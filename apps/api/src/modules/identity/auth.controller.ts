@@ -46,6 +46,13 @@ export class AuthController {
     });
   }
 
+  /** Signs in on this browser, revoking any session it already had so none is left orphaned. */
+  private async startSession(request: AppRequest, response: Response, token: string) {
+    const previous = sessionToken(request, this.config);
+    if (previous) await this.auth.signOut(previous);
+    this.setSessionCookie(response, token);
+  }
+
   private get oauthCookie(): string {
     return this.config.secureCookies ? '__Host-ot_oauth' : 'ot_oauth';
   }
@@ -84,7 +91,7 @@ export class AuthController {
       sameSite: 'lax',
       path: '/',
     });
-    if (finish.ok) this.setSessionCookie(response, finish.sessionToken);
+    if (finish.ok) await this.startSession(request, response, finish.sessionToken);
     response.redirect(302, finish.redirect);
   }
 
@@ -110,7 +117,7 @@ export class AuthController {
       body.token,
       clientIp(request),
     );
-    this.setSessionCookie(response, sessionToken);
+    await this.startSession(request, response, sessionToken);
     return session;
   }
 

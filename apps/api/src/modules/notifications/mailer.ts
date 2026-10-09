@@ -21,6 +21,13 @@ export abstract class Mailer {
 export class OutboxMailer extends Mailer {
   readonly sent: Email[] = [];
 
+  constructor() {
+    super();
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('MAIL_TRANSPORT=outbox is not allowed in production');
+    }
+  }
+
   async send(email: Email): Promise<void> {
     this.sent.push(email);
   }
