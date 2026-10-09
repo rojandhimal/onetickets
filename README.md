@@ -40,7 +40,10 @@ be backwards-compatible (expand, then contract).
 
 The api connects with `DATABASE_URL` as a login role granted `ot_app`, never as the owner or a
 superuser: every tenant table has row-level security keyed to the organisation set per transaction
-by `UnitOfWork`. Background jobs use a role granted `ot_worker`.
+by `UnitOfWork`. Background jobs use a role granted `ot_worker`. See
+[docs/backend/tenancy-and-access.md](docs/backend/tenancy-and-access.md) before adding a table.
+
+More in [docs/](docs/README.md): API endpoints, how the api works, and decision records.
 
 ## Module boundaries
 
