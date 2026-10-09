@@ -191,6 +191,32 @@ describe('row-level security across organisations', () => {
     expect(seen).toEqual([]);
   });
 
+  it("keeps each user's MFA recovery codes to themselves", async () => {
+    await withOwner((client) =>
+      client.query(
+        `insert into identity.mfa_recovery_codes (user_id, code_hash)
+         values ($1, '\\x01'), ($2, '\\x02')`,
+        [aliceId, bobId],
+      ),
+    );
+    const seen = await asTenant({ userId: bobId }, async (client) => {
+      const { rows } = await client.query<{ user_id: string }>(
+        'select distinct user_id from identity.mfa_recovery_codes',
+      );
+      return rows.map((row) => row.user_id);
+    });
+    expect(seen).toEqual([bobId]);
+
+    const updated = await asTenant({ userId: bobId }, async (client) => {
+      const { rowCount } = await client.query(
+        'update identity.mfa_recovery_codes set used_at = now() where user_id = $1',
+        [aliceId],
+      );
+      return rowCount;
+    });
+    expect(updated).toBe(0);
+  });
+
   it("lists a user's own organisations without exposing other members", async () => {
     const seen = await asTenant({ userId: aliceId }, async (client) => ({
       organisations: (await client.query('select id from identity.organisations')).rows,

@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { configureTrustProxy } from '../src/http.js';
 import { OutboxMailer, Mailer } from '../src/modules/notifications/index.js';
 import { uniqueEmail, withOwner } from './db.js';
 
@@ -42,7 +43,8 @@ describe('sign-in API (S0-3)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication<NestExpressApplication>();
-    (app as NestExpressApplication).set('trust proxy', 1);
+    // As behind the AWS load balancer, which appends the client address.
+    configureTrustProxy(app as NestExpressApplication, { TRUST_PROXY_HOPS: '1' });
     await app.init();
     outbox = app.get(Mailer) as OutboxMailer;
   });
@@ -199,6 +201,18 @@ describe('sign-in API (S0-3)', () => {
       post('/auth/magic-link/verify', { token: 'guess' }, { 'x-forwarded-for': attacker });
     for (let i = 0; i < 30; i++) await guess().expect(410);
     expect((await guess().expect(429)).body.code).toBe('rate_limited');
+  });
+
+  it('keys per-IP limits on the address the load balancer appends, not on what the client sends', async () => {
+    // Its own address, so this test's 30 hits don't rate-limit the others (or a rerun).
+    const realClient = `2001:db8::${randomInt(1, 0xffff).toString(16)}:${randomInt(1, 0xffff).toString(16)}`;
+    const send = (i: number) =>
+      request(app.getHttpServer())
+        .post('/auth/magic-link')
+        .set({ origin: WEB, 'x-forwarded-for': `198.51.100.${i % 250}, ${realClient}` })
+        .send({ email: uniqueEmail(`spoof${i}`) });
+    for (let i = 0; i < 30; i++) await send(i).expect(202);
+    expect((await send(30).expect(429)).body.code).toBe('rate_limited');
   });
 
   it('signs out by revoking the session server-side', async () => {

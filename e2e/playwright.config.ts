@@ -35,7 +35,7 @@ export default defineConfig({
         WEB_URL: webUrl,
         SESSION_COOKIE_SECURE: 'false',
         MAIL_TRANSPORT: 'console',
-        TRUST_PROXY_HOPS: '1',
+        TRUST_PROXY_HOPS: '0',
         // A fixed test-only key: 32 bytes, base64.
         MFA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
       },
