@@ -35,6 +35,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 | `/auth/verify`     | Landing page for the magic link. Exchanges the token and goes to `/organiser`.              |
 | `/organiser/setup` | Asks a new organiser to name their organisation (`POST /organisations`).                    |
 | `/organiser`       | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`.   |
+| `/csp-report`      | Receives CSP violation reports, scrubs them and forwards them to Sentry.                    |
 | `/healthz`         | Returns `{"status":"ok"}` for the container health check.                                   |
 
 ## Sign-in flow
@@ -85,12 +86,14 @@ Every event, span and breadcrumb is scrubbed in the app before it is sent
 
 The environment comes from `APP_ENV` on the server and from the hostname in the browser
 (`dev.<domain>`, `staging.<domain>`, `<domain>`), so one image is promoted across environments.
-When a DSN is set, the report-only CSP also sends its violation reports to Sentry.
+When a DSN is set, the report-only CSP sends violation reports to `/csp-report`. That route keeps
+only the path of each URL in the report, redacts the rest and forwards it to Sentry's security
+endpoint from the server.
 
 ### Sentry project setup
 
-CSP reports go straight from the browser to Sentry and skip the in-app scrubbers, so every Sentry
-project (one per app) must have these before its DSN is used:
+Sentry's own scrubbing is the second layer behind the app's, so every Sentry project (one per app)
+must have these before its DSN is used:
 
 1. Settings > Security & Privacy: turn on **Data Scrubber** and **Use Default Scrubbers**.
 2. Same page: turn on **Prevent Storing of IP Addresses**.

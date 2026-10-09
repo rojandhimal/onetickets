@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import nextConfig from '../../next.config';
 import { cspReportUri } from './security-headers';
 
@@ -21,6 +21,16 @@ describe('security headers', () => {
     expect(h.get('Strict-Transport-Security')).toMatch(/max-age=\d+/);
     expect(h.get('Content-Security-Policy-Report-Only')).toContain("frame-ancestors 'none'");
     expect(h.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
+  });
+
+  it('sends CSP reports to our own scrubbing endpoint, never straight to Sentry', async () => {
+    vi.resetModules();
+    vi.stubEnv('NEXT_PUBLIC_SENTRY_DSN', 'https://abc123@o42.ingest.sentry.io/4507');
+    const { securityHeaders } = await import('./security-headers');
+    vi.unstubAllEnvs();
+    const csp = securityHeaders.find((h) => h.key === 'Content-Security-Policy-Report-Only');
+    expect(csp?.value).toContain('report-uri /csp-report');
+    expect(csp?.value).not.toContain('sentry_key');
   });
 
   it('sends no referrer from the magic-link landing page', async () => {

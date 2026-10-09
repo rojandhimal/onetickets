@@ -25,10 +25,13 @@ The web app removes data before Sentry sends anything:
 - `redact()` and the scrubbers (`scrubEvent`, `scrubBreadcrumb`, `scrubSpan`) live in
   `@onetickets/shared`, so the web app and the api scrub identically.
 
-Every Sentry project must also have these settings, because CSP violation reports go from the
-browser straight to Sentry and never pass through the in-app scrubbers. Those reports carry the
-page URL with its query string, the referrer and the blocked URL, and Sentry records the
-reporter's IP address.
+- CSP violation reports carry the page URL with its query string, the referrer and the blocked URL.
+  Browsers post them to our own `/csp-report`, not to Sentry. It keeps only the path of each URL,
+  drops `script-sample`, runs the rest through `redact()` and forwards the report from the server,
+  so Sentry never sees the reporter's IP address.
+
+Every Sentry project must also have these settings, as a second layer behind the app and for
+anything sent before a scrubber existed:
 
 - Security & Privacy: **Data Scrubber** on and **Use Default Scrubbers** on
 - Security & Privacy: **Prevent Storing of IP Addresses** on
@@ -41,5 +44,6 @@ These steps are in the Sentry setup checklist in `docs/web/README.md`.
 - Issues show who was affected by id only. Support looks the person up in our own admin.
 - Some useful context (query strings, request bodies) is never available in Sentry.
 - New fields we want in Sentry have to be added to the allowlist on purpose, with a test.
-- A new Sentry project isn't ready until the settings above are on. Sentry's scrubbing is a
-  second layer for events and the only one for CSP reports.
+- A new Sentry project isn't ready until the settings above are on.
+- The web app runs one extra endpoint, `/csp-report`. It accepts at most 16 KB, drops anything
+  that isn't a CSP report, and always answers 204.

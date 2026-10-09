@@ -17,12 +17,17 @@ export function sentryOrigin(dsn = parseDsn()): string {
   return dsn ? ` ${dsn.origin}` : '';
 }
 
-/** Sentry's security endpoint collects CSP violation reports, so report-only tells us what to fix. */
+/**
+ * Sentry's security endpoint for CSP violation reports. Browsers don't post here directly: they
+ * post to our own /csp-report, which scrubs the report and forwards it (ADR 0003).
+ */
 export function cspReportUri(dsn = parseDsn()): string | null {
   const projectId = dsn?.pathname.replace(/^\/+/, '');
   if (!dsn || !dsn.username || !projectId) return null;
   return `${dsn.origin}/api/${projectId}/security/?sentry_key=${dsn.username}`;
 }
+
+export const CSP_REPORT_PATH = '/csp-report';
 
 const csp = [
   "default-src 'self'",
@@ -35,7 +40,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  ...(cspReportUri() ? [`report-uri ${cspReportUri()}`] : []),
+  ...(cspReportUri() ? [`report-uri ${CSP_REPORT_PATH}`] : []),
 ].join('; ');
 
 export const securityHeaders: Header[] = [

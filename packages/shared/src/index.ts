@@ -1,3 +1,6 @@
+// Must stay first: configures zod before any schema below is defined.
+import './zod-config.js';
+
 export { formatAud } from './money.js';
 export type { Cents } from './money.js';
 export { can, canGrant, MFA_REQUIRED, OWNER_ONLY_GRANTS, PERMISSIONS, ROLES } from './roles.js';
