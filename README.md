@@ -34,9 +34,6 @@ cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build
 ```
 
-To just see the app running, without setting up Node, follow [docs/run-locally.md](docs/run-locally.md)
-instead.
-
 Then migrate the database, create the api's login role and start the apps. The full steps, and
 what to do when something goes wrong, are in [docs/local-development.md](docs/local-development.md).
 

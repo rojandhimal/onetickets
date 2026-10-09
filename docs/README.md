@@ -4,7 +4,6 @@ Start with the [README](../README.md). This folder holds everything else.
 
 | Path                                         | What lives there                                                                        | Owner             |
 | -------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------- |
-| `run-locally.md`                             | One command to run the whole app with Docker, for anyone                                | DevOps            |
 | [local-development.md](local-development.md) | Setting up and running everything on your machine                                       | Docs, DevOps      |
 | [architecture.md](architecture.md)           | How the apps, modules and database fit together                                         | Docs              |
 | [testing.md](testing.md)                     | Test layers, commands and rules                                                         | QA                |
