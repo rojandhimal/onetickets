@@ -6,10 +6,19 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "noEmit": true,
+    "declaration": false,
     "allowJs": false,
     "incremental": true,
-    "plugins": [{ "name": "next" }]
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["next-env.d.ts", "src", "*.config.ts", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "src", "*.config.ts", "vitest.setup.ts", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

@@ -1,0 +1,150 @@
+.form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.googleButton {
+  height: 54px;
+  border-radius: var(--radius-button);
+  border: 1.5px solid var(--line-field);
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.googleButton:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--slate);
+  font-size: 14px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-button);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.field input {
+  scroll-margin-bottom: 96px; /* keep the focused field above the on-screen keyboard */
+  height: 50px;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  border: 1.5px solid var(--line-field);
+  background: var(--white);
+  font-size: 16px;
+  color: var(--ink);
+}
+.field input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+.hint {
+  font-size: 13px;
+  color: var(--slate);
+}
+.fieldError {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--error);
+}
+.fieldError > svg {
+  flex: none;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.legal,
+.switchMode {
+  text-align: center;
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+}
+.switchMode {
+  font-size: 15px;
+}
+/* Links inside running text need a non-colour cue (WCAG 1.4.1). */
+.legal a,
+.switchMode a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.switchMode a {
+  font-weight: 700;
+}
+
+.sent {
+  gap: 16px;
+  padding-top: 32px;
+}
+.sentIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: var(--indigo-tint);
+  color: var(--indigo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sent h2:focus {
+  outline: none;
+}
+.sent p {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.sentActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.sent p.resendStatus {
+  font-size: 14px;
+  color: var(--success-ink);
+}
+
+.heroHeader {
+  padding-bottom: 28px;
+  gap: 20px;
+}
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hero h1 {
+  font-size: 32px;
+}
+.hero p {
+  margin: 0;
+  color: var(--mist);
+  line-height: 1.45;
+}

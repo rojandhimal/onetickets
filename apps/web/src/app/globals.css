@@ -1,0 +1,103 @@
+/* Ticket stub design system v0.1 tokens. See the OneTickets UI Design canvas. */
+:root {
+  --indigo: #4338ca;
+  --indigo-hover: #3730a3;
+  --indigo-tint: #eef0ff;
+  --indigo-ink: #2e2799;
+  --marigold: #ffb547;
+  --marigold-tint: #fff4e0;
+  --marigold-ink: #5c3300;
+  --ink: #16161d;
+  --ink-soft: #33333f;
+  --slate: #5b5b6b;
+  --mist: #b9b9c6;
+  --paper: #f7f7fa;
+  --white: #ffffff;
+  --line-field: #8a8a9a;
+  --line-button: #d4d4de;
+  --line-divider: #e4e4ec;
+  --error: #b91c1c;
+  --error-tint: #fdecec;
+  --success-ink: #0b5a3a;
+
+  --font-display: var(--font-bricolage), 'Bricolage Grotesque', sans-serif;
+  --font-body: var(--font-figtree), 'Figtree', sans-serif;
+
+  --radius-control: 12px;
+  --radius-button: 14px;
+  --radius-card: 16px;
+  --gutter: 16px;
+  --column: 480px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--indigo);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--indigo-hover);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--white);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 19px;
+}
+.brand-sub {
+  font-weight: 500;
+  color: var(--mist);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

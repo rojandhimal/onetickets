@@ -55,7 +55,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
+      # Tests migrate and seed with this superuser, then run the api as an RLS-bound role.
+      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -67,3 +68,42 @@ jobs:
       - run: pnpm --filter @onetickets/shared build
       - name: Integration tests
         run: pnpm test:integration
+
+  e2e:
+    name: E2E and accessibility (Playwright)
+    needs: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: onetickets
+          POSTGRES_PASSWORD: onetickets
+          POSTGRES_DB: onetickets
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U onetickets"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Migrate as the superuser; the api runs as onetickets_app (granted ot_app, RLS applies).
+      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
+      DATABASE_URL: postgres://onetickets_app:onetickets_app@localhost:5432/onetickets
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Migrate and create the api's database role
+        run: ./e2e/setup-db.sh
+      - name: Install Chromium
+        run: pnpm --filter @onetickets/e2e exec playwright install --with-deps chromium
+      - name: E2E tests at 375 px and 1280 px
+        run: pnpm e2e
