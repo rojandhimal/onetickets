@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { expectAccessible } from './a11y';
 
 // S0-3 web. Loads each page from the production build, so a server render error fails here

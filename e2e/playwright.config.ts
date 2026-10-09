@@ -31,6 +31,11 @@ export default defineConfig({
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
       env: {
+        // CI sets this; locally it defaults to the docker compose Postgres and the RLS-bound login
+        // that ./e2e/setup-db.sh creates, so `pnpm e2e` works without exporting anything.
+        DATABASE_URL:
+          process.env.DATABASE_URL ??
+          'postgres://onetickets_app:onetickets_app@localhost:5432/onetickets',
         PORT: '3001',
         WEB_URL: webUrl,
         SESSION_COOKIE_SECURE: 'false',

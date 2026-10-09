@@ -37,8 +37,11 @@ pnpm build && ./e2e/setup-db.sh && pnpm e2e  # browser and accessibility tests
 ```
 
 E2E tests live in `e2e/` and run every page at 375 px and 1280 px with an axe check for WCAG 2.2 AA.
-Run `pnpm --filter @onetickets/e2e exec playwright install chromium` once first. `e2e/setup-db.sh`
-migrates and creates the `onetickets_app` login role the api uses (see `apps/api/.env.example`).
+Any Content-Security-Policy violation on a page also fails the test (`e2e/tests/fixtures.ts`), so
+import `test` from `./fixtures` in new specs. Run `pnpm --filter @onetickets/e2e exec playwright
+install chromium` once first, with Postgres up (`docker compose up -d postgres`). `e2e/setup-db.sh`
+migrates and creates the `onetickets_app` login role the api uses; the e2e api connects as that role
+by default, so no `DATABASE_URL` is needed locally.
 
 ## Database
 
