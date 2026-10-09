@@ -10,3 +10,13 @@ export type {
   MemberDto,
   OrganisationDto,
 } from './api/organisations.js';
+export { magicLinkRequest, magicLinkVerify, mfaCode, organiserNameSchema } from './api/auth.js';
+export type {
+  MagicLinkRequest,
+  MagicLinkVerify,
+  MfaCode,
+  RecoveryCodes,
+  Session,
+  SessionUser,
+  TotpSetup,
+} from './api/auth.js';
