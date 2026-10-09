@@ -6,6 +6,8 @@ export interface AuthConfig {
   secureCookies: boolean;
   /** 32-byte key that encrypts MFA secrets at rest. */
   mfaKey: Buffer;
+  /** Sign-in emails the whole service may send in a rolling hour, whoever asks. */
+  magicLinkHourlyCap: number;
 }
 
 export const AUTH_CONFIG = Symbol('AUTH_CONFIG');
@@ -28,7 +30,11 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
   if (mfaKey.length !== 32) {
     throw new Error('MFA_ENCRYPTION_KEY must be 32 bytes, base64 (openssl rand -base64 32)');
   }
-  return { webUrl, secureCookies, mfaKey };
+  const magicLinkHourlyCap = Number(env.MAGIC_LINK_HOURLY_CAP ?? 300);
+  if (!Number.isInteger(magicLinkHourlyCap) || magicLinkHourlyCap < 1) {
+    throw new Error('MAGIC_LINK_HOURLY_CAP must be a whole number above 0');
+  }
+  return { webUrl, secureCookies, mfaKey, magicLinkHourlyCap };
 }
 
 export function sessionCookieName(config: AuthConfig): string {

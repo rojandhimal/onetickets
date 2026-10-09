@@ -14,6 +14,7 @@ import { rateKey } from './secrets.js';
 import { SessionsRepository } from './sessions.repository.js';
 
 const FIFTEEN_MINUTES = 15 * 60_000;
+const ONE_HOUR = 60 * 60_000;
 
 @Injectable()
 export class AuthService {
@@ -36,6 +37,15 @@ export class AuthService {
       { key: rateKey('link:email', email), max: 5, windowMs: FIFTEEN_MINUTES },
       { key: rateKey('link:ip', ip), max: 30, windowMs: FIFTEEN_MINUTES },
     );
+    // A ceiling on everything we send, so no mix of addresses and IPs can burn SES reputation.
+    // Checked after the per-email and per-IP limits so blocked requests don't use it up.
+    await this.limiter.hit({
+      key: 'link:global',
+      max: this.config.magicLinkHourlyCap,
+      windowMs: ONE_HOUR,
+      rolling: true,
+      warning: `Sign-in email cap of ${this.config.magicLinkHourlyCap}/hour reached; refusing more`,
+    });
     const token = await this.uow.run({}, (tx) => this.magicLinks.issue(tx, email, organiserName));
     await this.mailer.send({
       to: email,

@@ -26,8 +26,9 @@ cookie is first-party. Every error is `ApiErrorBody` (`{ statusCode, code, messa
   verify answers 410 with `link_expired`, `link_used` or `link_invalid`.
 - `organiserName` names the user's first organisation if they have none. The web app does not send
   it: a user with `organisation: null` is sent to `/organiser/setup`.
-- Limits: 5 links per email and 30 per IP every 15 minutes; 30 verify attempts per IP every
-  15 minutes.
+- Limits: 5 links per email and 30 per IP every 15 minutes, and `MAGIC_LINK_HOURLY_CAP` (300)
+  for the whole service in a rolling hour; 30 verify attempts per IP every 15 minutes. The IP is
+  the one the load balancer appended (see `TRUST_PROXY_HOPS`), never one the client sent.
 
 ## Google
 
