@@ -1,0 +1,24 @@
+# api environment variables
+
+`apps/api/.env.example` has working local values. The api checks these at startup and refuses to
+start if a required one is missing or unsafe for production.
+
+| Variable                 | Required            | What it is                                                                                                                                                                        |
+| ------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | yes                 | The api's login, granted `ot_app`. Never the schema owner or a superuser.                                                                                                         |
+| `MIGRATION_DATABASE_URL` | for migrations      | The schema owner. Used only by `pnpm --filter @onetickets/api migrate`.                                                                                                           |
+| `PORT`                   | no (3001)           | HTTP port.                                                                                                                                                                        |
+| `WEB_URL`                | yes                 | The web app's origin. Sign-in links point here; state-changing requests must come from it.                                                                                        |
+| `SESSION_COOKIE_SECURE`  | no (true)           | `false` only for local http. Refused in production.                                                                                                                               |
+| `MFA_ENCRYPTION_KEY`     | yes                 | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts authenticator secrets at rest.                                                                                      |
+| `TRUST_PROXY_HOPS`       | no                  | Proxies in front of the api, so the client IP is right for rate limits. 1 behind the ALB or the web rewrite; 2 once Cloudflare proxies too. Too high lets clients spoof their IP. |
+| `MAIL_TRANSPORT`         | yes                 | `ses` in AWS; `smtp` (Mailpit) or `console` locally; `outbox` in tests. `smtp` and `console` are refused in production.                                                           |
+| `EMAIL_FROM_DOMAIN`      | with `ses`          | Sender domain verified in SES; mail comes from `no-reply@` it.                                                                                                                    |
+| `SMTP_HOST`, `SMTP_PORT` | with `smtp`         | Mailpit in the local stack (`mailpit`, 1025). No auth or TLS.                                                                                                                     |
+| `GOOGLE_CLIENT_ID`       | no                  | Turns on Google sign-in. Empty means the button shows "unavailable".                                                                                                              |
+| `GOOGLE_CLIENT_SECRET`   | with Google         | OAuth client secret.                                                                                                                                                              |
+| `GOOGLE_REDIRECT_URI`    | no                  | Defaults to `WEB_URL/api/auth/google/callback`. Register this exact URL with Google.                                                                                              |
+| `NODE_ENV`               | `production` in AWS | Turns on the production refusals above.                                                                                                                                           |
+
+Secrets (`MFA_ENCRYPTION_KEY`, `GOOGLE_CLIENT_SECRET`, database passwords) come from the deployment's
+secret store and are never committed.
