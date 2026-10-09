@@ -89,6 +89,9 @@ merged, the sign-up screens render but the magic-link step will not complete.
 | `API_URL`                | web         | `http://localhost:3001`                                              |
 | `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard           |
 
+The api's full list, including the sign-in settings, is in
+[docs/backend/environment.md](backend/environment.md).
+
 Never commit a real secret. `.env` files are git-ignored, and CI scans every change for secrets.
 
 ## Day to day
