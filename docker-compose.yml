@@ -1,4 +1,5 @@
-# Local Postgres matching CI. `docker compose up -d`, then copy apps/api/.env.example to apps/api/.env.
+# Local Postgres matching CI (no LocalStack, see infra/README.md). `docker compose up -d`, then copy apps/api/.env.example to apps/api/.env.
+# Bound to localhost only so the default password is not reachable from the network.
 services:
   postgres:
     image: postgres:16
@@ -7,7 +8,7 @@ services:
       POSTGRES_PASSWORD: onetickets
       POSTGRES_DB: onetickets
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 
