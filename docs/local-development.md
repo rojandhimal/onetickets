@@ -87,6 +87,11 @@ cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build  # the apps import the built shared package
 ```
 
+The api won't start without an MFA key. Put the output of `openssl rand -base64 32` after
+`MFA_ENCRYPTION_KEY=` in `apps/api/.env`. Sign-in emails print in the api's terminal by default; to
+see them in the test inbox instead, set `MAIL_TRANSPORT=smtp` and uncomment `SMTP_HOST` and
+`SMTP_PORT` in the same file.
+
 #### Create the database schema
 
 Migrations run as the schema owner (`onetickets`, the Postgres superuser in Docker):
@@ -137,11 +142,6 @@ pnpm --filter @onetickets/scanner dev
 The browser only talks to the web app. Next.js forwards `/api/*` to the api at `API_URL`, so the
 session cookie stays first-party.
 
-Signing in end to end needs the auth API (story S0-3), which is still being built. Until it is
-merged, the sign-up screens render but the magic-link step will not complete, and opening
-`/organiser` returns a 500 (`GET /me failed with 404` from `apps/web/src/lib/session.ts`) instead
-of redirecting to sign-in.
-
 ### Environment variables
 
 | Variable                 | Used by     | Local value                                                          |
@@ -149,6 +149,7 @@ of redirecting to sign-in.
 | `DATABASE_URL`           | api         | `postgres://onetickets_app:onetickets_app@localhost:5432/onetickets` |
 | `MIGRATION_DATABASE_URL` | api migrate | `postgres://onetickets:onetickets@localhost:5432/onetickets`         |
 | `PORT`                   | api         | `3001`                                                               |
+| `MFA_ENCRYPTION_KEY`     | api         | your own `openssl rand -base64 32`; the api won't start without it   |
 | `API_URL`                | web         | `http://localhost:3001`                                              |
 | `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard           |
 

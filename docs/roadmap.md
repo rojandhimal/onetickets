@@ -24,10 +24,11 @@ Sydney and Melbourne.
 ## Where Sprint 0 is
 
 Done and merged: monorepo and CI (S0-1), CI security checks, Terraform and deploy pipeline (S0-2,
-not applied), sign-up screens and organiser home (S0-3 web), organisations, roles and row-level
-security (S0-4), e2e and accessibility tests.
+not applied), sign-up screens and organiser home (S0-3 web), the auth API (S0-3), organisations,
+roles and row-level security (S0-4), e2e and accessibility tests, the security checklist, and a
+one-command local Docker stack.
 
-In progress: the auth API (S0-3), observability (S0-5), and a one-command local Docker stack.
+In progress: observability (S0-5).
 
 Sprint 0 demo, Friday 13 November: an organiser signs up and lands on an empty organiser home,
 running locally.

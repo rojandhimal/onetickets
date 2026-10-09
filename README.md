@@ -4,8 +4,8 @@ Event ticketing for Australian organisers: publish an event, sell or give away t
 people in at the door with a phone. Think Eventbrite, built for small and mid-sized Australian
 events, with prices shown including GST and payouts through Stripe Connect.
 
-**Status:** Sprint 0 (foundations). Organiser sign-up screens, organisations and roles are in
-`main`. Sign-in (the auth API) is being built now. Public launch is planned for May 2027 in Sydney
+**Status:** Sprint 0 (foundations). Organiser sign-up and sign-in (magic link, Google, MFA),
+organisations and roles are in `main`. Public launch is planned for May 2027 in Sydney
 and Melbourne. See the [roadmap](docs/roadmap.md).
 
 ## What's in the repo
@@ -32,8 +32,9 @@ To develop, you need Node 22 (see `.nvmrc`), pnpm 10 (`corepack enable`) and Doc
 
 ```sh
 pnpm install
-docker compose up -d
+docker compose up -d postgres mailpit   # Postgres and the test inbox, not the web or api containers
 cp apps/api/.env.example apps/api/.env   # then set MFA_ENCRYPTION_KEY=$(openssl rand -base64 32)
+cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @onetickets/shared build
 ```
 

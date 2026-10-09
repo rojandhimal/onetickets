@@ -37,18 +37,18 @@ Apps never import each other. They share code only through `packages/*`.
 
 The api is one deployable split into modules that match the business areas:
 
-| Module        | Owns                                                            | Status                                                    |
-| ------------- | --------------------------------------------------------------- | --------------------------------------------------------- |
-| Health        | `GET /health` (api and database up)                             | Built                                                     |
-| Identity      | Users, organisations, memberships, roles, audit events, sign-in | Organisations and roles built; sign-in in progress (S0-3) |
-| Catalogue     | Events and ticket types                                         | Sprint 1                                                  |
-| Inventory     | Capacity, holds, sold counts                                    | Sprints 1 and 2                                           |
-| Checkout      | Orders, idempotent checkout                                     | Sprint 2                                                  |
-| Ticketing     | Signed QR tickets, "My tickets"                                 | Sprint 2                                                  |
-| Scanning      | Check-in, offline sync                                          | Sprint 3                                                  |
-| Payments      | Stripe Connect, webhooks, refunds, payouts                      | Sprints 4, 5, 7                                           |
-| Ledger        | Double-entry journal of every money movement                    | Sprints 4 and 5                                           |
-| Notifications | Emails                                                          | As needed                                                 |
+| Module        | Owns                                                            | Status          |
+| ------------- | --------------------------------------------------------------- | --------------- |
+| Health        | `GET /health` (api and database up)                             | Built           |
+| Identity      | Users, organisations, memberships, roles, audit events, sign-in | Built           |
+| Catalogue     | Events and ticket types                                         | Sprint 1        |
+| Inventory     | Capacity, holds, sold counts                                    | Sprints 1 and 2 |
+| Checkout      | Orders, idempotent checkout                                     | Sprint 2        |
+| Ticketing     | Signed QR tickets, "My tickets"                                 | Sprint 2        |
+| Scanning      | Check-in, offline sync                                          | Sprint 3        |
+| Payments      | Stripe Connect, webhooks, refunds, payouts                      | Sprints 4, 5, 7 |
+| Ledger        | Double-entry journal of every money movement                    | Sprints 4 and 5 |
+| Notifications | Emails                                                          | As needed       |
 
 Rules:
 
@@ -61,15 +61,21 @@ Rules:
 
 ### Current endpoints
 
-| Method and path                               | What it does                                 |
-| --------------------------------------------- | -------------------------------------------- |
-| `GET /health`                                 | Api and database status                      |
-| `GET /me/organisations`                       | Organisations the signed-in user belongs to  |
-| `POST /organisations`                         | Create an organisation; caller becomes owner |
-| `GET /organisations/:organisationId/members`  | List members (needs `manageMembers`)         |
-| `POST /organisations/:organisationId/members` | Add a member with a role                     |
+| Method and path                               | What it does                                      |
+| --------------------------------------------- | ------------------------------------------------- |
+| `GET /health`                                 | Api and database status                           |
+| `POST /auth/magic-link`, `/verify`            | Email a sign-in link, then trade it for a session |
+| `GET /auth/google/start`, `/callback`         | Sign in with Google                               |
+| `GET /me`, `POST /auth/sign-out`              | Current session; sign out                         |
+| `POST /me/mfa/totp/setup`, `/confirm`         | Turn on an authenticator app                      |
+| `POST /auth/mfa/verify`                       | Step up with an MFA or recovery code              |
+| `GET /me/organisations`                       | Organisations the signed-in user belongs to       |
+| `POST /organisations`                         | Create an organisation; caller becomes owner      |
+| `GET /organisations/:organisationId/members`  | List members (needs `manageMembers`)              |
+| `POST /organisations/:organisationId/members` | Add a member with a role                          |
 
-Request and response shapes live in `packages/shared/src/api`.
+Request and response shapes live in `packages/shared/src/api`; each module's endpoints are
+documented in [docs/api/](api/).
 
 ## Data and multi-tenancy
 
