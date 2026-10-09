@@ -4,25 +4,13 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GoogleMark, Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
 import { GOOGLE_START_URL, requestMagicLink } from '@/lib/auth-client';
+import type { InitialError } from '@/lib/auth-errors';
 import { validateEmail } from '@/lib/validation';
 import { SentPanel } from './SentPanel';
 import styles from './signup.module.css';
 
 type Step = 'form' | 'sent';
-export type InitialError = 'google' | 'google_unverified' | 'google_unavailable' | 'link';
 type Banner = InitialError | 'rate-limited' | 'failed' | null;
-
-const INITIAL_ERRORS: readonly InitialError[] = [
-  'google',
-  'google_unverified',
-  'google_unavailable',
-  'link',
-];
-
-/** Maps ?error= to a known message. Anything else is ignored, never echoed. */
-export function parseInitialError(value: string | undefined): InitialError | null {
-  return INITIAL_ERRORS.find((e) => e === value) ?? null;
-}
 
 const bannerText: Record<Exclude<Banner, null>, string> = {
   google: "Google sign-in didn't finish. Try again, or use your email instead.",

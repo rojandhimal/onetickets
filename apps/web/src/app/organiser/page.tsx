@@ -73,7 +73,10 @@ export default async function OrganiserHomePage() {
                 ) : (
                   <div className={`${styles.template} ${styles.templateSoon}`}>
                     {content}
-                    <span className={styles.soonChip}>Coming soon</span>
+                    <span className={styles.soonChip}>
+                      <span aria-hidden="true">Coming soon</span>
+                      <span className="visually-hidden">{`${t.name}, coming soon`}</span>
+                    </span>
                   </div>
                 )}
               </li>

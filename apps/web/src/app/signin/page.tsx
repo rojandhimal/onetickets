@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
-import { parseInitialError, SignupForm } from '../signup/SignupForm';
+import { parseInitialError } from '@/lib/auth-errors';
+import { SignupForm } from '../signup/SignupForm';
 import local from '../signup/signup.module.css';
 
 export const metadata: Metadata = { title: 'Sign in' };
@@ -23,7 +24,7 @@ export default async function SigninPage({ searchParams }: Props) {
           <Logo />
           <div className={local.hero}>
             <h1 className={styles.display}>Welcome back</h1>
-            <p>We&apos;ll email you a link to sign in. No password needed.</p>
+            <p>Sign in with Google or get a link by email.</p>
           </div>
         </div>
       </header>

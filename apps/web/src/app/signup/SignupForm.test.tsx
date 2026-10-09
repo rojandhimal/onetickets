@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseInitialError, SignupForm } from './SignupForm';
+import { parseInitialError } from '@/lib/auth-errors';
+import { SignupForm } from './SignupForm';
 
 function mockFetch(status: number, body?: unknown) {
   const fn = vi

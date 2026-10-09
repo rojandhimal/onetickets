@@ -48,7 +48,7 @@ describe('SentPanel', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(JSON.parse((fetch.mock.calls[0]?.[1] as RequestInit).body as string)).toEqual({ email });
     expect(
-      await screen.findByText("Sent again. Check spam if it's not there."),
+      await screen.findByText("Sent again. Check your spam folder if it's not there."),
     ).toBeInTheDocument();
     expect(resend).toBeDisabled();
   });

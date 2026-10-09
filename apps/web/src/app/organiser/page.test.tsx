@@ -46,6 +46,7 @@ describe('organiser home', () => {
     expect(screen.getByRole('heading', { name: 'Welcome, Priya' })).toBeInTheDocument();
     expect(screen.getByText('The Print Shed')).toBeInTheDocument();
     expect(screen.getAllByText('Coming soon')).toHaveLength(4);
+    expect(screen.getByText('Workshop, coming soon')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Workshop/ })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: 'Start from a blank event' }),

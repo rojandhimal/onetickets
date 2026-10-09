@@ -1,18 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Bricolage_Grotesque, Figtree } from 'next/font/google';
+import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
 import './globals.css';
 
-const bricolage = Bricolage_Grotesque({
-  subsets: ['latin'],
-  weight: ['500', '700', '800'],
+// Self-hosted (latin subset, variable weight) so builds never depend on Google Fonts being
+// reachable, and so the CSP can keep font-src 'self'. Licences: src/fonts/OFL-*.txt.
+const bricolage = localFont({
+  src: '../fonts/BricolageGrotesque-latin.woff2',
+  weight: '500 800',
   variable: '--font-bricolage',
   display: 'swap',
 });
 
-const figtree = Figtree({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const figtree = localFont({
+  src: '../fonts/Figtree-latin.woff2',
+  weight: '400 700',
   variable: '--font-figtree',
   display: 'swap',
 });

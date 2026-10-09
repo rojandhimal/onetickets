@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
-import { parseInitialError, SignupForm } from './SignupForm';
+import { parseInitialError } from '@/lib/auth-errors';
+import { SignupForm } from './SignupForm';
 import local from './signup.module.css';
 
 export const metadata: Metadata = { title: 'Sign up as an organiser' };

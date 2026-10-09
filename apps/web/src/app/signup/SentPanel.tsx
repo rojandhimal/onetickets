@@ -57,7 +57,8 @@ export function SentPanel({ email, onUseDifferentEmail }: Props) {
         </h2>
       </div>
       <p>
-        We sent a sign-in link to <strong>{email}</strong>. It works for 15 minutes on any device.
+        We&apos;ve sent a link to <strong>{email}</strong>. Open it on any device within 15 minutes.
+        Not there? Check your spam folder.
       </p>
       <div className={styles.sentActions}>
         <button type="button" className={screen.textButton} onClick={onUseDifferentEmail}>
@@ -72,7 +73,7 @@ export function SentPanel({ email, onUseDifferentEmail }: Props) {
         </button>
       </div>
       <p role="status" className={styles.resendStatus}>
-        {status === 'sent' ? "Sent again. Check spam if it's not there." : ''}
+        {status === 'sent' ? "Sent again. Check your spam folder if it's not there." : ''}
       </p>
       {(status === 'rate-limited' || status === 'failed') && (
         <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
