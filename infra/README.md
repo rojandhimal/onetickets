@@ -40,12 +40,12 @@ ECS replaces tasks only once the new ones pass health checks, and rolls back on 
 ## What the app images must provide
 
 - `apps/api/Dockerfile` and `apps/web/Dockerfile`, built from the repository root, for `linux/amd64`.
-- The API listens on `PORT` (3001) and answers `GET /health/live` with 200 without touching the database (the load balancer check). Web listens on 3000 and answers `GET /` with 200.
-- Web forwards `/api/*` to the API over the private network at `http://api.onetickets.internal:3001` (Cloud Map DNS, the same name in every environment). Next.js evaluates rewrites at build time, so the web Dockerfile must set `API_URL` to that address during `next build`; the task also receives it at runtime.
+- The API listens on `PORT` (3001) and answers `GET /health/live` with 200 without touching the database (the load balancer check). Web listens on 3000 and answers `GET /healthz` with 200.
+- Web forwards `/api/*` to the API over the private network at `http://api.onetickets.internal:3001` (Cloud Map DNS, the same name in every environment). Next.js evaluates rewrites and `NEXT_PUBLIC_*` values at build time, and the same image runs in staging and production, so build-time values must be identical across environments. `apps/web/Dockerfile` sets `API_URL` to the private address; the task also receives it at runtime. Per-environment browser settings (such as the Sentry environment name) must be read at runtime, not baked in.
 - The API image contains its migration command, by default `node dist/database/migrate.js` with `apps/api/migrations` alongside `dist` (change `migrate_command` in `modules/environment` if it moves). It reads `MIGRATION_DATABASE_URL`, which is the schema owner.
 - The API reads `DATABASE_URL`, which logs in as `onetickets_app`. That role owns nothing and is a member of the `ot_app` group role the migrations create, so row-level security applies to it. After each migration run, the `db-roles` task (plain `psql`, owner credentials) creates the login if missing, sets its password from Secrets Manager and grants it `ot_app`. A worker login granted `ot_worker` gets added the same way when workers exist.
 - Connection URLs use `sslmode=require&uselibpqcompat=true`: traffic is encrypted, but the RDS certificate is not verified yet. Ship the RDS CA bundle in the image and switch to `verify-full` before launch.
-- API environment set by Terraform: `APP_ENV` (`dev`, `staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=2` (load balancer plus the web rewrite; set `api_trust_proxy_hops` to 3 once Cloudflare proxies the hostnames).
+- API environment set by Terraform: `APP_ENV` (`dev`, `staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=1` (the load balancer appends the client address; the web rewrite forwards it unchanged). Set `api_trust_proxy_hops` to 2 once Cloudflare proxies the hostnames: too high a count lets clients spoof their IP past rate limits.
 - API secrets from Secrets Manager: `DATABASE_URL`, `MFA_ENCRYPTION_KEY` (32 random bytes, base64, generated once per environment) and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (empty until filled in by hand, see below).
 
 ## What the owner must set up first
@@ -69,6 +69,7 @@ These need a person with a credit card and access to the company domain. Nothing
      | Where                    | Variable              | Value                                         |
      | ------------------------ | --------------------- | --------------------------------------------- |
      | Repository               | `DEPLOY_ENABLED`      | `true`                                        |
+     | Repository               | `SENTRY_WEB_DSN`      | Sentry DSN for the web app (optional, S0-5)   |
      | `staging` environment    | `AWS_DEPLOY_ROLE_ARN` | `deploy_role_arn` output of `envs/staging`    |
      | `staging` environment    | `APP_URL`             | `https://staging.<domain>`                    |
      | `production` environment | `AWS_DEPLOY_ROLE_ARN` | `deploy_role_arn` output of `envs/production` |

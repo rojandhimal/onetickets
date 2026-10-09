@@ -93,6 +93,7 @@ jobs:
             docker buildx build --platform linux/amd64 \
               --file "apps/$app/Dockerfile" \
               --cache-from type=gha,scope=$app --cache-to type=gha,mode=max,scope=$app \
+              --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.SENTRY_WEB_DSN }}" \
               --label org.opencontainers.image.revision=${{ github.event.workflow_run.head_sha || github.sha }} \
               --tag "$image" --push .
           done

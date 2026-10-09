@@ -60,7 +60,7 @@ locals {
     }
     web = {
       port              = 3000
-      health_check_path = "/"
+      health_check_path = "/healthz"
       hostnames         = [var.web_hostname]
       cpu               = var.web_cpu
       memory            = var.web_memory
@@ -72,6 +72,7 @@ locals {
         # Private address of the API (Cloud Map), the same in every
         # environment, so it can be baked into the image at build time.
         { name = "API_URL", value = local.internal_api_url },
+        { name = "FEATURE_EVENT_WIZARD", value = "false" },
       ]
       secrets = []
       command = null

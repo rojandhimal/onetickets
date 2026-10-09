@@ -64,9 +64,9 @@ variable "api_health_check_path" {
 }
 
 variable "api_trust_proxy_hops" {
-  description = "Proxies in front of the API that append to X-Forwarded-For: the load balancer and the web app's /api rewrite. Add 1 when Cloudflare proxies the hostnames."
+  description = "Proxies that append to X-Forwarded-For before the API: the load balancer (the web app's /api rewrite forwards it unchanged). Set to 2 once Cloudflare proxies the hostnames. Too high lets clients spoof their IP past rate limits."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "api_cpu" {
