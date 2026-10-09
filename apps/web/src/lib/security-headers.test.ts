@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import nextConfig from '../../next.config';
+import { cspReportUri } from './security-headers';
 
 async function headersFor(path: string) {
   const rules = (await nextConfig.headers?.()) ?? [];
@@ -22,7 +23,28 @@ describe('security headers', () => {
     expect(h.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
   });
 
+  it('sends CSP reports to our own scrubbing endpoint, never straight to Sentry', async () => {
+    vi.resetModules();
+    vi.stubEnv('NEXT_PUBLIC_SENTRY_DSN', 'https://abc123@o42.ingest.sentry.io/4507');
+    const { securityHeaders } = await import('./security-headers');
+    vi.unstubAllEnvs();
+    const csp = securityHeaders.find((h) => h.key === 'Content-Security-Policy-Report-Only');
+    expect(csp?.value).toContain('report-uri /csp-report');
+    expect(csp?.value).not.toContain('sentry_key');
+  });
+
   it('sends no referrer from the magic-link landing page', async () => {
     expect((await headersFor('/auth/verify')).get('Referrer-Policy')).toBe('no-referrer');
+  });
+});
+
+describe('cspReportUri', () => {
+  it('points CSP reports at the Sentry project from the DSN', () => {
+    expect(cspReportUri(new URL('https://abc123@o42.ingest.sentry.io/4507'))).toBe(
+      'https://o42.ingest.sentry.io/api/4507/security/?sentry_key=abc123',
+    );
+  });
+  it('is off without a DSN', () => {
+    expect(cspReportUri(null)).toBeNull();
   });
 });
