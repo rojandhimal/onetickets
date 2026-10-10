@@ -1,6 +1,6 @@
 # The whole app on one machine: `docker compose up --build`, then open http://localhost:3000.
 # Emails (magic links) land in Mailpit at http://localhost:8025 instead of being sent.
-# See "Run OneTickets on your computer" in README.md.
+# See docs/local-development.md.
 #
 # Developers running the api or web with pnpm can start just the dependencies:
 #   docker compose up -d postgres mailpit
