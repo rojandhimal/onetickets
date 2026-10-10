@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
+import { can } from '@onetickets/shared';
 import * as Sentry from '@sentry/nextjs';
 import { Logo } from '@/components/Logo';
 import { SentryContext } from '@/components/SentryContext';
@@ -18,7 +19,8 @@ export default async function OrganiserHomePage() {
   if (!session) redirect('/signin');
   const organisation = session.organisation;
   if (!organisation) redirect('/organiser/setup');
-  const wizardOn = isEventWizardEnabled();
+  // Finance and door staff can't create events, so they keep the read-only template list.
+  const wizardOn = isEventWizardEnabled() && can(organisation.role, 'manageEvents');
   Sentry.setUser({ id: session.user.id });
   Sentry.setTag('organisation_id', organisation.id);
 

@@ -109,7 +109,7 @@ export function VenueCombobox({
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${errorId} ${hintId}` : hintId}
         autoComplete="off"
-        maxLength={120}
+        maxLength={100}
         value={query}
         onChange={(e) => type(e.target.value)}
         onKeyDown={onKeyDown}

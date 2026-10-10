@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { can } from '@onetickets/shared';
 import { notFound, redirect } from 'next/navigation';
 import screen from '@/components/screen.module.css';
 import { isEventWizardEnabled } from '@/lib/flags';
@@ -19,6 +20,7 @@ export default async function NewEventPage({
   const session = await getSession();
   if (!session) redirect('/signin');
   if (!session.organisation) redirect('/organiser/setup');
+  if (!can(session.organisation.role, 'manageEvents')) notFound();
   const { template } = await searchParams;
 
   return (

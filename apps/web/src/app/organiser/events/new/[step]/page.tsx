@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { can } from '@onetickets/shared';
 import { notFound, redirect } from 'next/navigation';
 import { getEventDraft } from '@/lib/events-server';
 import { isEventWizardEnabled } from '@/lib/flags';
@@ -22,6 +23,7 @@ export default async function WizardStepPage({
   const session = await getSession();
   if (!session) redirect('/signin');
   if (!session.organisation) redirect('/organiser/setup');
+  if (!can(session.organisation.role, 'manageEvents')) notFound();
 
   const event = await getEventDraft(session.organisation.id, draft);
   if (!event || event.status !== 'draft') notFound();

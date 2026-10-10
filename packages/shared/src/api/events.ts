@@ -78,6 +78,28 @@ export const venueInput = z.discriminatedUnion('kind', [
 ]);
 export type VenueInput = z.infer<typeof venueInput>;
 
+// ---------- venue lookup (S1-1 basics step) ----------
+
+/** GET /places/search: suggestions for the venue combobox. */
+export const placeSearchQuery = z.object({
+  q: z.string().trim().min(2).max(100),
+  city: city.default('sydney'),
+});
+export type PlaceSearchQuery = z.infer<typeof placeSearchQuery>;
+
+export interface PlaceSuggestionDto {
+  placeId: string;
+  name: string;
+  address: string;
+}
+
+export interface PlaceSearchResponse {
+  items: PlaceSuggestionDto[];
+}
+
+/** GET /places/:placeId: the full venue to put in the draft's `venue`. */
+export type PlaceDto = Extract<VenueInput, { kind: 'place' }>;
+
 /** What the public sees of a venue. An online event's link is only for ticket holders. */
 export type PublicVenueDto = Exclude<VenueInput, { kind: 'online' }> | { kind: 'online' };
 
@@ -85,7 +107,9 @@ export type PublicVenueDto = Exclude<VenueInput, { kind: 'online' }> | { kind: '
 
 /**
  * Autosave body for PATCH. Every field is optional except `version`, the version the client last
- * saw: a stale one gets 409 `stale_draft` with the current draft as the body.
+ * saw: a stale one gets 409 `stale_draft` with the current draft in `current`. `null` clears a
+ * field (refused with 422 `required_when_live` for what a live event needs). A bad field gets 422
+ * with `field` set, so the client can drop it and save the rest.
  *
  * `about` and `accessibility.notes` are plain text (SEC-3). The api strips markup and control
  * characters; the web renders them as text with line breaks, never as HTML.
@@ -93,7 +117,6 @@ export type PublicVenueDto = Exclude<VenueInput, { kind: 'online' }> | { kind: '
 export const eventDraftPatch = z
   .object({
     version: z.int().min(0),
-    /** null clears a field the organiser emptied. */
     name: z.string().trim().min(1).max(EVENT_LIMITS.name).nullable(),
     startsAt: isoDateTime.nullable(),
     endsAt: isoDateTime.nullable(),
@@ -265,23 +288,6 @@ export interface PublicEventDto {
   priceFromAllInCents: number;
   spotsLeft: number;
   ticketTypes: PublicTicketTypeDto[];
-}
-
-// ---------- venue lookup (S1-1) ----------
-
-export const placeSearchQuery = z.object({
-  q: z.string().trim().min(3).max(120),
-  city: city.optional(),
-});
-export interface PlaceSuggestionDto {
-  placeId: string;
-  /** e.g. "The Print Shed", or the street line when it isn't a named place. */
-  name: string;
-  /** e.g. "12 Sydenham Rd, Marrickville NSW 2204". */
-  address: string;
-}
-export interface PlaceSearchResponse {
-  items: PlaceSuggestionDto[];
 }
 
 // ---------- browse (S1-5) ----------
