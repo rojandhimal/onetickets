@@ -47,7 +47,7 @@ describe('api log redaction', () => {
     });
     // A secret in a field named like one, whose value no string pattern would catch.
     logger.error(
-      Object.assign(new Error(`Lookup for ${PII.email} failed`), { token: 'plainsecret42' }),
+      Object.assign(new Error(`Lookup for ${PII.email} failed`), { token: 'plainsecret42' }), // gitleaks:allow (fake)
     );
 
     const text = output();
