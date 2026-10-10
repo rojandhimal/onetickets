@@ -49,6 +49,9 @@ locals {
         { name = "MAIL_TRANSPORT", value = "ses" },
         { name = "EMAIL_FROM_DOMAIN", value = var.email_domain },
         { name = "TRUST_PROXY_HOPS", value = tostring(var.api_trust_proxy_hops) },
+        { name = "LOG_LEVEL", value = var.api_log_level },
+        # SENTRY_RELEASE (the commit) is added by infra/scripts/deploy.sh.
+        { name = "SENTRY_DSN", value = var.api_sentry_dsn },
       ]
       secrets = [
         { name = "DATABASE_URL", valueFrom = "${var.db_app_secret_arn}:url::" },

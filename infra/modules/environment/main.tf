@@ -123,6 +123,7 @@ module "app" {
   api_max_count          = var.api_max_count
   web_desired_count      = var.web_desired_count
   log_retention_days     = var.log_retention_days
+  api_sentry_dsn         = var.api_sentry_dsn
   deletion_protection    = var.deletion_protection
   enable_execute_command = var.enable_execute_command
   ecr_pull_account_ids   = var.ecr_pull_account_ids

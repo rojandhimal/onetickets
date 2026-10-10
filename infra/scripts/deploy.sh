@@ -25,8 +25,11 @@ done
 register_revision() {
   local family="$1" image="$2"
   aws ecs describe-task-definition --task-definition "$family" --query taskDefinition --output json |
-    jq --arg image "$image" '
+    jq --arg image "$image" --arg release "${image##*:}" '
       .containerDefinitions[0].image = $image
+      | .containerDefinitions[0].environment =
+          ([(.containerDefinitions[0].environment // [])[] | select(.name != "SENTRY_RELEASE")]
+           + [{name: "SENTRY_RELEASE", value: $release}])
       | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities,
             .registeredAt, .registeredBy, .deregisteredAt)' >"$tmp/$family.json"
   aws ecs register-task-definition --cli-input-json "file://$tmp/$family.json" \

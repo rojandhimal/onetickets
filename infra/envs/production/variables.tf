@@ -8,6 +8,12 @@ variable "domain" {
   type        = string
 }
 
+variable "sentry_api_dsn" {
+  description = "Sentry DSN for the API in this environment. Leave empty until the Sentry project exists."
+  type        = string
+  default     = ""
+}
+
 variable "alert_email" {
   type    = string
   default = ""
