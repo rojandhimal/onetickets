@@ -1,0 +1,350 @@
+/* Public event page, design artboard 2. Phone first; from 768 px the ticket bar becomes a card in a
+   right-hand column. */
+
+.page {
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.hero {
+  position: relative;
+  height: 172px;
+  overflow: hidden;
+  background: var(--indigo-ink);
+}
+.bannerImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.heroWord {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 56px;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+}
+.heroButtons {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+/* White circles read on any banner image. */
+.roundButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--white);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgb(22 22 29 / 0.2);
+}
+.roundButton:hover {
+  color: var(--ink);
+}
+.toast {
+  position: absolute;
+  right: 0;
+  top: 52px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Category tints, as on the organiser home template rows. */
+.workshop {
+  background: #e6e3ff;
+  color: #2e2799;
+}
+.gig {
+  background: #ffe2b8;
+  color: #7a3e00;
+}
+.school_night {
+  background: #ffd9d4;
+  color: #8c1d12;
+}
+.meetup,
+.blank {
+  background: #d7f2e6;
+  color: #0b5a3a;
+}
+
+.layout {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+}
+
+.content {
+  padding: 18px var(--gutter) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.titleBlock h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.byline {
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fact {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.fact dt {
+  flex: none;
+  padding-top: 1px;
+  color: var(--indigo);
+}
+.fact dd,
+.factText {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fact dd > span:not(.factText),
+.factText > span {
+  font-size: 14px;
+  color: var(--slate);
+}
+.fact .venueFact {
+  flex: 1;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+.venueFact .factText {
+  flex: 1;
+}
+.mapThumb {
+  flex: none;
+  width: 60px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px solid var(--line-button);
+  background: #e9eaf0;
+  overflow: hidden;
+  display: block;
+}
+.mapArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.inlineLink {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.organiser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+.avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.section h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+/* Organiser text is plain text: keep their line breaks, never interpret markup. */
+.plainText {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-margin-top: 16px;
+}
+.card h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.card .plainText {
+  font-size: 15px;
+}
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chips li {
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--indigo-tint);
+  color: var(--indigo-ink);
+  font-weight: 600;
+}
+
+.map {
+  display: block;
+  height: 140px;
+  border-radius: 14px;
+  background: #e9eaf0;
+  overflow: hidden;
+}
+
+/* Sticky ticket bar on phones. */
+.bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px var(--gutter) calc(14px + env(safe-area-inset-bottom));
+  background: var(--white);
+  border-top: 1px solid var(--line-divider);
+}
+.barPrice {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.barAmount {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+}
+.barSpots {
+  font-size: 13px;
+  color: var(--slate);
+}
+.getTickets {
+  height: 52px;
+  padding: 0 28px;
+  border-radius: var(--radius-button);
+  background: var(--indigo);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+}
+.getTickets:hover {
+  background: var(--indigo-hover);
+  color: var(--white);
+}
+.soon {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    height: 320px;
+  }
+  .layout {
+    max-width: 1040px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 32px;
+    padding: 0 24px;
+    align-items: start;
+  }
+  .content {
+    padding: 28px 0 48px;
+  }
+  .bar {
+    top: 24px;
+    bottom: auto;
+    margin-top: 28px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+    border: 1px solid var(--line-divider);
+    border-radius: var(--radius-card);
+  }
+  .getTickets {
+    justify-content: center;
+  }
+}

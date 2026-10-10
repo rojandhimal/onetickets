@@ -31,5 +31,6 @@ Rules:
 | [0015](0015-magic-links-and-server-side-sessions.md)               | Magic links and server-side sessions                                         | Proposed | BackendDev   |
 | [0016](0016-wizard-autosave-with-versions-and-on-device-drafts.md) | Autosave event drafts with a version check; offline edits kept on the device | Proposed | FrontendDev  |
 | [0017](0017-public-event-reads-and-plain-text-descriptions.md)     | Public event reads through an RLS policy, with plain-text descriptions       | Proposed | BackendDev   |
+| [0018](0018-enforced-nonce-csp-on-event-pages.md)                  | Enforce a nonce-based CSP on public event pages first                        | Proposed | FrontendDev  |
 
-0018 (event page CSP) is claimed by FrontendDev. The next free number is 0019.
+The next free number is 0019.

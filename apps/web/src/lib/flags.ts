@@ -5,3 +5,16 @@
 export function isEventWizardEnabled(): boolean {
   return process.env.FEATURE_EVENT_WIZARD === 'true';
 }
+
+/**
+ * Event pages show the organiser's banner (design 2, `showBanner`). On by default while tegs
+ * decides; `false` shows the template colour block instead.
+ */
+export function isEventBannerShown(): boolean {
+  return process.env.FEATURE_EVENT_BANNER !== 'false';
+}
+
+/** Booking arrives in Sprint 2. Until then the event page's bar says tickets open soon. */
+export function isBookingEnabled(): boolean {
+  return process.env.FEATURE_BOOKING === 'true';
+}

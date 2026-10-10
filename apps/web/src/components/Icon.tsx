@@ -40,6 +40,34 @@ const paths = {
       <path d="m21 16-5-5-9 9" />
     </>
   ),
+  ticket: (
+    <path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z" />
+  ),
+  pin: (
+    <>
+      <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+    </>
+  ),
+  access: (
+    <>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M12 7v6h5l2 6M12 10H7" />
+      <path d="M9.5 13.2A5 5 0 1 0 15 19" />
+    </>
+  ),
+  online: (
+    <>
+      <rect x="3" y="5" width="18" height="12" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </>
+  ),
   workshop: (
     <>
       <path d="M4 19V8l8-4 8 4v11" />
