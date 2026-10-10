@@ -31,6 +31,10 @@ free-text descriptions that end up on public pages, in emails and in link previe
 - **Banners are re-encoded.** Uploads are decoded, turned upright, cropped to 2:1 and re-encoded as
   WebP, so EXIF (including GPS) and anything hidden in the file are dropped. Each upload gets a new
   random key behind a storage interface (local disk now, S3 and CloudFront in AWS).
+- **Venue lookup sits behind the api** (`/places`, signed in only), behind a `PlacesProvider`
+  interface. For now it is a fixed list of real venues (`PLACES_PROVIDER=fake`) for local
+  development, tests and staging. A keyed or paid provider (Google Places, Mapbox and so on) needs a
+  cost line and tegs's sign-off before it is used anywhere.
 
 ## Options considered
 
