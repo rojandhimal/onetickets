@@ -39,7 +39,7 @@ test inbox) on your computer, with no AWS account.
 
 To stop, press Ctrl+C in the terminal, or click stop in Docker Desktop. Your data is kept for next
 time. To pick up new changes, pull the latest code (GitHub Desktop: Fetch origin, then Pull) and
-run `docker compose up --build` again. To wipe the database and start fresh, run
+run `docker compose up --build` again. To wipe the database and uploaded images and start fresh, run
 `docker compose down -v`.
 
 There is nothing to copy or configure for this. The optional settings are in [`.env.example`](../.env.example).

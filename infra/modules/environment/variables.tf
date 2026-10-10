@@ -121,6 +121,11 @@ variable "web_desired_count" {
   default = 1
 }
 
+variable "api_sentry_dsn" {
+  type    = string
+  default = ""
+}
+
 variable "log_retention_days" {
   type    = number
   default = 30

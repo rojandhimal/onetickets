@@ -92,6 +92,17 @@ variable "api_trust_proxy_hops" {
   default     = 1
 }
 
+variable "api_sentry_dsn" {
+  description = "Sentry DSN for the API. Empty turns Sentry off. Not secret: it only allows sending events."
+  type        = string
+  default     = ""
+}
+
+variable "api_log_level" {
+  type    = string
+  default = "info"
+}
+
 variable "api_cpu" {
   type    = number
   default = 512

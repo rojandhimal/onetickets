@@ -30,6 +30,7 @@ What differs between environments:
 | NAT gateways        | none (tasks run in public subnets with public IPs)  | 2 (one per AZ)                                                |
 | Tasks               | 1 each of API and web, smallest size, Fargate Spot  | API 2 to 6, web 2, on-demand                                  |
 | Hours               | Mon to Fri 7:00 to 22:00 Sydney time, off otherwise | always on                                                     |
+| App log retention   | 30 days                                             | 90 days                                                       |
 | Deletion protection | off                                                 | on                                                            |
 
 There is no dev AWS account. Development runs locally with docker compose (see "Local development" below).
@@ -54,7 +55,7 @@ ECS replaces tasks only once the new ones pass health checks, and rolls back on 
 - The API image contains its migration command, by default `node dist/database/migrate.js` with `apps/api/migrations` alongside `dist` (change `migrate_command` in `modules/environment` if it moves). It reads `MIGRATION_DATABASE_URL`, which is the schema owner.
 - The API reads `DATABASE_URL`, which logs in as `onetickets_app`. That role owns nothing and is a member of the `ot_app` group role the migrations create, so row-level security applies to it. After each migration run, the `db-roles` task (plain `psql`, owner credentials) creates the login if missing, sets its password from Secrets Manager and grants it `ot_app`. A worker login granted `ot_worker` gets added the same way when workers exist.
 - Connection URLs use `sslmode=require&uselibpqcompat=true`: traffic is encrypted, but the RDS certificate is not verified yet. Ship the RDS CA bundle in the image and switch to `verify-full` before launch.
-- API environment set by Terraform: `APP_ENV` (`staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=1` (the load balancer appends the client address; the web rewrite forwards it unchanged). Set `api_trust_proxy_hops` to 2 once Cloudflare proxies the hostnames: too high a count lets clients spoof their IP past rate limits.
+- API environment set by Terraform: `APP_ENV` (`staging` or `production`), `WEB_URL` (`https://<web hostname>`), `MAIL_TRANSPORT=ses`, `EMAIL_FROM_DOMAIN` (the SES domain, for example `staging.<domain>`), and `TRUST_PROXY_HOPS=1` (the load balancer appends the client address; the web rewrite forwards it unchanged). Set `api_trust_proxy_hops` to 2 once Cloudflare proxies the hostnames: too high a count lets clients spoof their IP past rate limits. Also `LOG_LEVEL` (`info`), `SENTRY_DSN` (from `sentry_api_dsn` in the environment's `terraform.tfvars`; empty keeps Sentry off) and `SENTRY_RELEASE`, which `scripts/deploy.sh` sets to the image's commit on every deploy. The API logs JSON to stdout, which lands in CloudWatch. Changes to these (or any task setting) reach the running tasks on the next deploy, not at apply: after applying, run the Deploy workflow ("Run workflow" on main) to roll them out.
 - API secrets from Secrets Manager: `DATABASE_URL`, `MFA_ENCRYPTION_KEY` (32 random bytes, base64, generated once per environment) and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (empty until filled in by hand, see below).
 
 ## What the owner must set up first
@@ -90,6 +91,18 @@ These need a person with a credit card and access to the company domain. Nothing
    - turn on Data Scrubber and Use Default Scrubbers
    - turn on Prevent Storing of IP Addresses
    - add `token`, `code`, `state` and `email` to Additional Sensitive Fields
+
+   Then put the API project's DSN in each environment's `terraform.tfvars` as `sentry_api_dsn` and apply. To check events arrive, set `SENTRY_TEST_ROUTE=on` on the API for a few minutes (ECS console: update the service with a new task definition revision that adds it), call `GET https://api.<host>/health/sentry-test`, then run the Deploy workflow again: every deploy drops `SENTRY_TEST_ROUTE`.
+
+## Before staging goes live
+
+Work the app needs from AWS that isn't built yet. Each item lands with the feature that needs it.
+
+- **Uploaded images (S1 event banners).** Locally they are files in a Docker volume (`BANNER_STORAGE=local`, `BANNER_DIR`). Container disk is lost on every deploy, so in AWS they go to the existing private `uploads` bucket through BackendDev's S3 adapter. Uploads pass through the API, which re-encodes them and strips metadata, so the bucket needs no CORS. Still to do:
+  - set `BANNER_STORAGE=s3` and `UPLOADS_BUCKET=<bucket name>` on the API
+  - narrow the task role to put, get and delete on the bucket's `banners/` prefix
+  - serve banners through CloudFront with origin access control and long caching (every upload gets a new key, so no invalidations), and pass its base as `BANNER_PUBLIC_BASE_URL`, for example `https://cdn.<domain>/banners`
+- **`MAGIC_LINK_HOURLY_CAP`** as a Terraform variable, if launch needs a value other than the default of 300.
 
 ## Applying, in order
 

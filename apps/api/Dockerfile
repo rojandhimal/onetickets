@@ -25,6 +25,9 @@ ENV NODE_ENV=production \
     PORT=3001
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
+# Local-disk storage for event banners (BANNER_DIR). Created here so a Docker volume mounted on it
+# starts out owned by the node user. In AWS, banners go to S3 instead.
+RUN mkdir -p /app/var/banners && chown -R node:node /app/var
 USER node
 EXPOSE 3001
 # --import loads Sentry first so it can trace http, express and pg (ESM needs the flag).

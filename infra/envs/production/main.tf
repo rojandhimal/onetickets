@@ -1,12 +1,13 @@
 module "environment" {
   source = "../../modules/environment"
 
-  environment  = "production"
-  vpc_cidr     = "10.30.0.0/16"
-  web_hostname = var.domain
-  api_hostname = "api.${var.domain}"
-  alert_email  = var.alert_email
-  email_domain = var.domain
+  environment    = "production"
+  vpc_cidr       = "10.30.0.0/16"
+  web_hostname   = var.domain
+  api_hostname   = "api.${var.domain}"
+  alert_email    = var.alert_email
+  api_sentry_dsn = var.sentry_api_dsn
+  email_domain   = var.domain
 
   nat_gateways = 2
 

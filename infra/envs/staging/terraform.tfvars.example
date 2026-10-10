@@ -2,3 +2,5 @@ account_id  = "111111111111"
 domain      = "onetickets.com.au"
 alert_email = "alerts@example.com"
 production_account_id = "333333333333"
+# Sentry DSN for the API, once the Sentry project is set up (see infra/README.md).
+# sentry_api_dsn = "https://<key>@<org>.ingest.sentry.io/<project>"
