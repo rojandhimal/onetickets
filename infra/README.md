@@ -94,6 +94,16 @@ These need a person with a credit card and access to the company domain. Nothing
 
    Then put the API project's DSN in each environment's `terraform.tfvars` as `sentry_api_dsn` and apply. To check events arrive, set `SENTRY_TEST_ROUTE=on` on the API for a few minutes (ECS console: update the service with a new task definition revision that adds it), call `GET https://api.<host>/health/sentry-test`, then deploy again to remove it.
 
+## Before staging goes live
+
+Work the app needs from AWS that isn't built yet. Each item lands with the feature that needs it.
+
+- **Uploaded images (S1 event banners).** Locally they are files in a Docker volume (`UPLOADS_DIR`). Container disk is lost on every deploy, so in AWS they go to the existing private `uploads` bucket (the API task role can already read and write it) through BackendDev's S3 adapter. Still to do:
+  - pass the bucket name to the API (for example `UPLOADS_BUCKET`)
+  - serve banners through a CDN (CloudFront with origin access control, or Cloudflare) instead of making the bucket public
+  - add CORS on the bucket if browsers upload straight to S3 with presigned URLs
+- **`MAGIC_LINK_HOURLY_CAP`** as a Terraform variable, if launch needs a value other than the default of 300.
+
 ## Applying, in order
 
 Run with admin credentials for the management account (`aws sso login`), Terraform 1.10 or later.

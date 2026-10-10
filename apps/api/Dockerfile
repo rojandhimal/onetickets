@@ -25,6 +25,9 @@ ENV NODE_ENV=production \
     PORT=3001
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
+# Local-disk storage for uploads (UPLOADS_DIR). Created here so a Docker volume mounted on it
+# starts out owned by the node user. In AWS, uploads go to S3 instead.
+RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
 USER node
 EXPOSE 3001
 CMD ["node", "dist/main.js"]
