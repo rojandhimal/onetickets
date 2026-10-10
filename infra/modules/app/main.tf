@@ -463,8 +463,11 @@ resource "aws_lb_listener_rule" "app" {
 }
 
 # ---------------------------------------------------------------------------
-# Task definitions and services. The image here is only the first revision's;
-# deploys register new revisions with the image CI built.
+# Task definitions and services. Terraform owns everything in the task
+# definition except the image: a change here (environment, secrets, sizes)
+# registers a new revision with the placeholder image, and the next deploy
+# copies that latest revision with the image CI built. The services ignore
+# task_definition, so nothing rolls until that deploy.
 # ---------------------------------------------------------------------------
 
 resource "aws_ecs_task_definition" "app" {
@@ -500,10 +503,6 @@ resource "aws_ecs_task_definition" "app" {
       }
     }
   }])
-
-  lifecycle {
-    ignore_changes = [container_definitions]
-  }
 }
 
 # One-off tasks the deploy runs, in order, before updating services. Both
@@ -555,11 +554,6 @@ resource "aws_ecs_task_definition" "migrate" {
       }
     }
   }])
-
-  # CI registers new revisions with each release's image.
-  lifecycle {
-    ignore_changes = [container_definitions]
-  }
 }
 
 resource "aws_ecs_task_definition" "db_roles" {

@@ -87,12 +87,13 @@ services:
       # in Secrets Manager.
       MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       # GOOGLE_CLIENT_ID is left unset, so Google sign-in stays off.
-      # Uploaded images (event banners) are kept in the uploads volume, so they survive rebuilds.
-      UPLOADS_DIR: /app/data/uploads
+      # Uploaded event banners are kept in the banners volume, so they survive rebuilds.
+      BANNER_STORAGE: local
+      BANNER_DIR: /app/var/banners
     ports:
       - '127.0.0.1:3001:3001'
     volumes:
-      - uploads:/app/data/uploads
+      - banners:/app/var/banners
     networks:
       default:
         # The web image is built to reach the api at this name, as in AWS.
@@ -124,4 +125,4 @@ services:
 
 volumes:
   pgdata:
-  uploads:
+  banners:

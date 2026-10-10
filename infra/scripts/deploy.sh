@@ -21,14 +21,16 @@ done
 [[ -n "${images[api]:-}" ]] || { echo "api=<image> is required (migrations run from the api image)" >&2; exit 1; }
 
 # Registers a copy of the family's latest revision with a new image and prints
-# the new revision's ARN.
+# the new revision's ARN. The latest revision is Terraform's whenever the
+# environment changed since the last deploy. Sets SENTRY_RELEASE, and drops
+# SENTRY_TEST_ROUTE so a test route switched on by hand ends with this deploy.
 register_revision() {
   local family="$1" image="$2"
   aws ecs describe-task-definition --task-definition "$family" --query taskDefinition --output json |
     jq --arg image "$image" --arg release "${image##*:}" '
       .containerDefinitions[0].image = $image
       | .containerDefinitions[0].environment =
-          ([(.containerDefinitions[0].environment // [])[] | select(.name != "SENTRY_RELEASE")]
+          ([(.containerDefinitions[0].environment // [])[] | select(.name != "SENTRY_RELEASE" and .name != "SENTRY_TEST_ROUTE")]
            + [{name: "SENTRY_RELEASE", value: $release}])
       | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities,
             .registeredAt, .registeredBy, .deregisteredAt)' >"$tmp/$family.json"
