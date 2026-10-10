@@ -1,6 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import type { Session } from './contract';
+import type { Session } from '@onetickets/shared';
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 

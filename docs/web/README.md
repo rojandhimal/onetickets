@@ -51,7 +51,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 Google sign-in starts at `/api/auth/google/start` and returns to `/organiser`. When it fails, the api redirects back to `/signin`
 with `?error=google`, `google_unverified` or `google_unavailable`, and the form shows the matching message.
 
-The agreed request and response shapes are in `apps/web/src/lib/contract.ts`.
+The request and response shapes are in `packages/shared/src/api/auth.ts`, shared with the api; the endpoints are documented in [docs/api/auth.md](../api/auth.md).
 
 ## How the browser reaches the api
 

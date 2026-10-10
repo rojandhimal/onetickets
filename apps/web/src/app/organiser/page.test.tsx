@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@/lib/contract';
+import type { Session } from '@onetickets/shared';
 
 const getSession = vi.fn<() => Promise<Session | null>>();
 const redirect = vi.fn((to: string) => {
