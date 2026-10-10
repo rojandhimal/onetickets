@@ -1,4 +1,5 @@
 import { HttpStatus, Inject, Injectable, type NestMiddleware } from '@nestjs/common';
+import { BANNER_CONTENT_TYPES } from '@onetickets/shared';
 import type { NextFunction, Request, Response } from 'express';
 import { AUTH_CONFIG, type AuthConfig } from './auth.config.js';
 import { ApiError } from './errors.js';
@@ -8,7 +9,8 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /**
  * CSRF defence for cookie sessions, alongside SameSite=Lax: a state-changing request must come
  * from the web app's origin and, if it has a body, be JSON (which cross-site forms cannot send
- * without a CORS preflight). Webhooks that need an exemption will register their own route.
+ * without a CORS preflight). Image uploads (PUT with an image type) are allowed for the same
+ * reason: a cross-site form cannot send those types either. Webhooks that need an exemption will register their own route.
  */
 @Injectable()
 export class RequestOriginMiddleware implements NestMiddleware {
@@ -21,7 +23,8 @@ export class RequestOriginMiddleware implements NestMiddleware {
       return next(new ApiError(HttpStatus.FORBIDDEN, 'bad_origin', 'Request origin not allowed.'));
     }
     const hasBody = Number(request.headers['content-length'] ?? 0) > 0;
-    if (hasBody && !request.is('application/json')) {
+    const isImageUpload = request.method === 'PUT' && !!request.is([...BANNER_CONTENT_TYPES]);
+    if (hasBody && !request.is('application/json') && !isImageUpload) {
       return next(
         new ApiError(
           HttpStatus.UNSUPPORTED_MEDIA_TYPE,

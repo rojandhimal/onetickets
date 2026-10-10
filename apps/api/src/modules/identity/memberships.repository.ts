@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { MemberDto, OrganisationDto, Role } from '@onetickets/shared';
 import type pg from 'pg';
+import { recordAudit } from './audit.js';
 
 /** SQL for the identity schema. Every call runs inside a UnitOfWork transaction. */
 @Injectable()
@@ -77,10 +78,6 @@ export class MembershipsRepository {
     subjectUserId: string | null,
     detail: Record<string, unknown> = {},
   ): Promise<void> {
-    await tx.query(
-      `insert into identity.audit_events (organisation_id, actor_user_id, action, subject_user_id, detail)
-       values ($1, $2, $3, $4, $5)`,
-      [organisationId, actorUserId, action, subjectUserId, detail],
-    );
+    await recordAudit(tx, organisationId, actorUserId, action, subjectUserId, detail);
   }
 }
