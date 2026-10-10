@@ -38,7 +38,9 @@ prove nothing.
 Every page is checked at 375 px and 1280 px wide with an axe scan for WCAG 2.2 AA. Any
 Content-Security-Policy violation on a page also fails the test, so a report-only violation can't
 reach production unnoticed. New specs import `test` and `expect` from `e2e/tests/fixtures.ts`
-rather than `@playwright/test` to get that check.
+rather than `@playwright/test` to get that check. It watches every page in the test's own browser
+context, across navigations. A context a spec creates itself with `browser.newContext()` isn't
+watched.
 
 ```sh
 pnpm --filter @onetickets/e2e exec playwright install chromium   # once

@@ -1,25 +1,24 @@
 import { expect, test as base } from '@playwright/test';
 
-// Every page load is watched for Content-Security-Policy violations, and a test fails if any
-// happened. The CSP is report-only today, so a violation would otherwise only show up as a
-// Sentry report in production, and would break the page once the policy is enforced.
+// Every page in the test's browser context is watched for Content-Security-Policy violations, so
+// a report-only CSP regression fails e2e instead of reaching production. Violations are collected
+// on the Node side, so ones on a page the test has already navigated away from still count.
+// Specs import `test` and `expect` from here instead of '@playwright/test'.
 export const test = base.extend<{ cspGuard: void }>({
   cspGuard: [
-    async ({ page }, use) => {
-      await page.addInitScript(() => {
-        const seen: string[] = [];
-        (window as unknown as { __cspViolations: string[] }).__cspViolations = seen;
+    async ({ context }, use) => {
+      const violations: string[] = [];
+      await context.exposeBinding('__reportCsp', (_source, violation: string) => {
+        violations.push(violation);
+      });
+      await context.addInitScript(() => {
         document.addEventListener('securitypolicyviolation', (e) => {
-          seen.push(
+          (window as unknown as { __reportCsp: (v: string) => void }).__reportCsp(
             `${e.effectiveDirective} blocked ${e.blockedURI || 'inline'} (${e.sourceFile}:${e.lineNumber})`,
           );
         });
       });
       await use();
-      if (page.isClosed()) return;
-      const violations = await page
-        .evaluate(() => (window as unknown as { __cspViolations?: string[] }).__cspViolations ?? [])
-        .catch(() => []);
       expect(violations, 'Content-Security-Policy violations on the page').toEqual([]);
     },
     { auto: true },
