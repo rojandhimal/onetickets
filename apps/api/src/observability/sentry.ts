@@ -13,7 +13,9 @@ export function sentryOptions(env: NodeJS.ProcessEnv = process.env): NodeOptions
     enabled: Boolean(env.SENTRY_DSN),
     environment: env.APP_ENV || 'development',
     release: env.SENTRY_RELEASE || undefined,
-    tracesSampleRate: Number(env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1'),
+    tracesSampleRate: sampleRate(env.SENTRY_TRACES_SAMPLE_RATE),
+    // Trace headers stay inside OneTickets: none on calls to Google, SES or anything else.
+    tracePropagationTargets: [],
     dataCollection: {
       userInfo: false,
       cookies: false,
@@ -25,4 +27,9 @@ export function sentryOptions(env: NodeJS.ProcessEnv = process.env): NodeOptions
     beforeBreadcrumb: (crumb) => scrubBreadcrumb(crumb),
     beforeSendSpan: (span) => scrubSpan(span),
   };
+}
+
+function sampleRate(value: string | undefined): number {
+  const rate = Number(value ?? '0.1');
+  return Number.isFinite(rate) && rate >= 0 && rate <= 1 ? rate : 0.1;
 }

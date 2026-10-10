@@ -1,15 +1,30 @@
 import 'reflect-metadata';
 import { randomInt } from 'node:crypto';
+import { Controller, Get, Module } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureLogging, configureTrustProxy } from '../src/http.js';
+import { Public } from '../src/modules/identity/index.js';
 import { Mailer, type OutboxMailer } from '../src/modules/notifications/index.js';
 import { leaks, PII } from '../src/observability/pii-sample.js';
 
 const WEB = 'http://localhost:3000';
+
+// A route that fails the way real bugs do: an unhandled error whose message holds personal data.
+@Controller()
+class ThrowingController {
+  @Get('throws')
+  @Public()
+  throws(): never {
+    throw new TypeError(`No account for ${PII.email}`);
+  }
+}
+
+@Module({ controllers: [ThrowingController] })
+class ThrowingModule {}
 
 // QA 5.3 and 5.4: every log line for a request has its request id (and organisation id once
 // known), and a request full of personal data leaves none of it in the logs.
@@ -30,7 +45,9 @@ describe('api request logs', () => {
       written.push(String(chunk));
       return true;
     });
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule, ThrowingModule],
+    }).compile();
     app = moduleRef.createNestApplication<NestExpressApplication>({ bufferLogs: true });
     configureLogging(app);
     configureTrustProxy(app, { TRUST_PROXY_HOPS: '1' });
@@ -91,5 +108,23 @@ describe('api request logs', () => {
       .set('x-request-id', 'bad id with spaces')
       .expect(401);
     expect(res.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('logs an unhandled error with its type and stack, and no personal data', async () => {
+    await request(app.getHttpServer())
+      .get('/throws')
+      .set('x-request-id', 'req-throws-0003')
+      .expect(500);
+
+    const lines = logLines().filter((line) => line.requestId === 'req-throws-0003');
+    expect(leaks(JSON.stringify(lines))).toEqual([]);
+    const errorLine = lines.find((line) => line.context === 'ExceptionsHandler');
+    expect(errorLine).toBeDefined();
+    expect(errorLine!.msg).toContain('No account for');
+    expect(errorLine!.err).toMatchObject({
+      type: 'TypeError',
+      message: expect.stringContaining('No account for'),
+      stack: expect.stringContaining('ThrowingController'),
+    });
   });
 });

@@ -37,4 +37,29 @@ describe('api log redaction', () => {
     expect(text).toContain('org-123');
     expect(text).toContain('lookup failed');
   });
+
+  it("keeps an error's type and stack, with personal data masked, even with no message", () => {
+    const { logger, output } = capture();
+    // Nest's exception handler logs the error on its own like this.
+    logger.error({
+      context: 'ExceptionsHandler',
+      err: new TypeError(`No account for ${PII.email}`),
+    });
+    logger.error(new Error(`Lookup for ${PII.email} failed`));
+
+    const text = output();
+    expect(leaks(text)).toEqual([]);
+    const [first, second] = text
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(first.err).toMatchObject({
+      type: 'TypeError',
+      message: expect.stringContaining('No account for'),
+    });
+    expect(first.err.stack).toContain('logging.test');
+    expect(first.msg).toContain('No account for');
+    expect(second.err?.type ?? second.type).toBe('Error');
+    expect(second.msg).toContain('Lookup for');
+  });
 });
