@@ -35,13 +35,17 @@ prove nothing.
 
 ## End-to-end and accessibility tests
 
-Every page is checked at 375 px and 1280 px wide with an axe scan for WCAG 2.2 AA.
+Every page is checked at 375 px and 1280 px wide with an axe scan for WCAG 2.2 AA. Any
+Content-Security-Policy violation on a page also fails the test, so a report-only violation can't
+reach production unnoticed. New specs import `test` and `expect` from `e2e/tests/fixtures.ts`
+rather than `@playwright/test` to get that check.
 
 ```sh
 pnpm --filter @onetickets/e2e exec playwright install chromium   # once
+docker compose up -d postgres
 pnpm build
 ./e2e/setup-db.sh      # migrates and creates the onetickets_app login role (needs psql)
-pnpm e2e
+pnpm e2e               # the api connects as onetickets_app unless DATABASE_URL is set
 ```
 
 ## Rules
