@@ -1,5 +1,5 @@
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { createTransport, type Transporter } from 'nodemailer';
 
 export interface Email {
@@ -43,8 +43,6 @@ export class OutboxMailer extends Mailer {
  */
 @Injectable()
 export class ConsoleMailer extends Mailer {
-  private readonly logger = new Logger('Mail');
-
   constructor() {
     super();
     if (process.env.NODE_ENV === 'production') {
@@ -53,7 +51,11 @@ export class ConsoleMailer extends Mailer {
   }
 
   async send(email: Email): Promise<void> {
-    this.logger.log(`To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}`);
+    // Straight to the terminal, not the logger: the log redactor would mask the address and the
+    // sign-in link, which is the whole point of this transport.
+    process.stderr.write(
+      `\n--- mail (MAIL_TRANSPORT=console) ---\nTo: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n---\n`,
+    );
   }
 }
 

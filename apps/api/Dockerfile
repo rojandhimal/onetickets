@@ -27,4 +27,5 @@ WORKDIR /app
 COPY --from=build --chown=node:node /out ./
 USER node
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+# --import loads Sentry first so it can trace http, express and pg (ESM needs the flag).
+CMD ["node", "--import", "./dist/instrument.js", "dist/main.js"]

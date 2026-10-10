@@ -1,4 +1,5 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { Logger } from 'nestjs-pino';
 
 /**
  * How many proxies in front of the api append the client address to X-Forwarded-For, so
@@ -16,4 +17,9 @@ export function configureTrustProxy(
     throw new Error('TRUST_PROXY_HOPS must be a whole number of proxies (0 locally)');
   }
   app.set('trust proxy', hops);
+}
+
+/** Nest's own logs (and every `new Logger(...)` in the modules) go through pino and its redactor. */
+export function configureLogging(app: NestExpressApplication): void {
+  app.useLogger(app.get(Logger));
 }

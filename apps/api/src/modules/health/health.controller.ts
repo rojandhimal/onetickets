@@ -1,4 +1,4 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Public } from '../identity/index.js';
 import { HealthService, type HealthReport } from './health.service.js';
 
@@ -11,6 +11,17 @@ export class HealthController {
   @Public()
   live(): { status: 'ok' } {
     return { status: 'ok' };
+  }
+
+  /**
+   * Throws an unhandled error so staging can confirm Sentry receives api errors with release and
+   * environment (QA 5.1). A 404 unless SENTRY_TEST_ROUTE=on; turn it off again afterwards.
+   */
+  @Get('sentry-test')
+  @Public()
+  sentryTest(): never {
+    if (process.env.SENTRY_TEST_ROUTE !== 'on') throw new NotFoundException();
+    throw new Error('Sentry test error from the api');
   }
 
   /** Process is up and the database answers. */
