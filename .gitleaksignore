@@ -1,0 +1,3 @@
+# Fake token in the redaction-test PII sample, committed before it carried `gitleaks:allow`.
+# Fingerprint format: <commit>:<file>:<rule>:<line>. Only this exact finding is ignored.
+b61d703ace2848cf982326353c41b21e5f55b08c:apps/api/src/observability/pii-sample.ts:generic-api-key:6
