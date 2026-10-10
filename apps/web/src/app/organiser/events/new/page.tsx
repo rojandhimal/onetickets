@@ -1,0 +1,29 @@
+import type { Metadata } from 'next';
+import { notFound, redirect } from 'next/navigation';
+import screen from '@/components/screen.module.css';
+import { isEventWizardEnabled } from '@/lib/flags';
+import { getSession } from '@/lib/session';
+import { apiTemplate } from '@/lib/templates';
+import { StartDraft } from './StartDraft';
+
+export const metadata: Metadata = { title: 'New event' };
+
+// Template rows on the organiser home land here. The draft is created from the browser, so a
+// prefetch of this page can never create one.
+export default async function NewEventPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ template?: string }>;
+}) {
+  if (!isEventWizardEnabled()) notFound();
+  const session = await getSession();
+  if (!session) redirect('/signin');
+  if (!session.organisation) redirect('/organiser/setup');
+  const { template } = await searchParams;
+
+  return (
+    <div className={screen.screen}>
+      <StartDraft organisationId={session.organisation.id} template={apiTemplate(template)} />
+    </div>
+  );
+}

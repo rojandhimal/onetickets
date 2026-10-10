@@ -23,6 +23,14 @@ export const EVENT_TEMPLATES: readonly EventTemplate[] = [
   { id: 'meetup', name: 'Meetup', description: 'Clubs and community groups', icon: 'meetup' },
 ];
 
+/** The api spells template ids with underscores; a bare /new starts from a blank event. */
+export function apiTemplate(
+  webId: string | undefined,
+): 'workshop' | 'gig' | 'school_night' | 'meetup' | 'blank' {
+  const found = EVENT_TEMPLATES.find((t) => t.id === webId);
+  return found ? (found.id === 'school-night' ? 'school_night' : found.id) : 'blank';
+}
+
 export function newEventHref(templateId?: EventTemplate['id']): string {
   return templateId ? `/organiser/events/new?template=${templateId}` : '/organiser/events/new';
 }

@@ -19,6 +19,20 @@ const paths = {
     </>
   ),
   chevron: <path d="m9 18 6-6-6-6" />,
+  back: <path d="m15 18-6-6 6-6" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  check: <path d="M20 6 9 17l-5-5" />,
+  'wifi-off': (
+    <path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5v.01M3 3l18 18" />
+  ),
+  share: (
+    <>
+      <path d="M12 3v13" />
+      <path d="m7 8 5-5 5 5" />
+      <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+    </>
+  ),
+  circle: <circle cx="12" cy="12" r="8" />,
   workshop: (
     <>
       <path d="M4 19V8l8-4 8 4v11" />

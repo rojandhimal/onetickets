@@ -16,27 +16,29 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 
 ## Environment variables
 
-| Variable                                            | Where it's read         | What it does                                                                                                  |
-| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time. |
-| `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` makes the event templates on `/organiser` into links. Anything else shows them as "Coming soon".       |
-| `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                |
-| `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                            |
-| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                      |
-| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | build time only         | Upload source maps to Sentry. Without a token, source maps aren't uploaded.                                   |
+| Variable                                            | Where it's read         | What it does                                                                                                                                                           |
+| --------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time.                                                          |
+| `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404. |
+| `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                                                                         |
+| `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                                                                                     |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                                                                               |
+| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | build time only         | Upload source maps to Sentry. Without a token, source maps aren't uploaded.                                                                                            |
 
 ## Pages
 
-| Route              | What it does                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------- |
-| `/`                | Redirects to `/signup` for now.                                                             |
-| `/signup`          | Email-only sign-up, or continue with Google. Signed-in organisers are sent to `/organiser`. |
-| `/signin`          | The same form with returning-organiser copy.                                                |
-| `/auth/verify`     | Landing page for the magic link. Exchanges the token and goes to `/organiser`.              |
-| `/organiser/setup` | Asks a new organiser to name their organisation (`POST /organisations`).                    |
-| `/organiser`       | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`.   |
-| `/csp-report`      | Receives CSP violation reports, scrubs them and forwards them to Sentry.                    |
-| `/healthz`         | Returns `{"status":"ok"}` for the container health check.                                   |
+| Route                                                           | What it does                                                                                                                                   |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                             | Redirects to `/signup` for now.                                                                                                                |
+| `/signup`                                                       | Email-only sign-up, or continue with Google. Signed-in organisers are sent to `/organiser`.                                                    |
+| `/signin`                                                       | The same form with returning-organiser copy.                                                                                                   |
+| `/auth/verify`                                                  | Landing page for the magic link. Exchanges the token and goes to `/organiser`.                                                                 |
+| `/organiser/setup`                                              | Asks a new organiser to name their organisation (`POST /organisations`).                                                                       |
+| `/organiser`                                                    | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`.                                                      |
+| `/organiser/events/new`                                         | Creates a draft from `?template=` (workshop, gig, school-night, meetup; none means blank) and opens the wizard. Behind `FEATURE_EVENT_WIZARD`. |
+| `/organiser/events/new/{basics,tickets,details,review}?draft=…` | The create-event wizard. Steps switch without a page load; reopening a draft resumes on its last step.                                         |
+| `/csp-report`                                                   | Receives CSP violation reports, scrubs them and forwards them to Sentry.                                                                       |
+| `/healthz`                                                      | Returns `{"status":"ok"}` for the container health check.                                                                                      |
 
 ## Sign-in flow
 
@@ -53,11 +55,37 @@ with `?error=google`, `google_unverified` or `google_unavailable`, and the form 
 
 The request and response shapes are in `packages/shared/src/api/auth.ts`, shared with the api; the endpoints are documented in [docs/api/auth.md](../api/auth.md).
 
+## Create-event wizard (S1-1)
+
+The organiser home's template rows open `/organiser/events/new?template=…`, which creates the draft
+from the browser (`POST /organisations/:id/events`) so a link prefetch can never create one. The
+wizard then lives on `/organiser/events/new/{step}?draft=…`:
+
+1. **Basics**: name, date, start and end time (an end before the start means the next day), and
+   either a venue picked from the address lookup (`GET /places/search`, then `GET /places/:id`) or an
+   https link for online events. Times are entered in the event's time zone and sent as ISO 8601 with
+   the offset (`src/lib/zoned-time.ts`).
+2. **Tickets**: shows the template's free ticket type. Editing arrives with S1-2.
+3. **Details**: placeholder until S1-4 (About, accessibility, cancellations, contact email).
+4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
+   Publish button is never disabled; pressing it with something missing shows "Add … to publish.
+   Everything else is ready." and moves focus to the checklist. After `POST /organisations/:orgId/events/:id/publish` the
+   "Your event is live" screen shows the link to `/e/{slug}` with copy and share buttons.
+
+Every change autosaves ([ADR 0016](../adr/0016-wizard-autosave-with-versions-and-on-device-drafts.md)):
+on blur, every 10 seconds while there are changes, and when the tab is hidden. Offline changes are
+kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…"
+or "Saved on this phone".
+
+Request and response shapes are in `packages/shared/src/api/events.ts`. The rules behind the checklist
+and the stepper ticks are in `src/lib/wizard-model.ts`.
+
 ## How the browser reaches the api
 
 The browser only calls `/api/*` on the web origin. `next.config.ts` rewrites those to `API_URL`, so the
 session cookie stays first-party and the api needs no CORS. Next forwards `Origin` and any incoming
-`X-Forwarded-For` unchanged. Nothing is stored in `localStorage`.
+`X-Forwarded-For` unchanged. Nothing is stored in `localStorage`; the only thing kept on the device is
+unsynced wizard edits in IndexedDB (ADR 0016).
 
 ## Security headers
 
