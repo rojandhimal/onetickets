@@ -13,6 +13,8 @@ export function proxy(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('Content-Security-Policy', csp);
+  // The nonce is per response, so no shared cache or CDN may hand this HTML to anyone else.
+  response.headers.set('Cache-Control', 'private, no-store');
   return response;
 }
 

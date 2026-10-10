@@ -3,7 +3,7 @@
 - Status: Proposed
 - Date: 2026-10-10
 - Story: S1-3 (SEC-3)
-- Deciders: FrontendDev, Security
+- Deciders: FrontendDev, Security (accepted the approach on 2026-10-10, with the conditions under Consequences)
 
 ## Context
 
@@ -38,9 +38,18 @@ bootstrap scripts to carry a per-request nonce, which forces dynamic rendering o
 
 ## Consequences
 
-- Event pages can't be statically cached as HTML. They were per request already because seat counts
+- **Before any checkout or payment page ships, the CSP must be enforced on every page** (Security's
+  condition, 2026-10-10; PM to card it). Report-only elsewhere is acceptable only while event
+  pages are the one place showing organiser content to the public.
+- Event page HTML is sent with `Cache-Control: private, no-store`, so no CDN or shared cache can
+  serve one response's nonce to someone else. It can't be statically cached. They were per request already because seat counts
   change.
 - Any new script on an event page must be loaded by Next or carry the nonce (`headers().get('x-nonce')`),
   or it will be blocked. The e2e CSP check (PR #13) catches this.
+- If About or access notes ever turn URLs into links, allow only http and https and add
+  `rel="noopener noreferrer nofollow ugc"`.
+- A possible tightening, not done yet: `style-src-elem 'self' 'nonce-…'` with
+  `style-src-attr 'unsafe-inline'`, which keeps React style attributes but blocks injected
+  `<style>` elements.
 - Revisit when Next can nonce statically rendered pages, or when the report-only reports from other
   pages are clean: then move every page to the enforced policy.
