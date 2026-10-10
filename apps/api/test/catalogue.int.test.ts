@@ -479,6 +479,15 @@ describe('events and ticket types API', () => {
       expect(served.headers['x-content-type-options']).toBe('nosniff');
       expect(Buffer.from(served.body).includes('priya.sharma')).toBe(false);
 
+      const ogPath = new URL(first.body.banner.ogUrl).pathname.replace(/^\/api/, '');
+      expect(ogPath).toBe(servedPath.replace(/\.webp$/, '-og.jpg'));
+      const og = await anon().get(ogPath).buffer(true).expect(200);
+      expect(og.headers['content-type']).toBe('image/jpeg');
+      expect(await sharp(Buffer.from(og.body)).metadata()).toMatchObject({
+        width: 1200,
+        height: 630,
+      });
+
       const second = await as(owner)
         .put(
           path,
@@ -490,6 +499,7 @@ describe('events and ticket types API', () => {
         .expect(200);
       expect(second.body.banner.url).not.toBe(first.body.banner.url);
       await anon().get(servedPath).expect(404);
+      await anon().get(ogPath).expect(404);
 
       await as(owner).delete(path).expect(200);
       await anon()

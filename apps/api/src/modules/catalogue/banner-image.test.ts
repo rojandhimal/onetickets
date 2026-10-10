@@ -17,6 +17,9 @@ describe('processBanner', () => {
     const result = await processBanner(await jpeg(4000, 3000));
     expect(result).toMatchObject({ width: 2160, height: 1080 });
     expect((await sharp(result.image).metadata()).format).toBe('webp');
+    const og = await sharp(result.ogImage).metadata();
+    expect(og).toMatchObject({ format: 'jpeg', width: 1200, height: 630 });
+    expect(og.exif).toBeUndefined();
   });
 
   it('never enlarges a small image', async () => {

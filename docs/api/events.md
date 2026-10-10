@@ -40,7 +40,8 @@ event_not_found`, the same as one that does not exist.
 - **Banner.** Send the image itself with `Content-Type: image/jpeg`, `image/png` or `image/webp`.
   The api decodes it whatever the header says, turns it upright, crops it to 2:1 (at most
   2160 × 1080), re-encodes it as WebP and drops all metadata (EXIF, GPS). Each upload gets a new
-  URL. The crop focus is set with `bannerFocus` in the autosave.
+  URL. The crop focus is set with `bannerFocus` in the autosave. Each banner also gets a
+  1200 × 630 JPEG for link previews (`BannerDto.ogUrl`), cut from the 2:1 banner.
 - **Publishing** needs a name, a start and end in the future with the end after the start, a venue
   or online link, and at least one ticket type. Otherwise `422 not_ready` lists what is missing in
   `missing` (`name`, `date_time`, `venue`, `ticket_type`), in checklist order. The event gets a

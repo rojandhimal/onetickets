@@ -6,7 +6,12 @@ export interface ProcessedBanner {
   image: Buffer;
   width: number;
   height: number;
+  /** 1200 × 630 JPEG for link previews (Open Graph), which can't always show WebP. */
+  ogImage: Buffer;
 }
+
+export const OG_WIDTH = 1200;
+export const OG_HEIGHT = 630;
 
 export class UnsupportedImageError extends Error {}
 
@@ -38,7 +43,14 @@ export async function processBanner(upload: Buffer): Promise<ProcessedBanner> {
       .resize(width, height, { fit: 'cover', position: 'centre' })
       .webp({ quality: 82 })
       .toBuffer({ resolveWithObject: true });
-    return { image: data, width: info.width, height: info.height };
+    // From the 2:1 banner, so the preview shows what the page shows (630/1200 is close to 1:2,
+    // so the crop trims only a sliver top and bottom).
+    const ogImage = await sharp(data)
+      .resize(OG_WIDTH, OG_HEIGHT, { fit: 'cover', position: 'centre' })
+      .flatten({ background: '#ffffff' })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer();
+    return { image: data, width: info.width, height: info.height, ogImage };
   } catch {
     throw new UnsupportedImageError('The image could not be read.');
   }

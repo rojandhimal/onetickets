@@ -46,7 +46,7 @@ export class PublicEventsController {
     response
       .status(200)
       .set({
-        'content-type': 'image/webp',
+        'content-type': key.endsWith('.jpg') ? 'image/jpeg' : 'image/webp',
         'cache-control': 'public, max-age=31536000, immutable',
         'x-content-type-options': 'nosniff',
       })

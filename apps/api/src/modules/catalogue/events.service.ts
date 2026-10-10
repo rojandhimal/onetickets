@@ -16,7 +16,7 @@ import type pg from 'pg';
 import { UnitOfWork } from '../../database/database.module.js';
 import { ApiError, recordAudit } from '../identity/index.js';
 import { processBanner, UnsupportedImageError } from './banner-image.js';
-import { BannerStorage } from './banner-storage.js';
+import { BannerStorage, ogKeyFor } from './banner-storage.js';
 import { CATALOGUE_CONFIG, type CatalogueConfig } from './catalogue.config.js';
 import {
   type EventChanges,
@@ -209,6 +209,7 @@ export class EventsService {
     }
     const key = `${randomUUID()}.webp`;
     await this.storage.put(key, processed.image);
+    await this.storage.put(ogKeyFor(key), processed.ogImage);
     let previous: string | null = null;
     try {
       const dto = await this.inScope(actor, async (tx) => {
@@ -418,16 +419,20 @@ export class EventsService {
     }
   }
 
+  /** Removes a banner and its link-preview image. A leftover file is only logged. */
   private async removeStored(key: string): Promise<void> {
-    await this.storage.remove(key).catch((error: unknown) => {
-      this.logger.warn(`Could not remove banner ${key}: ${String(error)}`);
-    });
+    for (const stored of [key, ogKeyFor(key)]) {
+      await this.storage.remove(stored).catch((error: unknown) => {
+        this.logger.warn(`Could not remove banner ${stored}: ${String(error)}`);
+      });
+    }
   }
 
   private bannerDto(row: EventRow): BannerDto | null {
     if (!row.banner_key) return null;
     return {
       url: this.storage.publicUrl(row.banner_key),
+      ogUrl: this.storage.publicUrl(ogKeyFor(row.banner_key)),
       width: row.banner_width!,
       height: row.banner_height!,
       focus: { x: row.banner_focus_x, y: row.banner_focus_y },
