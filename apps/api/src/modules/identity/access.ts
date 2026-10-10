@@ -6,6 +6,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { PinoLogger } from 'nestjs-pino';
 import { MFA_REQUIRED, can, type Permission } from '@onetickets/shared';
 import { UnitOfWork } from '../../database/database.module.js';
 import type { AppRequest } from './auth-context.js';
@@ -44,6 +45,7 @@ export class AccessGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly uow: UnitOfWork,
     private readonly memberships: MembershipsRepository,
+    private readonly requestLog: PinoLogger,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -62,6 +64,8 @@ export class AccessGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AppRequest>();
     const auth = request.auth;
     if (!auth) throw notSignedIn();
+    // Ids, not personal data: every later log line for this request carries them.
+    this.requestLog.assign({ userId: auth.userId });
     if (policy.kind === 'signedIn') return true;
 
     const organisationId = request.params.organisationId;
@@ -71,6 +75,7 @@ export class AccessGuard implements CanActivate {
       this.memberships.roleOf(tx, organisationId, auth.userId),
     );
     if (!role) throw notAMember();
+    this.requestLog.assign({ organisationId });
 
     const { permission } = policy;
     if (permission) {
