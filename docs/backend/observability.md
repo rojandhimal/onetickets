@@ -28,8 +28,9 @@ than through the logger, so you can click them. It is refused in production.
 
 `LOG_LEVEL` sets the level (`info` by default; `debug` for more).
 
-Retention is set where the logs are shipped (DevOps): 30 days for application logs, 1 year for the audit
-log.
+Application logs are kept 30 days in staging and 90 days in production (CloudWatch, set by DevOps). The
+audit log is not in these logs: it lives in `identity.audit_events` in Postgres, and its 1-year retention
+is a database job (SEC-9).
 
 ## Errors and traces (Sentry)
 

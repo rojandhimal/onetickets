@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { redact, redactString, stripQuery } from '@onetickets/shared';
+import { isSensitiveKey, REDACTED, redact, redactString, stripQuery } from '@onetickets/shared';
 import type { Params } from 'nestjs-pino';
 import pino from 'pino';
 
@@ -22,7 +22,9 @@ export function requestId(req: IncomingMessage, res: ServerResponse): string {
 function redactError(error: Error): Error {
   const copy = Object.create(Object.getPrototypeOf(error) as object) as Error;
   for (const [key, value] of Object.entries(error)) {
-    (copy as unknown as Record<string, unknown>)[key] = redact(value);
+    (copy as unknown as Record<string, unknown>)[key] = isSensitiveKey(key)
+      ? REDACTED
+      : redact(value);
   }
   Object.defineProperty(copy, 'message', { value: redactString(error.message), writable: true });
   Object.defineProperty(copy, 'stack', {

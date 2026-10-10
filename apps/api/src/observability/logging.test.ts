@@ -45,10 +45,14 @@ describe('api log redaction', () => {
       context: 'ExceptionsHandler',
       err: new TypeError(`No account for ${PII.email}`),
     });
-    logger.error(new Error(`Lookup for ${PII.email} failed`));
+    // A secret in a field named like one, whose value no string pattern would catch.
+    logger.error(
+      Object.assign(new Error(`Lookup for ${PII.email} failed`), { token: 'plainsecret42' }),
+    );
 
     const text = output();
     expect(leaks(text)).toEqual([]);
+    expect(text).not.toContain('plainsecret42');
     const [first, second] = text
       .trim()
       .split('\n')
