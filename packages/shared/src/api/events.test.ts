@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import '../zod-config.js';
-import { browseQuery, eventDraftPatch, ticketTypeInput, venueInput } from './events.js';
+import {
+  browseQuery,
+  eventDraftPatch,
+  ticketTypeInput,
+  venueInput,
+  type BrowseCardDto,
+  type PublicEventDto,
+} from './events.js';
 
 const ticket = {
   name: 'General admission',
@@ -68,5 +75,21 @@ describe('events contract', () => {
   it('defaults browse to Sydney, 20 at a time', () => {
     expect(browseQuery.parse({})).toEqual({ city: 'sydney', limit: 20 });
     expect(browseQuery.parse({ limit: '5', when: 'tonight' })).toMatchObject({ limit: 5 });
+  });
+
+  it('keeps private details out of the public types (checked by typecheck)', () => {
+    expectTypeOf<PublicEventDto>().not.toHaveProperty('contactEmail');
+    expectTypeOf<PublicEventDto>().not.toHaveProperty('organisationId');
+    expectTypeOf<PublicEventDto['venue']>().toEqualTypeOf<
+      Exclude<PublicEventDto['venue'], { kind: 'online'; url: string }>
+    >();
+    expectTypeOf<Extract<PublicEventDto['venue'], { kind: 'online' }>>().not.toHaveProperty('url');
+    expectTypeOf<BrowseCardDto>().not.toHaveProperty('contactEmail');
+  });
+
+  it('lets autosave clear fields with null', () => {
+    expect(
+      eventDraftPatch.parse({ version: 1, name: null, startsAt: null, endsAt: null }),
+    ).toMatchObject({ name: null, startsAt: null, endsAt: null });
   });
 });

@@ -94,8 +94,8 @@ export class EventsService {
         return { stale: await this.draftDto(tx, actor, eventId) };
       }
       const changes = this.changesFrom(patch);
-      const startsAt = changes.starts_at ? new Date(changes.starts_at) : event.starts_at;
-      const endsAt = changes.ends_at ? new Date(changes.ends_at) : event.ends_at;
+      const startsAt = resolveTime(changes.starts_at, event.starts_at);
+      const endsAt = resolveTime(changes.ends_at, event.ends_at);
       if (startsAt && endsAt && endsAt <= startsAt) {
         throw new ApiError(
           HttpStatus.UNPROCESSABLE_ENTITY,
@@ -269,7 +269,7 @@ export class EventsService {
         event.name!,
         randomBytes(4).readUInt32BE().toString(36).padStart(7, '0'),
       );
-      await this.events.publish(tx, eventId, slug);
+      await this.events.publish(tx, eventId, slug, actor.userId);
       await recordAudit(tx, actor.organisationId, actor.userId, 'event.published', null, {
         eventId,
         slug,
@@ -378,12 +378,20 @@ export class EventsService {
 
   /** A live event keeps what publishing needed: these can change but not be cleared. */
   private refuseUnpublishing(changes: EventChanges): void {
-    if (changes.venue === null) {
+    const cleared = (
+      [
+        ['name', changes.name],
+        ['startsAt', changes.starts_at],
+        ['endsAt', changes.ends_at],
+        ['venue', changes.venue],
+      ] as const
+    ).find(([, value]) => value === null);
+    if (cleared) {
       throw new ApiError(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'required_when_live',
-        'A live event needs a venue or an online link.',
-        'venue',
+        'A live event needs a name, start and end times, and a venue or online link.',
+        cleared[0],
       );
     }
   }
@@ -502,6 +510,12 @@ export class EventsService {
 
 const ticketTypeNotFound = () =>
   new ApiError(HttpStatus.NOT_FOUND, 'ticket_type_not_found', 'Ticket type not found.');
+
+/** A patched time: undefined keeps the stored one, null clears it. */
+function resolveTime(value: string | null | undefined, stored: Date | null): Date | null {
+  if (value === undefined) return stored;
+  return value === null ? null : new Date(value);
+}
 
 function times(row: EventRow): EventTimes {
   return { startsAt: row.starts_at, endsAt: row.ends_at, publishedAt: row.published_at };

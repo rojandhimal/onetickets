@@ -403,6 +403,55 @@ describe('events and ticket types API', () => {
     await anon().get('/public/events').query({ cursor: 'nonsense' }).expect(422);
   });
 
+  it('lets a draft clear fields, but not what a live event needs', async () => {
+    const event = await publishable();
+    const cleared = await as(owner)
+      .patch(`${events()}/${event.id}`, {
+        version: event.version,
+        name: null,
+        startsAt: null,
+        contactEmail: null,
+      })
+      .expect(200);
+    expect(cleared.body).toMatchObject({ name: null, startsAt: null, contactEmail: null });
+
+    const live = await publish(await publishable());
+    const refused = await as(owner)
+      .patch(`${events()}/${live.id}`, { version: live.version, startsAt: null })
+      .expect(422);
+    expect(refused.body).toMatchObject({ code: 'required_when_live', field: 'startsAt' });
+  });
+
+  it("uses the publisher's email as the contact when none was given", async () => {
+    const event = await publishable({ contactEmail: null });
+    const live = await publish(event);
+    expect(live.contactEmail).toMatch(/^owner-.*@example\.test$/);
+    const { body } = await anon().get(`/public/events/${live.slug}`).expect(200);
+    expect(body.hasContactEmail).toBe(true);
+  });
+
+  it('never puts the online link or contact email in the public projection', async () => {
+    const live = await publish(
+      await publishable({ venue: { kind: 'online', url: 'https://meet.example.test/room-42' } }),
+    );
+    const { body } = await anon().get(`/public/events/${live.slug}`).expect(200);
+    expect(body).not.toHaveProperty('contactEmail');
+    expect(body).not.toHaveProperty('organisationId');
+    expect(body.venue).toEqual({ kind: 'online' });
+  });
+
+  it('looks up venues for signed-in organisers only', async () => {
+    await anon().get('/places/search').query({ q: 'town hall' }).expect(401);
+    const search = await as(owner).get('/places/search?q=town%20hall&city=melbourne').expect(200);
+    expect(search.body.items).toEqual([
+      { placeId: 'fake-fitzroy-town-hall', name: 'Fitzroy Town Hall', address: expect.any(String) },
+    ]);
+    const place = await as(owner).get('/places/fake-fitzroy-town-hall').expect(200);
+    expect(place.body).toMatchObject({ kind: 'place', suburb: 'Fitzroy', city: 'melbourne' });
+    expect((await as(owner).get('/places/nope').expect(404)).body.code).toBe('place_not_found');
+    await as(owner).get('/places/search?q=a').expect(422);
+  });
+
   describe('banners', () => {
     const photo = () =>
       sharp({ create: { width: 3000, height: 2000, channels: 3, background: '#c86432' } })

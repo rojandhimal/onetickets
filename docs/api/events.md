@@ -1,6 +1,7 @@
 # Events and ticket types API
 
 Module: `apps/api/src/modules/catalogue`. Contracts: `packages/shared/src/api/events.ts`.
+Decision record: [ADR 0017](../adr/0017-public-event-reads-and-plain-text-descriptions.md).
 
 Errors use `ApiErrorBody` (`{ statusCode, code, message, field? }`), plus the extra fields noted
 below. Switch on `code`, not on the message.
@@ -28,7 +29,9 @@ event_not_found`, the same as one that does not exist.
   (capacity 40 for a workshop, 100 for a gig or blank, 150 for a school night, 30 for a meetup;
   up to 10 per order; on sale from publishing until the event starts).
 - **Autosave.** `PATCH` takes any subset of fields plus `version`, the version the client last
-  saw. Every change, including ticket types and banners, bumps the version, so ticket-type and
+  saw. `null` clears `name`, `startsAt`, `endsAt`, `venue` or `contactEmail`; a live event refuses
+  clearing the first four with `422 required_when_live`. A bad field gets `422` with `field` set,
+  so the client can drop that field and save the rest. Every change, including ticket types and banners, bumps the version, so ticket-type and
   banner routes return the whole event. A stale version gets `409 stale_draft` with the current
   draft in `current`.
 - **Plain text (SEC-3).** `about` and `accessibility.notes` are stored as plain text: HTML tags and
@@ -43,7 +46,21 @@ event_not_found`, the same as one that does not exist.
   `missing` (`name`, `date_time`, `venue`, `ticket_type`), in checklist order. The event gets a
   slug (the name in kebab case plus a random suffix) and its public page is live at once.
   Publishing an event that is already live returns it unchanged.
-- **A live event** keeps a venue and at least one ticket type.
+- **Contact email.** With none given, publishing uses the publisher's own email. It is shown only
+  to ticket holders, never on the public page.
+- **A live event** keeps its name, times, venue and at least one ticket type.
+
+## Venue lookup
+
+Signed-in only, so the places provider's quota is not open to the public. The provider is a fixed
+list of real venues for now (`PLACES_PROVIDER=fake`); a real one comes later behind the same routes.
+
+| Method and path        | Query                        | Success                    |
+| ---------------------- | ---------------------------- | -------------------------- |
+| `GET /places/search`   | `q` (2 to 100 chars), `city` | 200 `PlaceSearchResponse`  |
+| `GET /places/:placeId` | none                         | 200 `PlaceDto` (a `place`) |
+
+Put the returned `PlaceDto` straight into the draft's `venue`.
 
 ## Public routes
 

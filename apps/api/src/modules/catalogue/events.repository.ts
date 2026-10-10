@@ -52,9 +52,9 @@ export interface TicketTypeRow {
 
 /** Columns an autosave may set, already validated and sanitised by the service. */
 export interface EventChanges {
-  name?: string;
-  starts_at?: string;
-  ends_at?: string;
+  name?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
   time_zone?: string;
   venue?: VenueInput | null;
   city?: string | null;
@@ -150,13 +150,24 @@ export class EventsRepository {
     );
   }
 
-  async publish(tx: pg.PoolClient, eventId: string, slug: string): Promise<void> {
+  /**
+   * Makes the event live. With no contact email yet, the publisher's own email is used, so it
+   * never blocks publishing (it is only shown to ticket holders).
+   */
+  async publish(
+    tx: pg.PoolClient,
+    eventId: string,
+    slug: string,
+    publisherUserId: string,
+  ): Promise<void> {
     await tx.query(
       `update catalogue.events
        set status = 'published', slug = $2, published_at = now(),
+           contact_email = coalesce(contact_email,
+             (select email from identity.users where id = $3)),
            version = version + 1, updated_at = now()
        where id = $1`,
-      [eventId, slug],
+      [eventId, slug, publisherUserId],
     );
   }
 

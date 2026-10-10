@@ -4,14 +4,17 @@ import { CATALOGUE_CONFIG, loadCatalogueConfig } from './catalogue.config.js';
 import { EventsController } from './events.controller.js';
 import { EventsRepository } from './events.repository.js';
 import { EventsService } from './events.service.js';
+import { PlacesController } from './places.controller.js';
+import { PlacesProvider, placesProviderFromEnv } from './places.js';
 import { PublicEventsController } from './public-events.controller.js';
 
-/** Events and ticket types: drafting, publishing, the public event page and browse. */
+/** Events and ticket types: drafting, venue lookup, publishing, the public event page and browse. */
 @Module({
-  controllers: [EventsController, PublicEventsController],
+  controllers: [EventsController, PlacesController, PublicEventsController],
   providers: [
     { provide: CATALOGUE_CONFIG, useFactory: () => loadCatalogueConfig() },
     { provide: BannerStorage, useFactory: () => bannerStorageFromEnv() },
+    { provide: PlacesProvider, useFactory: () => placesProviderFromEnv() },
     EventsRepository,
     EventsService,
   ],
