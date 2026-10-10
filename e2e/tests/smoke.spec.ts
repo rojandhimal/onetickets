@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { expectAccessible } from './a11y';
 
 test('api reports the database as up', async ({ request }) => {
