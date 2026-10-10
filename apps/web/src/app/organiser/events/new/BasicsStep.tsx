@@ -57,6 +57,9 @@ export function BasicsStep({
   );
   const [url, setUrl] = useState(event.venue?.kind === 'online' ? event.venue.url : '');
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
+  // Today where the event happens, so a late-night organiser in Perth isn't told Sydney's date.
+  const today = isoToWallClock(new Date().toISOString(), tz).date;
 
   function changeName(text: string) {
     setName(text);
@@ -142,9 +145,24 @@ export function BasicsStep({
             id="ev-date"
             type="date"
             value={date}
-            onChange={(e) => changeWhen({ date: e.target.value })}
-            onBlur={onBlur}
+            min={today}
+            aria-invalid={dateError ? true : undefined}
+            aria-describedby={dateError ? 'ev-date-error' : undefined}
+            onChange={(e) => {
+              if (dateError && e.target.value >= today) setDateError(null);
+              changeWhen({ date: e.target.value });
+            }}
+            onBlur={() => {
+              setDateError(date && date < today ? 'Pick a date from today on' : null);
+              onBlur();
+            }}
           />
+          {dateError && (
+            <span id="ev-date-error" className={styles.fieldError}>
+              <Icon name="alert" size={16} />
+              {dateError}
+            </span>
+          )}
         </div>
         <div className={styles.field}>
           <label htmlFor="ev-start">Starts</label>

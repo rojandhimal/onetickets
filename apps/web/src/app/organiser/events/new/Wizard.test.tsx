@@ -129,6 +129,23 @@ describe('create-event wizard', () => {
     );
   });
 
+  it('asks for an address from the list and a date from today on', async () => {
+    api({
+      'GET /api/places/search': () => json({ items: [] }),
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} />);
+    await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Somewhere');
+    await user.tab();
+    expect(screen.getByRole('combobox', { name: 'Venue address' })).toHaveAccessibleDescription(
+      expect.stringContaining('Pick an address from the list so people can find it'),
+    );
+    await user.type(screen.getByLabelText('Date'), '2020-01-01');
+    await user.tab();
+    expect(screen.getByLabelText('Date')).toHaveAccessibleDescription('Pick a date from today on');
+  });
+
   it('moves between steps without leaving the page', async () => {
     api({});
     const pushState = vi.spyOn(window.history, 'pushState');

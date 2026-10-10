@@ -65,7 +65,7 @@ export function LiveScreen({ event }: { event: EventDraftDto }) {
             onClick={() => void copy()}
             aria-describedby="live-link"
           >
-            {copied ? 'Copied' : 'Copy link'}
+            {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
         {canShare && (

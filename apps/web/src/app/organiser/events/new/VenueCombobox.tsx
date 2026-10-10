@@ -115,6 +115,8 @@ export function VenueCombobox({
         onKeyDown={onKeyDown}
         onBlur={() => {
           setOpen(false);
+          if (query.trim() && !value)
+            setError('Pick an address from the list so people can find it');
           onBlur();
         }}
       />
@@ -157,7 +159,7 @@ export function VenueCombobox({
       <span id={hintId} className={styles.hint}>
         {value
           ? value.address
-          : 'Start typing, then use the up and down arrows to pick a suggestion and Enter to choose.'}
+          : 'Use the up and down arrows to pick a suggestion, Enter to choose.'}
       </span>
     </div>
   );
