@@ -27,18 +27,18 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 
 ## Pages
 
-| Route                                                           | What it does                                                                                                                                   |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                                                             | Redirects to `/signup` for now.                                                                                                                |
-| `/signup`                                                       | Email-only sign-up, or continue with Google. Signed-in organisers are sent to `/organiser`.                                                    |
-| `/signin`                                                       | The same form with returning-organiser copy.                                                                                                   |
-| `/auth/verify`                                                  | Landing page for the magic link. Exchanges the token and goes to `/organiser`.                                                                 |
-| `/organiser/setup`                                              | Asks a new organiser to name their organisation (`POST /organisations`).                                                                       |
-| `/organiser`                                                    | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`.                                                      |
-| `/organiser/events/new`                                         | Creates a draft from `?template=` (workshop, gig, school-night, meetup; none means blank) and opens the wizard. Behind `FEATURE_EVENT_WIZARD`. |
-| `/organiser/events/new/{basics,tickets,details,review}?draft=…` | The create-event wizard. Steps switch without a page load; reopening a draft resumes on its last step.                                         |
-| `/csp-report`                                                   | Receives CSP violation reports, scrubs them and forwards them to Sentry.                                                                       |
-| `/healthz`                                                      | Returns `{"status":"ok"}` for the container health check.                                                                                      |
+| Route                                                           | What it does                                                                                                                                                               |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                             | Redirects to `/signup` for now.                                                                                                                                            |
+| `/signup`                                                       | Email-only sign-up, or continue with Google. Signed-in organisers are sent to `/organiser`.                                                                                |
+| `/signin`                                                       | The same form with returning-organiser copy.                                                                                                                               |
+| `/auth/verify`                                                  | Landing page for the magic link. Exchanges the token and goes to `/organiser`.                                                                                             |
+| `/organiser/setup`                                              | Asks a new organiser to name their organisation (`POST /organisations`).                                                                                                   |
+| `/organiser`                                                    | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`. With the wizard on, `?view=upcoming` or `?view=drafts` picks the events segment. |
+| `/organiser/events/new`                                         | Creates a draft from `?template=` (workshop, gig, school-night, meetup; none means blank) and opens the wizard. Behind `FEATURE_EVENT_WIZARD`.                             |
+| `/organiser/events/new/{basics,tickets,details,review}?draft=…` | The create-event wizard. Steps switch without a page load; reopening a draft resumes on its last step.                                                                     |
+| `/csp-report`                                                   | Receives CSP violation reports, scrubs them and forwards them to Sentry.                                                                                                   |
+| `/healthz`                                                      | Returns `{"status":"ok"}` for the container health check.                                                                                                                  |
 
 ## Sign-in flow
 
@@ -83,6 +83,19 @@ kept in IndexedDB and synced when the connection returns. The header shows "Draf
 "Saved on this phone" when offline, or "Couldn't save. We'll keep trying." when the api fails while
 online. A field the api refuses (422) keeps its value on screen with the api's message under it, and
 the header says "Couldn't save one field. Check the message under it." until it's changed.
+
+The organiser home lists the organisation's events (`GET /organisations/:id/events`) in two
+segments, Upcoming (published and not yet ended, soonest first) and Drafts (newest first). It
+opens on Drafts when nothing is coming up. Each card has the date, title, a Live or Draft chip,
+booked of capacity for live events, and one action: "Open event page", or "Finish setting up",
+which returns to the step the draft was left on. The step is saved as soon as it changes.
+
+Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
+build made with it off still picks it up when it's turned on.
+
+The wizard's e2e spec (`e2e/tests/wizard.spec.ts`) signs up through the real api and follows the
+sign-in link from the api's console mail, which `e2e/playwright.config.ts` keeps in
+`e2e/.logs/api.log`. It needs the events api from S1.
 
 Finance and door staff see "Only owners and admins can create events" on the organiser home instead
 of the templates, and the wizard pages return 404 for them.

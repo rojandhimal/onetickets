@@ -188,7 +188,8 @@ describe('create-event wizard', () => {
         'href',
         '/organiser/events/new/basics?draft=evt_1',
       );
-      expect(fetch).not.toHaveBeenCalled();
+      // Only the step change is saved; nothing tries to publish.
+      expect(fetch.mock.calls.filter((c) => String(c[0]).endsWith('/publish'))).toEqual([]);
     });
 
     it('publishes and shows the live screen', async () => {
