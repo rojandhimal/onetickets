@@ -130,7 +130,10 @@ create function catalogue.organiser_name(p_organisation_id uuid) returns text
         where e.organisation_id = o.id and e.status = 'published'
       )
   $$;
+-- A new owner needs CREATE on the schema unless the migrating user is a superuser (RDS's isn't).
+grant create on schema catalogue to ot_public_reader;
 alter function catalogue.organiser_name(uuid) owner to ot_public_reader;
+revoke create on schema catalogue from ot_public_reader;
 revoke all on function catalogue.organiser_name(uuid) from public;
 grant execute on function catalogue.organiser_name(uuid) to ot_app, ot_worker;
 revoke ot_public_reader from current_user;
