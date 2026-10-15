@@ -15,6 +15,9 @@ describe('toPlainText', () => {
     expect(toPlainText('<img src=x onerror=alert(1)//')).toBe('img src=x onerror=alert(1)//');
     expect(toPlainText('<\u200Bscript>alert(1)</\u202Escript>')).toBe('alert(1)');
     expect(toPlainText('<<<a>a>a>x')).toBe('x');
+    expect(toPlainText('<<b>img src=x onerror=1>Hi')).toBe('Hi');
+    // Reassembles into `<!-->`, read as an unclosed comment: everything after it goes too.
+    expect(toPlainText('<!-<!---->->Hi')).toBe('');
     expect(toPlainText('<!<!-- -->-- --><?php ?></>')).not.toMatch(/<[a-zA-Z/!?]/);
   });
 
