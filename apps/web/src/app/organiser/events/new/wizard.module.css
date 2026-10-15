@@ -195,8 +195,10 @@
 }
 :global(.visually-hidden):focus-visible + .bannerEmpty,
 :global(.visually-hidden):focus-visible + .bannerAction {
-  outline: 2px solid var(--indigo);
+  /* The site-wide focus ring (globals.css): ink with a white halo. */
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--white);
 }
 .bannerEmptyText {
   display: flex;

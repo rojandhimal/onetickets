@@ -267,10 +267,9 @@ describe('create-event wizard', () => {
     await waitFor(() => expect(name).toHaveAccessibleDescription('Use letters as well as symbols'));
     expect(name).toHaveValue('***');
     expect(name).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('Not saved: check the highlighted field')).toHaveAttribute(
-      'role',
-      'status',
-    );
+    expect(
+      screen.getByText("Couldn't save one field. Check the message under it."),
+    ).toHaveAttribute('role', 'status');
 
     // Typing again clears the message until the next save says otherwise.
     await user.type(name, 'x');
@@ -344,9 +343,7 @@ describe('create-event wizard', () => {
       );
 
       await user.upload(input, new File(['%PDF'], 'flyer.pdf', { type: 'application/pdf' }));
-      expect(input).toHaveAccessibleDescription(
-        expect.stringContaining('Use a JPG, PNG or HEIC image.'),
-      );
+      expect(input).toHaveAccessibleDescription(expect.stringContaining('Use a JPG or PNG image.'));
       expect(fetch).not.toHaveBeenCalled();
     });
   });

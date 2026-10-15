@@ -28,7 +28,7 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: "Couldn't save. We'll keep trying.",
 };
 
-const REFUSED_TEXT = 'Not saved: check the highlighted field';
+const REFUSED_TEXT = "Couldn't save one field. Check the message under it.";
 
 function applyChanges(event: EventDraftDto, changes: PendingChanges): EventDraftDto {
   // The banner focal point lives on `banner`, which only the api sets.

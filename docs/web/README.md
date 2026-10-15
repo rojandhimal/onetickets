@@ -82,7 +82,7 @@ on blur, every 10 seconds while there are changes, and when the tab is hidden. O
 kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…",
 "Saved on this phone" when offline, or "Couldn't save. We'll keep trying." when the api fails while
 online. A field the api refuses (422) keeps its value on screen with the api's message under it, and
-the header says "Not saved: check the highlighted field" until it's changed.
+the header says "Couldn't save one field. Check the message under it." until it's changed.
 
 Finance and door staff see "Only owners and admins can create events" on the organiser home instead
 of the templates, and the wizard pages return 404 for them.

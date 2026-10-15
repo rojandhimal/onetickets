@@ -15,7 +15,7 @@ type Focus = BannerDto['focus'];
 
 export const BANNER_ERRORS = {
   tooLarge: 'That file is over 10 MB. Try a smaller photo.',
-  wrongType: 'Use a JPG, PNG or HEIC image.',
+  wrongType: 'Use a JPG or PNG image.',
   offline: "We couldn't upload that. Check your connection and try again.",
   failed: "We couldn't upload that. Try again.",
   removeFailed: "We couldn't remove the banner. Try again.",
@@ -202,7 +202,7 @@ export function BannerField({
         </span>
       )}
       <span id={hintId} className={styles.hint}>
-        2:1 works best (2160 × 1080 px). JPG, PNG or HEIC up to 10 MB.
+        2:1 works best (2160 × 1080 px). JPG or PNG up to 10 MB.
       </span>
       <span role="status" className="visually-hidden">
         {busy === 'uploading' ? 'Uploading banner…' : busy === 'removing' ? 'Removing banner…' : ''}
