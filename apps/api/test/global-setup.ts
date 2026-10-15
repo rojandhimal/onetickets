@@ -1,9 +1,9 @@
 import { migrate } from '../src/database/migrate.js';
-import { APP_TEST_ROLE, migrationDatabaseUrl, withOwner } from './db.js';
+import { APP_TEST_ROLE, migrationDatabaseUrl, withMigrator } from './db.js';
 
 export default async function setup(): Promise<void> {
   await migrate(migrationDatabaseUrl());
-  await withOwner(async (client) => {
+  await withMigrator(async (client) => {
     await client.query(`do $$
       begin
         if not exists (select from pg_roles where rolname = '${APP_TEST_ROLE}') then

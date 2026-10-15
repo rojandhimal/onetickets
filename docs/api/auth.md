@@ -44,10 +44,10 @@ cookie is first-party. Every error is `ApiErrorBody` (`{ statusCode, code, messa
 
 ## Session
 
-| Method and path       | Success                                 |
-| --------------------- | --------------------------------------- |
-| `GET /me`             | 200 `Session`, or 401 `not_signed_in`   |
-| `POST /auth/sign-out` | 204; the session is revoked server-side |
+| Method and path       | Success                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `GET /me`             | 200 `Session`, or 401 `not_signed_in`                                                                           |
+| `POST /auth/sign-out` | 204; the session is revoked server-side and `Clear-Site-Data: "storage"` wipes browser storage (offline drafts) |
 
 The session cookie is `__Host-ot_session` (`ot_session` on local http): HttpOnly, SameSite=Lax.
 It expires after 7 days without use and 30 days after sign-in, whichever is first. Signing in again

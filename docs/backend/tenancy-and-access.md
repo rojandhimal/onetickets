@@ -23,6 +23,14 @@ route without one of these decorators:
   `set_config(..., true)`, so they end with the transaction and cannot leak between pooled
   connections.
 - Grants are least privilege: no `DELETE` until a feature needs one; the audit log is insert-only.
+- Public data is opened by a policy, not by skipping the tenant. `catalogue.events` and
+  `catalogue.ticket_types` have a second `ot_app` select policy for published events, which the
+  public event page and browse read with no organisation set. Drafts stay inside their
+  organisation. The organiser's name reaches the public page through
+  `catalogue.organiser_name()`, which returns only the name, and only for organisations with a
+  published event. The function is owned by `ot_public_reader`, a role nobody can log in as, with
+  column grants on `organisations (id, name)` and `events (organisation_id, status)` and read
+  policies scoped to that role alone.
 
 ## Adding a table
 
@@ -34,3 +42,11 @@ route without one of these decorators:
 
 `apps/api/test/rls.int.test.ts` fails CI if any module table lacks RLS, `FORCE` or an `ot_app`
 policy, so step 2 or 3 cannot be forgotten.
+
+## Backfills in migrations
+
+Migrations run as the owner, which `FORCE` fences like any other role, in CI, locally and on RDS.
+An `UPDATE` or `DELETE` on an existing table therefore matches no rows, without an error, unless
+a policy lets the owner in. Before the backfill, add a policy such as
+`create policy backfill on <table> to current_user using (true) with check (true)`, and drop it
+after the backfill in the same migration. Add a test that checks the backfilled rows.

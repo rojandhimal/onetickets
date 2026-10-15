@@ -14,6 +14,13 @@ describe('roles', () => {
     expect(can('admin', 'managePayouts')).toBe(false);
   });
 
+  it('lets owners and admins manage events, not finance or door staff', () => {
+    expect(can('owner', 'manageEvents')).toBe(true);
+    expect(can('admin', 'manageEvents')).toBe(true);
+    expect(can('finance', 'manageEvents')).toBe(false);
+    expect(can('door_staff', 'manageEvents')).toBe(false);
+  });
+
   it('lets only owners grant owner or finance', () => {
     expect(canGrant('owner', 'finance')).toBe(true);
     expect(canGrant('admin', 'finance')).toBe(false);

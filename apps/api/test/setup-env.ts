@@ -8,3 +8,5 @@ process.env.MAIL_TRANSPORT = 'outbox';
 process.env.MFA_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString('base64');
 // High enough that the suite never trips it; magic-link-cap.int.test.ts sets its own.
 process.env.MAGIC_LINK_HOURLY_CAP = '100000';
+// Banners go to a throwaway folder per run.
+process.env.BANNER_DIR = `${process.env.TMPDIR ?? '/tmp'}/onetickets-banners-${process.pid}`;
