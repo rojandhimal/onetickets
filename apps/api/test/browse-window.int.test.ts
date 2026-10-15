@@ -3,8 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EventsRepository } from '../src/modules/catalogue/events.repository.js';
 import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
 
-// S1-5 (QA 5.4): "tonight" and "this weekend" are worked out in the city's time zone, including
-// the weekends Sydney's clocks change. The clock is pinned by passing `now` to the repository,
+// S1-5 (QA 5.4): the When chips as design's handoff defines them, in the city's time zone, with a
+// night running to 5:00 am, including the weekends Sydney's clocks change. The clock is pinned by passing `now` to the repository,
 // which runs as the api's own role, so row-level security applies as it does for browse.
 describe('browse time windows in Sydney', () => {
   const repository = new EventsRepository();
@@ -43,7 +43,7 @@ describe('browse time windows in Sydney', () => {
     ids.set(label, rows[0]!.id);
   }
 
-  async function browse(when: 'tonight' | 'this_weekend' | 'next_7_days', now: string) {
+  async function browse(when: 'tonight' | 'this_weekend' | 'next_7_days' | undefined, now: string) {
     const client = await pool.connect();
     try {
       await client.query('begin');
@@ -68,61 +68,73 @@ describe('browse time windows in Sydney', () => {
       { userId: await seedUser(uniqueEmail('window')), role: 'owner' },
     ]);
     // Daylight saving ends Sun 4 Apr 2027 (AEDT +11 to AEST +10).
-    await seedEvent('apr-fri-8pm', org, '2027-04-02T09:00:00Z'); // Fri 20:00 AEDT
-    await seedEvent('apr-sat-1145pm', org, '2027-04-03T12:45:00Z'); // Sat 23:45 AEDT
-    await seedEvent('apr-sun-0015am', org, '2027-04-03T13:15:00Z'); // Sun 00:15 AEDT
-    await seedEvent('apr-sun-1130pm', org, '2027-04-04T13:30:00Z'); // Sun 23:30 AEST
-    await seedEvent('apr-mon-0030am', org, '2027-04-04T14:30:00Z'); // Mon 00:30 AEST
+    await seedEvent('apr-thu-6pm', org, '2027-04-01T07:00:00Z'); // Thu 18:00 AEDT
+    await seedEvent('apr-fri-4pm', org, '2027-04-02T05:00:00Z'); // Fri 16:00 AEDT
+    await seedEvent('apr-fri-6pm', org, '2027-04-02T07:00:00Z'); // Fri 18:00 AEDT
+    await seedEvent('apr-sat-1am', org, '2027-04-02T14:00:00Z'); // Sat 01:00 AEDT
+    await seedEvent('apr-sat-6am', org, '2027-04-02T19:00:00Z'); // Sat 06:00 AEDT
+    await seedEvent('apr-mon-0430', org, '2027-04-04T18:30:00Z'); // Mon 04:30 AEST
+    await seedEvent('apr-mon-0530', org, '2027-04-04T19:30:00Z'); // Mon 05:30 AEST
+    await seedEvent('apr-fri9-4am', org, '2027-04-08T18:00:00Z'); // Fri 9 Apr 04:00 AEST
+    await seedEvent('apr-fri9-6am', org, '2027-04-08T20:00:00Z'); // Fri 9 Apr 06:00 AEST
     // Daylight saving starts Sun 3 Oct 2027 (AEST +10 to AEDT +11).
-    await seedEvent('oct-sun-1130pm', org, '2027-10-03T12:30:00Z'); // Sun 23:30 AEDT
-    await seedEvent('oct-mon-0030am', org, '2027-10-03T13:30:00Z'); // Mon 00:30 AEDT
+    await seedEvent('oct-fri-6pm', org, '2027-10-01T08:00:00Z'); // Fri 18:00 AEST
+    await seedEvent('oct-mon-0430', org, '2027-10-03T17:30:00Z'); // Mon 04:30 AEDT
+    await seedEvent('oct-mon-0530', org, '2027-10-03T18:30:00Z'); // Mon 05:30 AEDT
   });
 
   afterAll(async () => {
     await pool.end();
   });
 
-  it('ends "tonight" at local midnight', async () => {
-    // Sat 3 Apr 23:30 AEDT.
-    expect(await browse('tonight', '2027-04-03T12:30:00Z')).toEqual(['apr-sat-1145pm']);
-    // Sun 3 Oct 22:00 AEDT, the night the clocks went forward.
-    expect(await browse('tonight', '2027-10-03T11:00:00Z')).toEqual(['oct-sun-1130pm']);
+  it('shows only events that have not started yet', async () => {
+    // Fri 2 Apr 18:30 AEDT: the 6 pm event is under way, so it has gone.
+    const upcoming = await browse(undefined, '2027-04-02T07:30:00Z');
+    expect(upcoming).not.toContain('apr-fri-6pm');
+    expect(upcoming).toContain('apr-sat-1am');
   });
 
-  it('runs "this weekend" from Saturday to Sunday midnight across the April change', async () => {
-    // Fri 2 Apr 10:00 AEDT. Monday starts at 00:00 AEST, an hour later in UTC than in AEDT.
-    expect(await browse('this_weekend', '2027-04-01T23:00:00Z')).toEqual([
-      'apr-sat-1145pm',
-      'apr-sun-0015am',
-      'apr-sun-1130pm',
+  it('runs "tonight" from 5 pm to 5 am, or from now once the night has started', async () => {
+    // Thu 1 Apr 10:00 AEDT: Thu 17:00 to Fri 05:00.
+    expect(await browse('tonight', '2027-03-31T23:00:00Z')).toEqual(['apr-thu-6pm']);
+    // Sat 3 Apr 00:30 AEDT is still Friday night: now to Sat 05:00, and Friday's 6 pm event
+    // has started.
+    expect(await browse('tonight', '2027-04-02T13:30:00Z')).toEqual(['apr-sat-1am']);
+    // Sun 3 Oct 23:00 AEDT, the night the clocks went forward: now to Mon 05:00 AEDT.
+    expect(await browse('tonight', '2027-10-03T12:00:00Z')).toEqual(['oct-mon-0430']);
+  });
+
+  it('runs "this weekend" from Friday 5 pm to Monday 5 am across the April change', async () => {
+    // Thu 1 Apr 10:00 AEDT: the coming weekend. Monday 05:00 is AEST, an hour later in UTC.
+    expect(await browse('this_weekend', '2027-03-31T23:00:00Z')).toEqual([
+      'apr-fri-6pm',
+      'apr-sat-1am',
+      'apr-sat-6am',
+      'apr-mon-0430',
+    ]);
+    // Mon 5 Apr 04:00 AEST is still the weekend: now to 05:00.
+    expect(await browse('this_weekend', '2027-04-04T18:00:00Z')).toEqual(['apr-mon-0430']);
+  });
+
+  it('runs "this weekend" from Friday 5 pm to Monday 5 am across the October change', async () => {
+    // Fri 1 Oct 10:00 AEST. Monday 05:00 is AEDT, an hour earlier in UTC.
+    expect(await browse('this_weekend', '2027-10-01T00:00:00Z')).toEqual([
+      'oct-fri-6pm',
+      'oct-mon-0430',
     ]);
   });
 
-  it('runs "this weekend" from Saturday to Sunday midnight across the October change', async () => {
-    // Fri 1 Oct 10:00 AEST. Monday starts at 00:00 AEDT, an hour earlier in UTC than in AEST.
-    expect(await browse('this_weekend', '2027-10-01T00:00:00Z')).toEqual(['oct-sun-1130pm']);
-  });
-
-  it('keeps the rest of the weekend once it has started, and drops events already over', async () => {
-    // Sun 4 Apr 01:30 AEDT: the events that started before 00:30 have ended.
-    expect(await browse('this_weekend', '2027-04-03T14:30:00Z')).toEqual(['apr-sun-1130pm']);
-  });
-
-  it('covers exactly the next seven days', async () => {
-    // Fri 2 Apr 20:30 AEDT, half an hour into the Friday event.
-    expect(await browse('next_7_days', '2027-04-02T09:30:00Z')).toEqual([
-      'apr-fri-8pm',
-      'apr-sat-1145pm',
-      'apr-sun-0015am',
-      'apr-sun-1130pm',
-      'apr-mon-0030am',
-    ]);
-    // Seven days before the Monday event starts, it is just out of range.
-    expect(await browse('next_7_days', '2027-03-28T14:30:00Z')).toEqual([
-      'apr-fri-8pm',
-      'apr-sat-1145pm',
-      'apr-sun-0015am',
-      'apr-sun-1130pm',
+  it('covers today and the next seven days, to 5 am on the eighth', async () => {
+    // Thu 1 Apr 10:00 AEDT: up to Fri 9 Apr 05:00 AEST.
+    expect(await browse('next_7_days', '2027-03-31T23:00:00Z')).toEqual([
+      'apr-thu-6pm',
+      'apr-fri-4pm',
+      'apr-fri-6pm',
+      'apr-sat-1am',
+      'apr-sat-6am',
+      'apr-mon-0430',
+      'apr-mon-0530',
+      'apr-fri9-4am',
     ]);
   });
 });

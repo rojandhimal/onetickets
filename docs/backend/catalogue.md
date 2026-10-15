@@ -67,7 +67,7 @@ See [environment.md](environment.md) for the full list.
 `pnpm --filter @onetickets/api test` runs the unit tests (sanitiser, sales windows, publish
 checklist, banners). `pnpm --filter @onetickets/api test:integration` needs Postgres and
 `MIGRATION_DATABASE_URL`; `test/catalogue.int.test.ts`, `test/browse-window.int.test.ts` (time
-windows with a pinned clock, across both daylight-saving changes) and `test/rls.int.test.ts` cover
+windows from design's handoff with a pinned clock, across both daylight-saving changes) and `test/rls.int.test.ts` cover
 this module.
 
 ## Decisions

@@ -330,6 +330,13 @@ describe('events and ticket types API', () => {
           ]),
         ),
       ).rejects.toThrow(/permission denied/);
+      await expect(
+        asApp((client) =>
+          client.query('update catalogue.ticket_types set event_id = event_id where id = $1', [
+            type.id,
+          ]),
+        ),
+      ).rejects.toThrow(/permission denied/);
 
       // Capacity changes reach inventory in the same transaction, and can't go below sold.
       const edit = { ...type, id: undefined, sold: undefined, capacity: 40, maxPerOrder: 5 };
@@ -542,13 +549,6 @@ describe('events and ticket types API', () => {
     const week = await browseAll({ city: 'sydney', when: 'next_7_days' });
     expect(week).toContain(soon.slug);
     expect(week).not.toContain(later.slug);
-
-    const sydneyDate = (d: Date) => d.toLocaleDateString('en-AU', { timeZone: 'Australia/Sydney' });
-    const tonight = await browseAll({ city: 'sydney', when: 'tonight' });
-    expect(tonight).not.toContain(later.slug);
-    if (sydneyDate(new Date(soon.startsAt!)) === sydneyDate(new Date())) {
-      expect(tonight).toContain(soon.slug);
-    }
 
     expect(await browseAll({ city: 'sydney', price: 'paid' })).not.toContain(soon.slug);
     expect(await browseAll({ city: 'sydney', price: 'free' })).toContain(soon.slug);

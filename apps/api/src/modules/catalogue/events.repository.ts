@@ -275,9 +275,9 @@ export class EventsRepository {
   }
 
   /**
-   * Upcoming published events in a city (online events show in every city), soonest first.
-   * "Tonight", "this weekend" and "next 7 days" are worked out in the city's time zone, from
-   * `now` (passed in so tests can pin the clock).
+   * Published events in a city that haven't started yet (online events show in every city),
+   * soonest first. The `when` windows follow design's handoff (S1-5): wall-clock times in the
+   * city's time zone, with a night running to 5:00 am. `now` is passed in so tests can pin it.
    */
   async browse(
     tx: pg.PoolClient,
@@ -293,23 +293,29 @@ export class EventsRepository {
   ): Promise<BrowseRow[]> {
     const { rows } = await tx.query<BrowseRow>(
       `with bounds as (
+         -- A "night" runs to 5:00 am, so the day before 5:00 am is still yesterday.
          select $8::timestamptz as now_at,
-                ($8::timestamptz at time zone $2)::date as today,
-                extract(isodow from $8::timestamptz at time zone $2)::int as dow
+                (($8::timestamptz at time zone $2) - interval '5 hours')::date as day
+       ),
+       days as (
+         select now_at, day,
+                -- The Friday of this weekend (Friday to Sunday) or, Monday to Thursday, the next.
+                day + (5 - extract(isodow from day)::int) as friday
+         from bounds
        ),
        window_ as (
-         select now_at as from_at,
+         select now_at,
            case $3::text
-             when 'tonight' then ((today + 1)::timestamp at time zone $2)
-             when 'this_weekend' then ((today + (8 - dow))::timestamp at time zone $2)
-             when 'next_7_days' then now_at + interval '7 days'
-           end as to_at,
-           case $3::text
-             when 'this_weekend' then greatest(now_at,
-               ((today + greatest(0, 6 - dow))::timestamp at time zone $2))
+             when 'tonight' then greatest(now_at, (day + time '17:00') at time zone $2)
+             when 'this_weekend' then greatest(now_at, (friday + time '17:00') at time zone $2)
              else now_at
-           end as weekend_from
-         from bounds
+           end as from_at,
+           case $3::text
+             when 'tonight' then (day + 1 + time '05:00') at time zone $2
+             when 'this_weekend' then (friday + 3 + time '05:00') at time zone $2
+             when 'next_7_days' then (day + 8 + time '05:00') at time zone $2
+           end as to_at
+         from days
        ),
        priced as (
          select ${EVENT_COLUMNS.split(',')
@@ -321,8 +327,8 @@ export class EventsRepository {
          where e.status = 'published' and (e.city = $1 or e.city is null)
        )
        select p.* from priced p, window_ w
-       where p.ends_at > w.from_at
-         and ($3::text is null or (p.starts_at < w.to_at and p.ends_at > w.weekend_from))
+       where p.starts_at > w.now_at
+         and ($3::text is null or (p.starts_at >= w.from_at and p.starts_at < w.to_at))
          and ($4::text is null
               or ($4 = 'free' and p.price_from_cents = 0)
               or ($4 = 'paid' and p.price_from_cents > 0))

@@ -79,11 +79,13 @@ No session needed. Only published events are visible; drafts are `404 event_not_
 
 - **Private details stay private.** The public event has no organisation id, no contact email
   (only `hasContactEmail`) and, for online events, no link: those are for ticket holders.
-- **Browse** lists events that have not ended, soonest first, 20 a page by default (up to 50),
-  with `nextCursor` for the next page. `city` defaults to `sydney`; online events show in every
-  city. `when` is worked out in the city's time zone: `tonight` runs until midnight,
-  `this_weekend` covers Saturday and Sunday (the rest of it, once it has started), and
-  `next_7_days` the next 168 hours. `price=paid` returns nothing until paid tickets exist.
+- **Browse** lists events that haven't started yet, soonest first, 20 a page by default (up to
+  50), with `nextCursor` for the next page. `city` defaults to `sydney`; online events show in
+  every city. `when` follows design's handoff (S1-5): wall-clock times in the city's time zone,
+  with a night running to 5:00 am. Let D be today, or yesterday before 5:00 am. `tonight` starts
+  from 5:00 pm on D (or now, if later) to 5:00 am on D+1; `this_weekend` from 5:00 pm Friday (or
+  now) to 5:00 am Monday, the current weekend from Friday to Monday 5:00 am and the coming one
+  otherwise; `next_7_days` from now to 5:00 am on D+8. `price=paid` returns nothing until paid tickets exist.
 - **Prices** are all-in (fees included). Every ticket is free until Sprint 4, so they are 0.
 - **Banners** are served by the api only while they are stored on local disk (development). In AWS
   the URL in `BannerDto.url` points at the CDN.

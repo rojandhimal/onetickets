@@ -139,5 +139,8 @@ grant execute on function catalogue.organiser_name(uuid) to ot_app, ot_worker;
 revoke ot_public_reader from current_user;
 
 grant select, insert, update on catalogue.events to ot_app;
-grant select, insert, update, delete on catalogue.ticket_types to ot_app;
+-- Which event and organisation a ticket type belongs to never changes (inventory copies them).
+grant select, insert, delete on catalogue.ticket_types to ot_app;
+grant update (name, capacity, max_per_order, price_cents, sales_start, sales_end, position,
+  updated_at) on catalogue.ticket_types to ot_app;
 grant select, insert, update on catalogue.events, catalogue.ticket_types to ot_worker;
