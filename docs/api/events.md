@@ -94,6 +94,17 @@ No session needed. Only published events are visible; drafts are `404 event_not_
   "From A$x". Never work out a price in the web app.
 - **Banners** are served by the api only while they are stored on local disk (development). In AWS
   the URL in `BannerDto.url` points at the CDN.
+- **Caching (QA 3.2).** A found event and every browse page send
+  `Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300`: shared caches may keep
+  them for a minute, browsers always revalidate. A 404, an error and every other api response send
+  `no-store`, so a slug that has just gone live is never hidden by a cached miss and nothing private
+  is ever cached. Banners are immutable (every upload gets a new key).
+- **Revalidation.** Publishing an event, and any later change to it while it's live (details, ticket
+  types, banner), makes the api `POST {WEB_URL}/internal/revalidate` with
+  `Authorization: Bearer {REVALIDATE_SECRET}` and `{ "slugs": ["<slug>"] }` once the change is
+  committed. The web app drops what it cached for that event. The call times out after 2 s and a
+  failure is only logged: the organiser's change still succeeds, and the page catches up within
+  the minute above. Off when `REVALIDATE_SECRET` is unset.
 
 ## Errors
 

@@ -55,11 +55,12 @@ Invariants the database enforces:
 
 ## Configuration
 
-| Variable               | Required    | Local value   | What it does                        |
-| ---------------------- | ----------- | ------------- | ----------------------------------- |
-| `FEATURE_PAID_TICKETS` | no (off)    | unset         | `on` allows ticket prices above 0   |
-| `BANNER_DIR`           | no          | `var/banners` | Where local-disk banners are stored |
-| `PLACES_PROVIDER`      | no (`fake`) | `fake`        | Venue lookup provider               |
+| Variable               | Required    | Local value   | What it does                          |
+| ---------------------- | ----------- | ------------- | ------------------------------------- |
+| `FEATURE_PAID_TICKETS` | no (off)    | unset         | `on` allows ticket prices above 0     |
+| `BANNER_DIR`           | no          | `var/banners` | Where local-disk banners are stored   |
+| `PLACES_PROVIDER`      | no (`fake`) | `fake`        | Venue lookup provider                 |
+| `REVALIDATE_SECRET`    | no (off)    | unset         | Tells the web app a live page changed |
 
 See [environment.md](environment.md) for the full list.
 
@@ -86,4 +87,5 @@ this module.
   page. Its on-sale test, `catalogue.ticket_on_sale`, repeats `sales-window.ts`, which still sets each
   type's `onSale` flag; an integration test keeps the two in step. Fees go on top in `pricing.ts`
   (Sprint 4), and only ever raise a price above 0, so free stays free.
-- Public responses don't send `Cache-Control` yet, and nothing revalidates a cache on publish.
+- Revalidation is fire-and-forget: a signal lost while the web app is down is not retried, so the
+  page is stale until its 60 s cache time ends. An edge purge (Cloudflare) is not wired up yet.
