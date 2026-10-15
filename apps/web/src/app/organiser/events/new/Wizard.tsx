@@ -16,7 +16,7 @@ import {
   previousStep,
   stepHref,
 } from '@/lib/wizard-model';
-import { BasicsStep, type ServerErrors } from './BasicsStep';
+import { BasicsStep, END_SAME_AS_START, type ServerErrors } from './BasicsStep';
 import { LiveScreen } from './LiveScreen';
 import { ReviewStep } from './ReviewStep';
 import styles from './wizard.module.css';
@@ -27,6 +27,13 @@ const SAVE_TEXT: Record<SaveState, string> = {
   offline: 'Saved on this phone',
   failed: "Couldn't save. We'll keep trying.",
 };
+
+/** Our wording for the api's codes; its own message otherwise, never a bare code. */
+export function refusedMessage(message: string, code?: string): string {
+  if (code === 'ends_before_start' || message === 'ends_before_start') return END_SAME_AS_START;
+  if (code === 'required_when_live') return 'A live event needs this. Add it back to keep it live.';
+  return /^[a-z_]+$/.test(message) ? 'Check this and try again.' : message;
+}
 
 const REFUSED_TEXT = "Couldn't save one field. Check the message under it.";
 
@@ -62,9 +69,9 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
       setRestored((n) => n + 1);
     },
     // The value stays on screen with the api's message under it; the rest of the draft saves.
-    onInvalid: (field, message) => {
+    onInvalid: (field, message, code) => {
       if (field === 'name' || field === 'startsAt' || field === 'endsAt' || field === 'venue')
-        setServerErrors((prev) => ({ ...prev, [field]: message }));
+        setServerErrors((prev) => ({ ...prev, [field]: refusedMessage(message, code) }));
     },
   });
 

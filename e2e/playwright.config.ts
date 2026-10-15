@@ -27,7 +27,9 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter @onetickets/api start',
+      // The api's console mail is kept in .logs/api.log so specs can follow sign-in links
+      // (tests/session.ts). Outside test-results/, which Playwright empties before each run.
+      command: 'mkdir -p .logs && pnpm --filter @onetickets/api start 2>&1 | tee .logs/api.log',
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
       env: {
@@ -49,7 +51,9 @@ export default defineConfig({
       command: 'pnpm --filter @onetickets/web start',
       url: webUrl,
       reuseExistingServer: !process.env.CI,
-      env: { API_URL: apiUrl },
+      // Flags are turned on at run time only. CI builds with them off, so this also proves a
+      // build made with a flag off picks it up at run time instead of baking in a 404.
+      env: { API_URL: apiUrl, FEATURE_EVENT_WIZARD: 'true' },
     },
   ],
 });

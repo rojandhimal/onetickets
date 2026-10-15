@@ -17,3 +17,4 @@ infra/envs/backend.hcl
 crash.log
 playwright-report/
 test-results/
+.logs/

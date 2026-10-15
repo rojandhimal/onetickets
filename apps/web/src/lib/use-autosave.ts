@@ -19,7 +19,7 @@ type Options = {
   /** Changes found on this device from an earlier offline session, before they're synced. */
   onRestore?: (changes: PendingChanges) => void;
   /** The api refused a field; the change is dropped so the rest can still save. */
-  onInvalid?: (field: string | undefined, message: string) => void;
+  onInvalid?: (field: string | undefined, message: string, code?: string) => void;
   store?: DraftStore;
   intervalMs?: number;
 };
@@ -64,7 +64,10 @@ export function useAutosave({
 
   const send = useCallback(
     async (keepalive: boolean) => {
-      for (let attempt = 0; attempt < 2 && isDirty(); attempt++) {
+      // Set when the api refused something it couldn't pin to a field: nothing says "saved" then.
+      let refusedWhole = false;
+      // A few rounds, so typing that lands during a save goes out straight after it.
+      for (let round = 0; round < 4 && isDirty(); round++) {
         const changes = pending.current;
         pending.current = {};
         setSaveState('saving');
@@ -76,31 +79,40 @@ export function useAutosave({
         if (result.ok) {
           version.current = result.event.version;
           callbacks.current.onSaved?.(result.event);
-          if (!isDirty()) {
-            await store.remove(id).catch(() => undefined);
-            setSaveState('saved');
-          }
-          return;
+          continue;
         }
-        // Newer typing wins over what was in flight.
-        pending.current = { ...changes, ...pending.current };
         if (result.kind === 'stale') {
           // Saved elsewhere first: take the new version and resend our changes on top.
+          // Newer typing wins over what was in flight.
           version.current = result.current.version;
+          pending.current = { ...changes, ...pending.current };
           continue;
         }
         if (result.kind === 'invalid') {
+          // Drop only what the api refused, from the snapshot it saw; typing since then stays.
           const field = result.field as keyof PendingChanges | undefined;
-          if (field && field in pending.current) delete pending.current[field];
-          else pending.current = {};
-          callbacks.current.onInvalid?.(result.field, result.message);
-          if (!isDirty()) setSaveState('saved');
+          if (field && field in changes) {
+            const rest = { ...changes };
+            delete rest[field];
+            pending.current = { ...rest, ...pending.current };
+          } else {
+            refusedWhole = true;
+          }
+          callbacks.current.onInvalid?.(result.field, result.message, result.code);
           continue;
         }
+        pending.current = { ...changes, ...pending.current };
         const offline = result.kind === 'offline' || !navigator.onLine;
         await keepOnDevice(offline ? 'offline' : 'failed');
         return;
       }
+      if (isDirty()) {
+        // Still changing after several rounds: keep it safe and let the next tick carry on.
+        await keepOnDevice('failed');
+        return;
+      }
+      await store.remove(id).catch(() => undefined);
+      setSaveState(refusedWhole ? 'failed' : 'saved');
     },
     [id, keepOnDevice, organisationId, store],
   );

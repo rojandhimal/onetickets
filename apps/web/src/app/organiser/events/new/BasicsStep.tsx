@@ -5,7 +5,13 @@ import { type RefObject, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import type { PendingChanges } from '@/lib/draft-store';
 import { placeLine } from '@/lib/wizard-model';
-import { eventEyebrow, isoToWallClock, nextDay, wallClockToIso } from '@/lib/zoned-time';
+import {
+  eventEyebrow,
+  isSkippedTime,
+  isoToWallClock,
+  nextDay,
+  wallClockToIso,
+} from '@/lib/zoned-time';
 import { BannerField } from './BannerField';
 import { VenueCombobox } from './VenueCombobox';
 import styles from './wizard.module.css';
@@ -19,6 +25,15 @@ const TEMPLATE_NAMES: Record<EventDraftDto['template'], string> = {
 };
 
 export const EVENT_NAME_MAX = 120;
+
+/** Template examples for the name field (handoff S1-1); the label carries the meaning. */
+export const NAME_PLACEHOLDERS: Record<EventDraftDto['template'], string> = {
+  workshop: 'For example, Screen printing for beginners',
+  gig: 'For example, The Lulus live at the Vic',
+  school_night: 'For example, Trivia night for the P&C',
+  meetup: 'For example, Inner west sketch club',
+  blank: 'For example, Saturday market stall',
+};
 
 type Place = Extract<VenueInput, { kind: 'place' }>;
 type Mode = 'place' | 'online';
@@ -130,6 +145,7 @@ export function BasicsStep({
   const previewVenue: VenueInput | null =
     mode === 'place' ? place : isHttpsUrl(url.trim()) ? { kind: 'online', url } : null;
   const startsAt = date && startTime ? wallClockToIso({ date, time: startTime }, tz) : null;
+  const startSkipped = !!(date && startTime && isSkippedTime({ date, time: startTime }, tz));
 
   return (
     <main className={styles.body}>
@@ -158,6 +174,7 @@ export function BasicsStep({
         <input
           id="ev-name"
           maxLength={EVENT_NAME_MAX}
+          placeholder={NAME_PLACEHOLDERS[event.template]}
           value={name}
           aria-invalid={nameError ? true : undefined}
           aria-describedby={nameError ? 'ev-name-error' : undefined}
@@ -194,9 +211,15 @@ export function BasicsStep({
             id="ev-start"
             type="time"
             value={startTime}
+            aria-describedby={startSkipped ? 'ev-start-hint' : undefined}
             onChange={(e) => changeWhen({ start: e.target.value })}
             onBlur={onBlur}
           />
+          {startSkipped && (
+            <span id="ev-start-hint" className={styles.hint}>
+              {skippedHint(startTime, startsAt!, tz)}
+            </span>
+          )}
         </div>
         <div className={styles.field}>
           <label htmlFor="ev-end">Ends</label>
@@ -296,6 +319,16 @@ export function BasicsStep({
       </section>
     </main>
   );
+}
+
+/** "2:30 am doesn't happen that day because the clocks go forward. We'll use 3:30 am." */
+function skippedHint(typed: string, resolvedIso: string, tz: string): string {
+  const say = (hhmm: string) => {
+    const [h = 0, m = 0] = hhmm.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+  };
+  const used = isoToWallClock(resolvedIso, tz).time;
+  return `${say(typed)} doesn't happen that day because the clocks go forward. We'll use ${say(used)}.`;
 }
 
 function FieldError({ id, message }: { id: string; message: string | null }) {

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { eventEyebrow, eventWhen, isoToWallClock, nextDay, wallClockToIso } from './zoned-time';
+import {
+  eventEyebrow,
+  eventWhen,
+  isSkippedTime,
+  isoToWallClock,
+  nextDay,
+  wallClockToIso,
+} from './zoned-time';
 
 const SYD = 'Australia/Sydney';
 
@@ -44,5 +51,24 @@ describe('zoned time', () => {
   it('rolls over months and years', () => {
     expect(nextDay('2026-12-31')).toBe('2027-01-01');
     expect(nextDay('2028-02-28')).toBe('2028-02-29');
+  });
+});
+
+describe('daylight saving gaps', () => {
+  it('moves a skipped time forward, in zones either side of UTC', () => {
+    expect(wallClockToIso({ date: '2027-10-03', time: '02:30' }, 'Australia/Sydney')).toBe(
+      '2027-10-03T03:30:00+11:00',
+    );
+    expect(wallClockToIso({ date: '2027-03-14', time: '02:30' }, 'America/New_York')).toBe(
+      '2027-03-14T03:30:00-04:00',
+    );
+    expect(isSkippedTime({ date: '2027-10-03', time: '02:30' }, 'Australia/Sydney')).toBe(true);
+    expect(isSkippedTime({ date: '2027-10-03', time: '04:00' }, 'Australia/Sydney')).toBe(false);
+  });
+
+  it('takes the first of a repeated time', () => {
+    expect(wallClockToIso({ date: '2027-04-04', time: '02:30' }, 'Australia/Sydney')).toBe(
+      '2027-04-04T02:30:00+11:00',
+    );
   });
 });

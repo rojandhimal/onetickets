@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { can } from '@onetickets/shared';
 import { notFound, redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import screen from '@/components/screen.module.css';
 import { isEventWizardEnabled } from '@/lib/flags';
 import { getSession } from '@/lib/session';
@@ -16,6 +17,9 @@ export default async function NewEventPage({
 }: {
   searchParams: Promise<{ template?: string }>;
 }) {
+  // Flags are read at request time, never at build: without this, a build with the flag off
+  // prerenders a permanent 404 that turning the flag on later can't undo.
+  await connection();
   if (!isEventWizardEnabled()) notFound();
   const session = await getSession();
   if (!session) redirect('/signin');

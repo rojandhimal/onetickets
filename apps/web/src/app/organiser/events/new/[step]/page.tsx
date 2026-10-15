@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { can } from '@onetickets/shared';
 import { notFound, redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getEventDraft } from '@/lib/events-server';
 import { isEventWizardEnabled } from '@/lib/flags';
 import { getSession } from '@/lib/session';
@@ -16,6 +17,9 @@ export default async function WizardStepPage({
   params: Promise<{ step: string }>;
   searchParams: Promise<{ draft?: string }>;
 }) {
+  // Flags are read at request time, never at build: without this, a build with the flag off
+  // prerenders a permanent 404 that turning the flag on later can't undo.
+  await connection();
   if (!isEventWizardEnabled()) notFound();
   const [{ step }, { draft }] = await Promise.all([params, searchParams]);
   if (!isWizardStep(step) || !draft) notFound();

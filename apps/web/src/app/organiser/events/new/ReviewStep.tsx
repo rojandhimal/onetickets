@@ -34,6 +34,8 @@ export function ReviewStep({
 }) {
   const [blocked, setBlocked] = useState<{ missing: Requirement[]; fromApi: boolean } | null>(null);
   const [failed, setFailed] = useState(false);
+  // Bumped on every press, so the same alert is a new element and screen readers announce it again.
+  const [attempt, setAttempt] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -59,6 +61,7 @@ export function ReviewStep({
     if (publishing) return;
     setFailed(false);
     setBlocked(null);
+    setAttempt((n) => n + 1);
     if (missingNow.length) {
       block(missingNow, false);
       return;
@@ -84,7 +87,7 @@ export function ReviewStep({
         </div>
 
         {showBlocked && (
-          <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
+          <div key={attempt} role="alert" className={`${screen.notice} ${screen.noticeError}`}>
             <Icon name="alert" />
             <p>
               <strong>{missingMessage(showBlocked)}</strong> Everything else is ready.
@@ -92,7 +95,7 @@ export function ReviewStep({
           </div>
         )}
         {failed && (
-          <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
+          <div key={attempt} role="alert" className={`${screen.notice} ${screen.noticeError}`}>
             <Icon name="alert" />
             <p>We couldn&apos;t publish your event. Check your connection and try again.</p>
           </div>

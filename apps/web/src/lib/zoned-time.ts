@@ -40,12 +40,26 @@ function formatOffset(minutes: number): string {
  */
 export function wallClockToIso({ date, time }: WallClock, timeZone: string): string {
   const naiveUtc = Date.parse(`${date}T${time}:00Z`);
-  // Two passes settle the offset either side of a daylight saving change.
-  let offset = offsetMinutes(new Date(naiveUtc), timeZone);
-  offset = offsetMinutes(new Date(naiveUtc - offset * 60_000), timeZone);
-  const instant = new Date(naiveUtc - offset * 60_000);
+  // The offsets half a day either side cover any daylight saving change near this time.
+  const before = offsetMinutes(new Date(naiveUtc - 12 * 3_600_000), timeZone);
+  const after = offsetMinutes(new Date(naiveUtc + 12 * 3_600_000), timeZone);
+  const candidates = [naiveUtc - before * 60_000, naiveUtc - after * 60_000];
+  // A time that happens twice (clocks going back) takes the first; one that never happens (clocks
+  // going forward) uses the offset from before the jump, which lands just after the gap.
+  const exact = candidates
+    .filter((t) => {
+      const p = parts(new Date(t), timeZone);
+      return p.date === date && p.time === time;
+    })
+    .sort((a, b) => a - b)[0];
+  const instant = new Date(exact ?? candidates[0]!);
   const local = parts(instant, timeZone);
   return `${local.date}T${local.time}:00${formatOffset(offsetMinutes(instant, timeZone))}`;
+}
+
+/** True when that date and time never happens in the zone (skipped by a daylight saving jump). */
+export function isSkippedTime(wall: WallClock, timeZone: string): boolean {
+  return isoToWallClock(wallClockToIso(wall, timeZone), timeZone).time !== wall.time;
 }
 
 export function isoToWallClock(iso: string, timeZone: string): WallClock {

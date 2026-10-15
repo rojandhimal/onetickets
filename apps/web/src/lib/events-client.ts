@@ -52,7 +52,7 @@ export type SaveDraftResult =
   /** Someone (another tab, an offline sync) saved first. `current` is the server's copy. */
   | { ok: false; kind: 'stale'; current: EventDraftDto }
   | { ok: false; kind: 'offline' }
-  | { ok: false; kind: 'invalid'; field?: string; message: string }
+  | { ok: false; kind: 'invalid'; field?: string; message: string; code?: string }
   | { ok: false; kind: 'failed' };
 
 export async function saveDraft(
@@ -77,7 +77,13 @@ export async function saveDraft(
   if (res.status === 422) {
     const body = await json<ApiErrorBody>(res);
     if (body?.message)
-      return { ok: false, kind: 'invalid', field: body.field, message: body.message };
+      return {
+        ok: false,
+        kind: 'invalid',
+        field: body.field,
+        message: body.message,
+        code: body.code,
+      };
   }
   return { ok: false, kind: 'failed' };
 }

@@ -143,7 +143,7 @@ describe('useAutosave', () => {
     );
     act(() => result.current.change({ name: 'x' }));
     await act(() => result.current.flush());
-    expect(onInvalid).toHaveBeenCalledWith('name', 'Too long');
+    expect(onInvalid).toHaveBeenCalledWith('name', 'Too long', 'invalid_request');
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(result.current.saveState).toBe('saved');
   });
@@ -176,5 +176,54 @@ describe('useAutosave', () => {
     act(() => result.current.change({ name: 'After upload' }));
     await act(() => result.current.flush());
     expect(bodies(fetch)[0]).toEqual({ version: 3, name: 'After upload' });
+  });
+
+  it('keeps typing made during a save the api refuses without naming a field', async () => {
+    let answer!: (r: Response) => void;
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<Response>((r) => (answer = r)))
+      .mockResolvedValueOnce(jsonResponse(draftEvent({ version: 2 })));
+    vi.stubGlobal('fetch', fetch);
+    const { result } = renderHook(() =>
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
+    );
+    act(() => result.current.change({ name: 'Bad' }));
+    let saving!: Promise<void>;
+    act(() => {
+      saving = result.current.flush();
+    });
+    act(() => result.current.change({ about: 'Typed meanwhile' }));
+    answer(jsonResponse({ statusCode: 422, code: 'invalid_request', message: 'No' }, 422));
+    await act(() => saving);
+
+    expect(bodies(fetch)[1]).toEqual({ version: 1, about: 'Typed meanwhile' });
+    expect(result.current.saveState).toBe('failed');
+  });
+
+  it('sends typing that lands during a save straight after it', async () => {
+    let answer!: (r: Response) => void;
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<Response>((r) => (answer = r)))
+      .mockResolvedValueOnce(jsonResponse(draftEvent({ version: 3 })));
+    vi.stubGlobal('fetch', fetch);
+    const { result } = renderHook(() =>
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
+    );
+    act(() => result.current.change({ name: 'A' }));
+    let saving!: Promise<void>;
+    act(() => {
+      saving = result.current.flush();
+    });
+    act(() => result.current.change({ name: 'AB' }));
+    answer(jsonResponse(draftEvent({ version: 2 })));
+    await act(() => saving);
+
+    expect(bodies(fetch)).toEqual([
+      { version: 1, name: 'A' },
+      { version: 2, name: 'AB' },
+    ]);
+    expect(result.current.saveState).toBe('saved');
   });
 });

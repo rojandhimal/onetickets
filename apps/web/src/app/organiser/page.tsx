@@ -8,13 +8,20 @@ import { SentryContext } from '@/components/SentryContext';
 import screen from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
 import { isEventWizardEnabled } from '@/lib/flags';
+import { listEvents } from '@/lib/events-server';
 import { welcomeLine } from '@/lib/greeting';
+import { pickView, splitEvents } from '@/lib/organiser-events';
 import { EVENT_TEMPLATES, newEventHref } from '@/lib/templates';
+import { EventsSection } from './EventsSection';
 import styles from './organiser.module.css';
 
 export const metadata: Metadata = { title: 'Organiser home' };
 
-export default async function OrganiserHomePage() {
+export default async function OrganiserHomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ view?: string }>;
+} = {}) {
   const session = await getSession();
   if (!session) redirect('/signin');
   const organisation = session.organisation;
@@ -25,10 +32,15 @@ export default async function OrganiserHomePage() {
   // Finance and door staff can't create events. Once the wizard is on, a "Coming soon" list would
   // suggest it's on its way for them, so they get the reason instead.
   const notAllowed = flagOn && !canCreate;
+  const events = wizardOn ? ((await listEvents(organisation.id)) ?? []) : [];
+  const { upcoming, drafts } = splitEvents(events);
+  const view = pickView((await searchParams)?.view, {
+    upcoming: upcoming.length,
+    drafts: drafts.length,
+  });
   Sentry.setUser({ id: session.user.id });
   Sentry.setTag('organisation_id', organisation.id);
 
-  // S0-3 only ships the empty state. The events list arrives with S1-1.
   return (
     <div className={screen.screen}>
       <SentryContext userId={session.user.id} organisationId={organisation.id} />
@@ -50,8 +62,10 @@ export default async function OrganiserHomePage() {
       </header>
 
       <main className={screen.main}>
+        {events.length > 0 && <EventsSection view={view} upcoming={upcoming} drafts={drafts} />}
+
         <section className={styles.intro} aria-labelledby="no-events">
-          <h2 id="no-events">No events yet</h2>
+          <h2 id="no-events">{events.length > 0 ? 'Start a new event' : 'No events yet'}</h2>
           <p className={screen.text}>
             {wizardOn
               ? "Pick a template to start. We'll fill in sensible defaults and you can change anything."
