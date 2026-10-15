@@ -62,4 +62,18 @@ describe('organiser home', () => {
     );
     expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
   });
+
+  it('tells finance and door staff who can create events once the wizard is on', async () => {
+    vi.stubEnv('FEATURE_EVENT_WIZARD', 'true');
+    const finance = { id: 'org_42', name: 'The Print Shed', role: 'finance' as const };
+    getSession.mockResolvedValue({ ...session, organisation: finance, organisations: [finance] });
+    render(await OrganiserHomePage());
+    expect(
+      screen.getByText(
+        'Only owners and admins can create events. Ask an owner to add you as an admin.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Workshop/ })).not.toBeInTheDocument();
+  });
 });

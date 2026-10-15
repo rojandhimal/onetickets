@@ -14,10 +14,13 @@ const DEBOUNCE_MS = 250;
 /** Address lookup on artboard 7: an ARIA 1.2 combobox with a list of suggestions. */
 export function VenueCombobox({
   value,
+  serverError = null,
   onChange,
   onBlur,
 }: {
   value: Place | null;
+  /** The api refused the venue (422); shown until the organiser picks again. */
+  serverError?: string | null;
   onChange: (venue: Place | null) => void;
   onBlur: () => void;
 }) {
@@ -27,7 +30,8 @@ export function VenueCombobox({
   const [items, setItems] = useState<PlaceSuggestionDto[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setError] = useState<string | null>(null);
+  const error = localError ?? serverError;
   const searchFor = useRef<string | null>(null);
 
   useEffect(() => {

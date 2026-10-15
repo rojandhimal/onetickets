@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { draftEvent, readyEvent } from '@/test/event-fixture';
@@ -125,7 +125,7 @@ describe('create-event wizard', () => {
     await user.type(screen.getByLabelText('Link for attendees'), 'zoom.us/j/1');
     await user.tab();
     expect(screen.getByLabelText('Link for attendees')).toHaveAccessibleDescription(
-      expect.stringContaining('Enter a link that starts with https://'),
+      expect.stringContaining('Add the full link, starting with https://'),
     );
   });
 
@@ -224,6 +224,130 @@ describe('create-event wizard', () => {
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'Add a ticket type to publish. Everything else is ready.',
       );
+    });
+  });
+
+  it('shows an end time equal to the start as an error, not a 24-hour event', async () => {
+    const fetch = api({
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    await user.type(screen.getByLabelText('Date'), '2026-11-14');
+    await user.type(screen.getByLabelText('Starts'), '10:00');
+    await user.type(screen.getByLabelText('Ends'), '10:00');
+    await user.tab();
+
+    expect(screen.getByLabelText('Ends')).toHaveAccessibleDescription(
+      'End time needs to be after the start',
+    );
+    await waitFor(() => expect(patches(fetch).length).toBeGreaterThan(0));
+    expect(Object.assign({}, ...patches(fetch)).endsAt).toBeNull();
+  });
+
+  it('keeps a value the api refuses on screen with its message', async () => {
+    api({
+      'PATCH /api/organisations/org_1/events/evt_1': () =>
+        json(
+          {
+            statusCode: 422,
+            code: 'invalid_request',
+            message: 'Use letters as well as symbols',
+            field: 'name',
+          },
+          422,
+        ),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    await user.type(screen.getByLabelText('Event name'), '***');
+    await user.tab();
+
+    const name = screen.getByLabelText('Event name');
+    await waitFor(() => expect(name).toHaveAccessibleDescription('Use letters as well as symbols'));
+    expect(name).toHaveValue('***');
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('Not saved: check the highlighted field')).toHaveAttribute(
+      'role',
+      'status',
+    );
+
+    // Typing again clears the message until the next save says otherwise.
+    await user.type(name, 'x');
+    expect(name).not.toHaveAttribute('aria-invalid');
+  });
+
+  it("says it couldn't save when the api fails while online", async () => {
+    api({
+      'PATCH /api/organisations/org_1/events/evt_1': () => json({ statusCode: 500 }, 500),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    await user.type(screen.getByLabelText('Event name'), 'Screen printing');
+    await user.tab();
+    expect(await screen.findByText("Couldn't save. We'll keep trying.")).toHaveAttribute(
+      'role',
+      'status',
+    );
+  });
+
+  describe('banner', () => {
+    const withBanner = () =>
+      draftEvent({
+        version: 2,
+        banner: {
+          url: '/api/public/banners/b1.webp',
+          ogUrl: '/api/public/banners/b1-og.jpg',
+          width: 2160,
+          height: 1080,
+          focus: { x: 0.5, y: 0.5 },
+        },
+      });
+
+    it('uploads a photo and offers Replace, Adjust crop and Remove', async () => {
+      const fetch = api({
+        'PUT /api/organisations/org_1/events/evt_1/banner': () => json(withBanner()),
+        'PATCH /api/organisations/org_1/events/evt_1': () => json(withBanner()),
+      });
+      const user = userEvent.setup();
+      render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+      const photo = new File(['jpeg'], 'gig.jpg', { type: 'image/jpeg' });
+      await user.upload(screen.getByLabelText(/Add a banner image/), photo);
+
+      expect(await screen.findByLabelText('Replace')).toBeInTheDocument();
+      const put = fetch.mock.calls.find((c) => c[1]?.method === 'PUT');
+      expect(put?.[1]?.body).toBe(photo);
+      expect(new Headers(put?.[1]?.headers).get('content-type')).toBe('image/jpeg');
+
+      await user.click(screen.getByRole('button', { name: 'Adjust crop' }));
+      const slider = screen.getByLabelText('Crop position, top to bottom');
+      // jsdom doesn't move range inputs with the keyboard.
+      fireEvent.change(slider, { target: { value: '55' } });
+      await waitFor(() =>
+        expect(Object.assign({}, ...patches(fetch)).bannerFocus).toEqual({ x: 0.5, y: 0.55 }),
+      );
+      // The upload's version is used, so the crop doesn't come back as stale.
+      expect(patches(fetch)[0].version).toBe(2);
+    });
+
+    it('refuses files over 10 MB and the wrong type before uploading', async () => {
+      const fetch = api({});
+      const user = userEvent.setup({ applyAccept: false });
+      render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+      const input = screen.getByLabelText(/Add a banner image/);
+
+      const big = new File(['x'], 'big.jpg', { type: 'image/jpeg' });
+      Object.defineProperty(big, 'size', { value: 10 * 1024 * 1024 + 1 });
+      await user.upload(input, big);
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining('That file is over 10 MB. Try a smaller photo.'),
+      );
+
+      await user.upload(input, new File(['%PDF'], 'flyer.pdf', { type: 'application/pdf' }));
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining('Use a JPG, PNG or HEIC image.'),
+      );
+      expect(fetch).not.toHaveBeenCalled();
     });
   });
 });

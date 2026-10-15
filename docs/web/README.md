@@ -61,10 +61,15 @@ The organiser home's template rows open `/organiser/events/new?template=…`, wh
 from the browser (`POST /organisations/:id/events`) so a link prefetch can never create one. The
 wizard then lives on `/organiser/events/new/{step}?draft=…`:
 
-1. **Basics**: name, date, start and end time (an end before the start means the next day), and
+1. **Basics**: a banner image, the name, date, start and end time (an end before the start means
+   the next day; an end equal to the start is an error), and
    either a venue picked from the address lookup (`GET /places/search`, then `GET /places/:id`) or an
    https link for online events. Times are entered in the event's time zone and sent as ISO 8601 with
-   the offset (`src/lib/zoned-time.ts`).
+   the offset (`src/lib/zoned-time.ts`). The banner is sent as the raw file to
+   `PUT …/events/:id/banner` (JPG, PNG or WebP up to 10 MB, checked in the browser first; iPhones
+   hand over a JPEG copy of HEIC photos). "Adjust crop" sets the vertical focal point, previewed at
+   the widest event page crop, and saves it as `bannerFocus` through autosave. Remove calls
+   `DELETE …/banner`. Both return the event with a new `version`, which autosave takes over.
 2. **Tickets**: shows the template's free ticket type. Editing arrives with S1-2.
 3. **Details**: placeholder until S1-4 (About, accessibility, cancellations, contact email).
 4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
@@ -74,8 +79,13 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
 
 Every change autosaves ([ADR 0016](../adr/0016-wizard-autosave-with-versions-and-on-device-drafts.md)):
 on blur, every 10 seconds while there are changes, and when the tab is hidden. Offline changes are
-kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…"
-or "Saved on this phone".
+kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…",
+"Saved on this phone" when offline, or "Couldn't save. We'll keep trying." when the api fails while
+online. A field the api refuses (422) keeps its value on screen with the api's message under it, and
+the header says "Not saved: check the highlighted field" until it's changed.
+
+Finance and door staff see "Only owners and admins can create events" on the organiser home instead
+of the templates, and the wizard pages return 404 for them.
 
 Request and response shapes are in `packages/shared/src/api/events.ts`. The rules behind the checklist
 and the stepper ticks are in `src/lib/wizard-model.ts`.

@@ -116,7 +116,7 @@ export function publishChecklist(event: EventDraftDto): ChecklistRow[] {
         ? [
             first.name,
             first.priceCents === 0 ? 'Free' : formatAud(first.priceCents),
-            first.capacity,
+            `${first.capacity} ${first.capacity === 1 ? 'ticket' : 'tickets'}`,
           ]
             .join(' · ')
             .concat(event.ticketTypes.length > 1 ? ` and ${event.ticketTypes.length - 1} more` : '')

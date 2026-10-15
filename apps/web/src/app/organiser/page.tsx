@@ -19,8 +19,12 @@ export default async function OrganiserHomePage() {
   if (!session) redirect('/signin');
   const organisation = session.organisation;
   if (!organisation) redirect('/organiser/setup');
-  // Finance and door staff can't create events, so they keep the read-only template list.
-  const wizardOn = isEventWizardEnabled() && can(organisation.role, 'manageEvents');
+  const flagOn = isEventWizardEnabled();
+  const canCreate = can(organisation.role, 'manageEvents');
+  const wizardOn = flagOn && canCreate;
+  // Finance and door staff can't create events. Once the wizard is on, a "Coming soon" list would
+  // suggest it's on its way for them, so they get the reason instead.
+  const notAllowed = flagOn && !canCreate;
   Sentry.setUser({ id: session.user.id });
   Sentry.setTag('organisation_id', organisation.id);
 
@@ -51,45 +55,50 @@ export default async function OrganiserHomePage() {
           <p className={screen.text}>
             {wizardOn
               ? "Pick a template to start. We'll fill in sensible defaults and you can change anything."
-              : "Creating events opens soon. You'll start from one of these templates."}
+              : notAllowed
+                ? // The owner's name isn't visible to these roles yet, so the copy names the role.
+                  'Only owners and admins can create events. Ask an owner to add you as an admin.'
+                : "Creating events opens soon. You'll start from one of these templates."}
           </p>
         </section>
 
-        <ul aria-label="Event templates" className={styles.templates}>
-          {EVENT_TEMPLATES.map((t) => {
-            const content = (
-              <>
-                <span className={`${styles.templateIcon} ${styles[t.id]}`}>
-                  <Icon name={t.icon} size={24} />
-                </span>
-                <span className={styles.templateText}>
-                  <strong>{t.name}</strong>
-                  <span>{t.description}</span>
-                </span>
-              </>
-            );
-            return (
-              <li key={t.id}>
-                {wizardOn ? (
-                  <a href={newEventHref(t.id)} className={styles.template}>
-                    {content}
-                    <span className={styles.chevron}>
-                      <Icon name="chevron" />
-                    </span>
-                  </a>
-                ) : (
-                  <div className={`${styles.template} ${styles.templateSoon}`}>
-                    {content}
-                    <span className={styles.soonChip}>
-                      <span aria-hidden="true">Coming soon</span>
-                      <span className="visually-hidden">{`${t.name}, coming soon`}</span>
-                    </span>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        {!notAllowed && (
+          <ul aria-label="Event templates" className={styles.templates}>
+            {EVENT_TEMPLATES.map((t) => {
+              const content = (
+                <>
+                  <span className={`${styles.templateIcon} ${styles[t.id]}`}>
+                    <Icon name={t.icon} size={24} />
+                  </span>
+                  <span className={styles.templateText}>
+                    <strong>{t.name}</strong>
+                    <span>{t.description}</span>
+                  </span>
+                </>
+              );
+              return (
+                <li key={t.id}>
+                  {wizardOn ? (
+                    <a href={newEventHref(t.id)} className={styles.template}>
+                      {content}
+                      <span className={styles.chevron}>
+                        <Icon name="chevron" />
+                      </span>
+                    </a>
+                  ) : (
+                    <div className={`${styles.template} ${styles.templateSoon}`}>
+                      {content}
+                      <span className={styles.soonChip}>
+                        <span aria-hidden="true">Coming soon</span>
+                        <span className="visually-hidden">{`${t.name}, coming soon`}</span>
+                      </span>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         {wizardOn && (
           <a href={newEventHref()} className={styles.blank}>

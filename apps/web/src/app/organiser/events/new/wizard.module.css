@@ -63,8 +63,15 @@
 .saving {
   color: var(--slate);
 }
-.offline {
+.offline,
+.failed,
+.refused {
   color: var(--marigold-ink);
+}
+.failed,
+.refused {
+  text-align: right;
+  line-height: 1.2;
 }
 
 .steps {
@@ -101,11 +108,18 @@
   font-weight: 800;
 }
 .stepLink {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 3px;
   min-height: 24px;
   color: inherit;
+}
+/* The bar and label stay compact; the tap target grows to 44 px over the bar above it. */
+.stepLink::after {
+  content: '';
+  position: absolute;
+  inset: -14px 0 -6px;
 }
 
 .body {
@@ -162,6 +176,111 @@
 .field input[aria-invalid='true'] {
   border-color: var(--error);
 }
+
+/* Banner (artboard 7). The preview uses the widest event page crop. */
+.field .bannerEmpty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1.5px dashed var(--line-field);
+  border-radius: var(--radius-control);
+  background: var(--white);
+  color: var(--indigo);
+  cursor: pointer;
+}
+.bannerEmpty:hover {
+  border-color: var(--indigo);
+}
+:global(.visually-hidden):focus-visible + .bannerEmpty,
+:global(.visually-hidden):focus-visible + .bannerAction {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+}
+.bannerEmptyText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink);
+}
+.bannerEmptyText > span {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--slate);
+}
+.bannerPreview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1040 / 320;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+  background: var(--line-divider);
+}
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.field .bannerAction {
+  min-height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--line-button);
+  border-radius: var(--radius-button);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.field .bannerAction:disabled {
+  color: var(--slate);
+  cursor: default;
+}
+.crop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-control);
+  background: var(--white);
+}
+.crop[hidden] {
+  display: none;
+}
+.cropImage {
+  position: relative;
+  touch-action: none;
+  cursor: ns-resize;
+}
+.cropImage img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  opacity: 0.55;
+}
+.cropWindow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border: 2px solid var(--white);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--ink);
+  pointer-events: none;
+}
+.field input[type='range'] {
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--indigo);
+}
+
 .hint {
   font-size: 13px;
   color: var(--slate);
@@ -231,6 +350,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.listbox[hidden] {
+  display: none;
 }
 .option {
   cursor: pointer;

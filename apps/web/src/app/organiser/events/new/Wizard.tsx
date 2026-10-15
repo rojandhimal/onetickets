@@ -16,7 +16,7 @@ import {
   previousStep,
   stepHref,
 } from '@/lib/wizard-model';
-import { BasicsStep } from './BasicsStep';
+import { BasicsStep, type ServerErrors } from './BasicsStep';
 import { LiveScreen } from './LiveScreen';
 import { ReviewStep } from './ReviewStep';
 import styles from './wizard.module.css';
@@ -25,7 +25,10 @@ const SAVE_TEXT: Record<SaveState, string> = {
   saved: 'Draft saved',
   saving: 'Saving…',
   offline: 'Saved on this phone',
+  failed: "Couldn't save. We'll keep trying.",
 };
+
+const REFUSED_TEXT = 'Not saved: check the highlighted field';
 
 function applyChanges(event: EventDraftDto, changes: PendingChanges): EventDraftDto {
   // The banner focal point lives on `banner`, which only the api sets.
@@ -48,7 +51,8 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
 
   const [event, setEvent] = useState(initialEvent);
   const [restored, setRestored] = useState(0);
-  const { saveState, change, flush } = useAutosave({
+  const [serverErrors, setServerErrors] = useState<ServerErrors>({});
+  const { saveState, change, flush, accept } = useAutosave({
     event: initialEvent,
     userId,
     onSaved: (server) => setEvent((prev) => ({ ...prev, ...serverFields(server) })),
@@ -57,11 +61,23 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
       // Remount the step so its fields show what was kept on this device.
       setRestored((n) => n + 1);
     },
+    // The value stays on screen with the api's message under it; the rest of the draft saves.
+    onInvalid: (field, message) => {
+      if (field === 'name' || field === 'startsAt' || field === 'endsAt' || field === 'venue')
+        setServerErrors((prev) => ({ ...prev, [field]: message }));
+    },
   });
 
   const update = useCallback(
     (changes: PendingChanges) => {
       setEvent((prev) => applyChanges(prev, changes));
+      setServerErrors((prev) => {
+        const touched = Object.keys(changes).filter((k) => k in prev);
+        if (!touched.length) return prev;
+        const next = { ...prev };
+        for (const k of touched) delete next[k as keyof ServerErrors];
+        return next;
+      });
       change(changes);
     },
     [change],
@@ -107,6 +123,10 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const [published, setPublished] = useState<EventDraftDto | null>(null);
   if (published) return <LiveScreen event={published} />;
 
+  // A field the api refused isn't saved, so the header mustn't say everything is.
+  const refused = Object.keys(serverErrors).length > 0;
+  const shownState = refused && saveState === 'saved' ? 'refused' : saveState;
+
   const back = previousStep(step);
   const next = nextStep(step);
 
@@ -118,8 +138,10 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
           key={restored}
           event={event}
           headingRef={headingRef}
+          serverErrors={serverErrors}
           onChange={update}
           onBlur={() => void flush()}
+          onBannerChanged={accept}
         />
       );
       break;
@@ -167,10 +189,10 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
               </a>
             )}
             <span className={styles.title}>New event</span>
-            <span role="status" className={`${styles.saveState} ${styles[saveState]}`}>
-              {saveState === 'saved' && <Icon name="check" size={14} />}
+            <span role="status" className={`${styles.saveState} ${styles[shownState]}`}>
+              {shownState === 'saved' && <Icon name="check" size={14} />}
               {saveState === 'offline' && <Icon name="wifi-off" size={14} />}
-              {SAVE_TEXT[saveState]}
+              {shownState === 'refused' ? REFUSED_TEXT : SAVE_TEXT[saveState]}
             </span>
           </div>
           <ol aria-label="Steps" className={styles.steps}>

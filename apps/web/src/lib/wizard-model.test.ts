@@ -36,7 +36,7 @@ describe('wizard model', () => {
       ['Event name', 'Screen printing for beginners', true],
       ['Date and time', 'Sat 14 Nov, 10:00 am to 1:00 pm', true],
       ['Venue', 'Not added yet', false],
-      ['At least one ticket type', 'General admission · Free · 40', true],
+      ['At least one ticket type', 'General admission · Free · 40 tickets', true],
     ]);
     expect(
       publishChecklist(readyEvent({ venue: { kind: 'online', url: 'https://x.test' } }))[2],

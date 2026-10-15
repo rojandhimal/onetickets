@@ -33,6 +33,13 @@ const paths = {
     </>
   ),
   circle: <circle cx="12" cy="12" r="8" />,
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <circle cx="9" cy="9.5" r="1.8" />
+      <path d="m21 16-5-5-9 9" />
+    </>
+  ),
   workshop: (
     <>
       <path d="M4 19V8l8-4 8 4v11" />

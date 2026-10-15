@@ -147,4 +147,34 @@ describe('useAutosave', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(result.current.saveState).toBe('saved');
   });
+
+  it("says it couldn't save when the api fails while online, then recovers", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ statusCode: 500 }, 500))
+      .mockResolvedValueOnce(jsonResponse(draftEvent({ version: 2 })));
+    vi.stubGlobal('fetch', fetch);
+    const store = memoryDraftStore();
+    const { result } = renderHook(() => useAutosave({ event: draftEvent(), userId: 'u_1', store }));
+    act(() => result.current.change({ name: 'Screen printing' }));
+    await act(() => result.current.flush());
+    expect(result.current.saveState).toBe('failed');
+    expect(await store.get('evt_1')).toEqual({ name: 'Screen printing' });
+
+    await act(() => result.current.flush());
+    expect(result.current.saveState).toBe('saved');
+    expect(bodies(fetch)[1]).toEqual({ version: 1, name: 'Screen printing' });
+  });
+
+  it('takes the version from a change the api made outside autosave', async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(draftEvent({ version: 4 })));
+    vi.stubGlobal('fetch', fetch);
+    const { result } = renderHook(() =>
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
+    );
+    act(() => result.current.accept(draftEvent({ version: 3 })));
+    act(() => result.current.change({ name: 'After upload' }));
+    await act(() => result.current.flush());
+    expect(bodies(fetch)[0]).toEqual({ version: 3, name: 'After upload' });
+  });
 });

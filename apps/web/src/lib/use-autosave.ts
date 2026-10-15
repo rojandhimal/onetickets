@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { type DraftStore, type PendingChanges, defaultDraftStore } from './draft-store';
 import { saveDraft } from './events-client';
 
-export type SaveState = 'saved' | 'saving' | 'offline';
+/** `failed`: online, but the api didn't take the save. Changes stay queued and retry. */
+export type SaveState = 'saved' | 'saving' | 'offline' | 'failed';
 
 export const AUTOSAVE_INTERVAL_MS = 10_000;
 
@@ -49,14 +50,17 @@ export function useAutosave({
 
   const isDirty = () => Object.keys(pending.current).length > 0;
 
-  const keepOnDevice = useCallback(async () => {
-    try {
-      await store.put(id, pending.current);
-    } catch {
-      // Storage full or blocked: the changes still sit in memory and retry on the next tick.
-    }
-    setSaveState('offline');
-  }, [id, store]);
+  const keepOnDevice = useCallback(
+    async (state: 'offline' | 'failed' = 'offline') => {
+      try {
+        await store.put(id, pending.current);
+      } catch {
+        // Storage full or blocked: the changes still sit in memory and retry on the next tick.
+      }
+      setSaveState(state);
+    },
+    [id, store],
+  );
 
   const send = useCallback(
     async (keepalive: boolean) => {
@@ -93,7 +97,8 @@ export function useAutosave({
           if (!isDirty()) setSaveState('saved');
           continue;
         }
-        await keepOnDevice();
+        const offline = result.kind === 'offline' || !navigator.onLine;
+        await keepOnDevice(offline ? 'offline' : 'failed');
         return;
       }
     },
@@ -118,10 +123,16 @@ export function useAutosave({
     [send],
   );
 
+  /** A change the api made outside autosave (a banner upload): take its version. */
+  const accept = useCallback((server: EventDraftDto) => {
+    if (server.version > version.current) version.current = server.version;
+    callbacks.current.onSaved?.(server);
+  }, []);
+
   const change = useCallback(
     (changes: PendingChanges) => {
       pending.current = { ...pending.current, ...changes };
-      if (saveState === 'offline') void keepOnDevice();
+      if (saveState === 'offline' || saveState === 'failed') void keepOnDevice(saveState);
     },
     [keepOnDevice, saveState],
   );
@@ -163,5 +174,5 @@ export function useAutosave({
     };
   }, [flush, id, intervalMs, store]);
 
-  return { saveState, change, flush };
+  return { saveState, change, flush, accept };
 }

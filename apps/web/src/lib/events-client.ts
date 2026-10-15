@@ -113,3 +113,32 @@ export async function getPlace(placeId: string): Promise<VenueInput | null> {
   const res = await call(`/places/${encodeURIComponent(placeId)}`);
   return res?.ok ? json<VenueInput>(res) : null;
 }
+
+export type BannerResult =
+  | { ok: true; event: EventDraftDto }
+  | { ok: false; kind: 'too-large' | 'wrong-type' | 'offline' | 'failed' };
+
+/** Uploads the image itself as the request body; the api crops, re-encodes and strips metadata. */
+export async function uploadBanner(ref: EventRef, file: Blob): Promise<BannerResult> {
+  const res = await call(`${eventPath(ref)}/banner`, {
+    method: 'PUT',
+    headers: { 'content-type': file.type },
+    body: file,
+  });
+  return bannerResult(res);
+}
+
+export async function removeBanner(ref: EventRef): Promise<BannerResult> {
+  return bannerResult(await call(`${eventPath(ref)}/banner`, { method: 'DELETE' }));
+}
+
+async function bannerResult(res: Response | null): Promise<BannerResult> {
+  if (!res) return { ok: false, kind: 'offline' };
+  if (res.ok) {
+    const event = await json<EventDraftDto>(res);
+    return event ? { ok: true, event } : { ok: false, kind: 'failed' };
+  }
+  if (res.status === 413) return { ok: false, kind: 'too-large' };
+  if (res.status === 415 || res.status === 422) return { ok: false, kind: 'wrong-type' };
+  return { ok: false, kind: 'failed' };
+}

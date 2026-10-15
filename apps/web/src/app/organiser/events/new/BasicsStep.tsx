@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import type { PendingChanges } from '@/lib/draft-store';
 import { placeLine } from '@/lib/wizard-model';
 import { eventEyebrow, isoToWallClock, nextDay, wallClockToIso } from '@/lib/zoned-time';
+import { BannerField } from './BannerField';
 import { VenueCombobox } from './VenueCombobox';
 import styles from './wizard.module.css';
 
@@ -22,6 +23,12 @@ export const EVENT_NAME_MAX = 120;
 type Place = Extract<VenueInput, { kind: 'place' }>;
 type Mode = 'place' | 'online';
 
+/** Messages from the api for fields it refused (422), keyed by patch field. */
+export type ServerErrors = Partial<Record<'name' | 'startsAt' | 'endsAt' | 'venue', string>>;
+
+export const END_SAME_AS_START = 'End time needs to be after the start';
+export const ONLINE_LINK_ERROR = 'Add the full link, starting with https://';
+
 function isHttpsUrl(text: string): boolean {
   try {
     const url = new URL(text);
@@ -35,13 +42,17 @@ function isHttpsUrl(text: string): boolean {
 export function BasicsStep({
   event,
   headingRef,
+  serverErrors = {},
   onChange,
   onBlur,
+  onBannerChanged,
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  serverErrors?: ServerErrors;
   onChange: (changes: PendingChanges) => void;
   onBlur: () => void;
+  onBannerChanged: (event: EventDraftDto) => void;
 }) {
   const tz = event.timeZone;
   const start = event.startsAt ? isoToWallClock(event.startsAt, tz) : null;
@@ -77,11 +88,12 @@ export function BasicsStep({
       onChange({ startsAt: null, endsAt: null });
       return;
     }
-    // An end time at or before the start means the event runs past midnight.
-    const endDate = e && e <= s ? nextDay(d) : d;
+    // An end time before the start means the event runs past midnight. The same time as the
+    // start is a mistake, not a 24-hour event, so no end is saved until it's fixed.
+    const endDate = e && e < s ? nextDay(d) : d;
     onChange({
       startsAt: wallClockToIso({ date: d, time: s }, tz),
-      endsAt: e ? wallClockToIso({ date: endDate, time: e }, tz) : null,
+      endsAt: e && e !== s ? wallClockToIso({ date: endDate, time: e }, tz) : null,
     });
   }
 
@@ -105,11 +117,16 @@ export function BasicsStep({
 
   function checkUrl() {
     const text = url.trim();
-    setUrlError(text && !isHttpsUrl(text) ? 'Enter a link that starts with https://' : null);
+    setUrlError(text && !isHttpsUrl(text) ? ONLINE_LINK_ERROR : null);
     onBlur();
   }
 
-  const overnight = !!(startTime && endTime && endTime <= startTime);
+  const overnight = !!(startTime && endTime && endTime < startTime);
+  const sameTime = !!(startTime && endTime && endTime === startTime);
+  const endError = sameTime ? END_SAME_AS_START : (serverErrors.endsAt ?? null);
+  const nameError = serverErrors.name ?? null;
+  const whenError = serverErrors.startsAt ?? null;
+  const venueError = serverErrors.venue ?? null;
   const previewVenue: VenueInput | null =
     mode === 'place' ? place : isHttpsUrl(url.trim()) ? { kind: 'online', url } : null;
   const startsAt = date && startTime ? wallClockToIso({ date, time: startTime }, tz) : null;
@@ -127,15 +144,27 @@ export function BasicsStep({
         </span>
       </div>
 
+      <BannerField
+        event={event}
+        onUploaded={onBannerChanged}
+        onFocusChange={(bannerFocus) => {
+          onChange({ bannerFocus });
+          onBlur();
+        }}
+      />
+
       <div className={styles.field}>
         <label htmlFor="ev-name">Event name</label>
         <input
           id="ev-name"
           maxLength={EVENT_NAME_MAX}
           value={name}
+          aria-invalid={nameError ? true : undefined}
+          aria-describedby={nameError ? 'ev-name-error' : undefined}
           onChange={(e) => changeName(e.target.value)}
           onBlur={onBlur}
         />
+        <FieldError id="ev-name-error" message={nameError} />
       </div>
 
       <div className={styles.when}>
@@ -146,8 +175,8 @@ export function BasicsStep({
             type="date"
             value={date}
             min={today}
-            aria-invalid={dateError ? true : undefined}
-            aria-describedby={dateError ? 'ev-date-error' : undefined}
+            aria-invalid={dateError || whenError ? true : undefined}
+            aria-describedby={dateError || whenError ? 'ev-date-error' : undefined}
             onChange={(e) => {
               if (dateError && e.target.value >= today) setDateError(null);
               changeWhen({ date: e.target.value });
@@ -157,12 +186,7 @@ export function BasicsStep({
               onBlur();
             }}
           />
-          {dateError && (
-            <span id="ev-date-error" className={styles.fieldError}>
-              <Icon name="alert" size={16} />
-              {dateError}
-            </span>
-          )}
+          <FieldError id="ev-date-error" message={dateError ?? whenError} />
         </div>
         <div className={styles.field}>
           <label htmlFor="ev-start">Starts</label>
@@ -180,10 +204,12 @@ export function BasicsStep({
             id="ev-end"
             type="time"
             value={endTime}
-            aria-describedby={overnight ? 'ev-end-hint' : undefined}
+            aria-invalid={endError ? true : undefined}
+            aria-describedby={endError ? 'ev-end-error' : overnight ? 'ev-end-hint' : undefined}
             onChange={(e) => changeWhen({ end: e.target.value })}
             onBlur={onBlur}
           />
+          <FieldError id="ev-end-error" message={endError} />
           {overnight && (
             <span id="ev-end-hint" className={styles.hint}>
               Ends the next day
@@ -213,7 +239,12 @@ export function BasicsStep({
           </button>
         </div>
         {mode === 'place' ? (
-          <VenueCombobox value={place} onChange={changePlace} onBlur={onBlur} />
+          <VenueCombobox
+            value={place}
+            serverError={venueError}
+            onChange={changePlace}
+            onBlur={onBlur}
+          />
         ) : (
           <div className={styles.field}>
             <label htmlFor="ev-link">Link for attendees</label>
@@ -224,17 +255,14 @@ export function BasicsStep({
               placeholder="https://"
               maxLength={2048}
               value={url}
-              aria-invalid={urlError ? true : undefined}
-              aria-describedby={urlError ? 'ev-link-error ev-link-hint' : 'ev-link-hint'}
+              aria-invalid={urlError || venueError ? true : undefined}
+              aria-describedby={
+                urlError || venueError ? 'ev-link-error ev-link-hint' : 'ev-link-hint'
+              }
               onChange={(e) => changeUrl(e.target.value)}
               onBlur={checkUrl}
             />
-            {urlError && (
-              <span id="ev-link-error" className={styles.fieldError}>
-                <Icon name="alert" size={16} />
-                {urlError}
-              </span>
-            )}
+            <FieldError id="ev-link-error" message={urlError ?? venueError} />
             <span id="ev-link-hint" className={styles.hint}>
               Only people with a ticket see this link.
             </span>
@@ -267,5 +295,15 @@ export function BasicsStep({
         </div>
       </section>
     </main>
+  );
+}
+
+function FieldError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <span id={id} className={styles.fieldError}>
+      <Icon name="alert" size={16} />
+      {message}
+    </span>
   );
 }
