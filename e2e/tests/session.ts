@@ -7,7 +7,7 @@ const API_LOG = new URL('../.logs/api.log', import.meta.url);
 
 /** The latest sign-in link mailed to `email`; workers run in parallel, so match the address. */
 function signInLink(email: string): string | null {
-  let log = '';
+  let log: string;
   try {
     log = readFileSync(API_LOG, 'utf8');
   } catch {
