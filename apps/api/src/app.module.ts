@@ -3,6 +3,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { LoggerModule } from 'nestjs-pino';
 import { DatabaseModule } from './database/database.module.js';
+import { CatalogueModule } from './modules/catalogue/index.js';
 import { HealthModule } from './modules/health/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { loggerParams } from './observability/logging.js';
@@ -15,6 +16,7 @@ import { loggerParams } from './observability/logging.js';
     DatabaseModule,
     HealthModule,
     IdentityModule,
+    CatalogueModule,
   ],
   // Reports unexpected errors to Sentry; ApiError and other HttpExceptions are expected and skipped.
   providers: [{ provide: APP_FILTER, useClass: SentryGlobalFilter }],

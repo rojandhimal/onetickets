@@ -14,6 +14,8 @@ export const PERMISSIONS = {
   manageMembers: ['owner', 'admin'],
   /** Bulk attendee CSV export. Also needs a recent MFA check. */
   exportData: ['owner', 'admin', 'finance'],
+  /** Create, edit and publish events and their ticket types. */
+  manageEvents: ['owner', 'admin'],
   /** Check tickets in at the door. */
   scanTickets: ['owner', 'admin', 'finance', 'door_staff'],
 } as const satisfies Record<string, readonly Role[]>;

@@ -225,4 +225,60 @@ describe('row-level security across organisations', () => {
     expect(seen.organisations).toEqual([{ id: orgA }]);
     expect(seen.memberships).toEqual([{ user_id: aliceId }]);
   });
+  it('keeps drafts inside their organisation and shows only published events to everyone', async () => {
+    const [draftB, publishedB] = await withOwner(async (client) => {
+      const { rows } = await client.query<{ id: string }>(
+        `insert into catalogue.events (organisation_id, template, name) values ($1, 'gig', 'Draft')
+         returning id`,
+        [orgB],
+      );
+      const published = await client.query<{ id: string }>(
+        `insert into catalogue.events
+           (organisation_id, template, name, starts_at, ends_at, venue, status, slug, published_at)
+         values ($1, 'gig', 'Live', now() + interval '1 day', now() + interval '2 days',
+                 '{"kind":"online","url":"https://x.test"}', 'published', $2, now())
+         returning id`,
+        [orgB, `live-${crypto.randomUUID().slice(0, 8)}`],
+      );
+      for (const id of [rows[0]!.id, published.rows[0]!.id]) {
+        await client.query(
+          `insert into catalogue.ticket_types
+             (event_id, organisation_id, name, capacity, max_per_order, sales_start, sales_end)
+           values ($1, $2, 'GA', 10, 2, '{"kind":"on_publish"}', '{"kind":"event_start"}')`,
+          [id, orgB],
+        );
+      }
+      return [rows[0]!.id, published.rows[0]!.id];
+    });
+
+    for (const scope of [{ organisationId: orgA, userId: aliceId }, {}]) {
+      await asTenant(scope, async (client) => {
+        const events = await client.query('select id from catalogue.events where id = any($1)', [
+          [draftB, publishedB],
+        ]);
+        expect(events.rows.map((r) => r.id)).toEqual([publishedB]);
+        const types = await client.query(
+          'select event_id from catalogue.ticket_types where event_id = any($1)',
+          [[draftB, publishedB]],
+        );
+        expect(types.rows.map((r) => r.event_id)).toEqual([publishedB]);
+        const changed = await client.query(
+          "update catalogue.events set name = 'Hijacked' where id = any($1)",
+          [[draftB, publishedB]],
+        );
+        expect(changed.rowCount).toBe(0);
+      });
+    }
+
+    await asTenant({ organisationId: orgA, userId: aliceId }, async (client) => {
+      await expect(
+        client.query(
+          `insert into catalogue.ticket_types
+             (event_id, organisation_id, name, capacity, max_per_order, sales_start, sales_end)
+           values ($1, $2, 'Sneaky', 10, 2, '{"kind":"on_publish"}', '{"kind":"event_start"}')`,
+          [publishedB, orgB],
+        ),
+      ).rejects.toThrow(/row-level security/);
+    });
+  });
 });
