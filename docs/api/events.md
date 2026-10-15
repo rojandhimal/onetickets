@@ -35,7 +35,9 @@ event_not_found`, the same as one that does not exist.
   banner routes return the whole event. A stale version gets `409 stale_draft` with the current
   draft in `current`.
 - **Plain text (SEC-3).** `about` and `accessibility.notes` are stored as plain text: HTML tags and
-  comments, control characters, zero-width characters and direction overrides are removed. Render
+  comments, control characters, zero-width characters and direction overrides are removed,
+  repeating until nothing changes, so the stored text never holds a `<` followed by a letter, `/`,
+  `!` or `?` (nested tricks like `<scr<script>ipt>` included). `Kids < 12` and `<3` stay. Render
   them as text, never as HTML. Single-line fields (the event name, ticket type names and a place
   venue's name, address and suburb) get the same cleaning with line breaks collapsed to one space;
   a name that is empty once cleaned gets `422 invalid_request`.
@@ -94,6 +96,7 @@ No session needed. Only published events are visible; drafts are `404 event_not_
 | 404    | `ticket_type_not_found`  | No such ticket type on this event                                    |
 | 409    | `stale_draft`            | Autosave sent an old `version`; `current` holds the draft as it is   |
 | 409    | `last_ticket_type`       | Removing the only ticket type of a live event                        |
+| 409    | `tickets_sold_or_held`   | Capacity below the tickets sold or held, or removing such a type     |
 | 413    | `image_too_large`        | Banner over 10 MB                                                    |
 | 415    | `unsupported_image`      | Banner is not a readable JPEG, PNG or WebP                           |
 | 422    | `invalid_request`        | Validation failed; `field` names the first bad field                 |

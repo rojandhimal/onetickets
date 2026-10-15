@@ -9,6 +9,27 @@ describe('toPlainText', () => {
     expect(toPlainText('<img src=x onerror=alert(1)>Hello')).toBe('Hello');
   });
 
+  it('leaves nothing a parser could read as markup, however tags are nested or split', () => {
+    expect(toPlainText('<scr<script>ipt>alert(1)</scr</script>ipt>')).toBe('alert(1)');
+    expect(toPlainText('<<b>img src=x onerror=alert(1)>Hi')).toBe('Hi');
+    expect(toPlainText('<img src=x onerror=alert(1)//')).toBe('img src=x onerror=alert(1)//');
+    expect(toPlainText('<\u200Bscript>alert(1)</\u202Escript>')).toBe('alert(1)');
+    expect(toPlainText('<<<a>a>a>x')).toBe('x');
+    expect(toPlainText('<!<!-- -->-- --><?php ?></>')).not.toMatch(/<[a-zA-Z/!?]/);
+  });
+
+  it('never outputs a tag opener for any mix of markup characters', () => {
+    const alphabet = ['<', '>', '/', '!', '?', '-', 's', 'b', ' ', '\u200B', '\n', '<!--', '-->'];
+    let seed = 42;
+    const next = () => (seed = (seed * 1_103_515_245 + 12_345) % 2 ** 31);
+    for (let run = 0; run < 5_000; run++) {
+      const length = next() % 24;
+      const input = Array.from({ length }, () => alphabet[next() % alphabet.length]).join('');
+      expect(toPlainText(input), JSON.stringify(input)).not.toMatch(/<[a-zA-Z/!?]/);
+      expect(toPlainLine(input), JSON.stringify(input)).not.toMatch(/<[a-zA-Z/!?]/);
+    }
+  });
+
   it('keeps everyday angle brackets and ampersands', () => {
     expect(toPlainText('Kids < 12 free & adults > 18 pay <3')).toBe(
       'Kids < 12 free & adults > 18 pay <3',

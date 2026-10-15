@@ -160,9 +160,10 @@ export class EventsService {
     return this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       this.checkWindow(event, input);
-      if (!(await this.events.updateTicketType(tx, eventId, ticketTypeId, input))) {
-        throw ticketTypeNotFound();
-      }
+      const updated = await this.events
+        .updateTicketType(tx, eventId, ticketTypeId, input)
+        .catch(inventoryConflict);
+      if (!updated) throw ticketTypeNotFound();
       await this.events.bumpVersion(tx, eventId);
       return this.draftDto(tx, actor, eventId);
     });
@@ -185,7 +186,7 @@ export class EventsService {
           'A live event needs at least one ticket type.',
         );
       }
-      await this.events.removeTicketType(tx, eventId, ticketTypeId);
+      await this.events.removeTicketType(tx, eventId, ticketTypeId).catch(inventoryConflict);
       await this.events.bumpVersion(tx, eventId);
       return this.draftDto(tx, actor, eventId);
     });
@@ -302,6 +303,7 @@ export class EventsService {
         price: query.price,
         after,
         limit: query.limit + 1,
+        now: new Date(),
       }),
     );
     const page = rows.slice(0, query.limit);
@@ -467,7 +469,7 @@ export class EventsService {
         priceCents: t.price_cents,
         salesStart: t.sales_start,
         salesEnd: t.sales_end,
-        sold: 0,
+        sold: t.sold,
       })),
       slug: row.slug,
       publishedAt: row.published_at?.toISOString() ?? null,
@@ -485,7 +487,7 @@ export class EventsService {
       id: t.id,
       name: t.name,
       allInPriceCents: t.price_cents,
-      spotsLeft: t.capacity,
+      spotsLeft: t.capacity - t.sold - t.held,
       onSale: onSale(t.sales_start, t.sales_end, times(row), now),
       maxPerOrder: t.max_per_order,
     }));
@@ -513,6 +515,22 @@ export class EventsService {
       ticketTypes,
     };
   }
+}
+
+/**
+ * The database refused an inventory change (INV-1): capacity below what is sold or held, or
+ * deleting a type that has tickets sold or held.
+ */
+function inventoryConflict(error: unknown): never {
+  const code = (error as { code?: string }).code;
+  if (code === '23514' || code === '23001') {
+    throw new ApiError(
+      HttpStatus.CONFLICT,
+      'tickets_sold_or_held',
+      'Some of these tickets are already sold or held.',
+    );
+  }
+  throw error;
 }
 
 const ticketTypeNotFound = () =>

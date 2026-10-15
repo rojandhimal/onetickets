@@ -127,4 +127,11 @@ Prices are shown including GST.
 ## Feature flags
 
 Unfinished features ship behind server-side flags read per request, so staging and production can
-differ without a rebuild. Today there is one: `FEATURE_EVENT_WIZARD` (`apps/web/src/lib/flags.ts`).
+differ without a rebuild. Today there are two:
+
+- `FEATURE_EVENT_WIZARD` (`apps/web/src/lib/flags.ts`) shows the event wizard on the web.
+- `FEATURE_PAID_TICKETS` (api, `catalogue.config.ts`) allows ticket prices above 0. Off until
+  Sprint 4.
+
+The catalogue api routes themselves are not flagged: with the wizard hidden nothing calls them,
+and the public routes only show events someone has published.

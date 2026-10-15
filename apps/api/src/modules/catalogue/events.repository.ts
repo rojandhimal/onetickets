@@ -48,6 +48,9 @@ export interface TicketTypeRow {
   price_cents: number;
   sales_start: SalesStart;
   sales_end: SalesEnd;
+  /** From inventory.ticket_inventory, which every ticket type has (INV-1). */
+  sold: number;
+  held: number;
 }
 
 /** Columns an autosave may set, already validated and sanitised by the service. */
@@ -77,8 +80,8 @@ const EVENT_COLUMNS = `id, organisation_id, status, version, template, name, sta
   contact_email, banner_key, banner_width, banner_height, banner_focus_x, banner_focus_y,
   last_step, slug, published_at, updated_at`;
 
-const TICKET_TYPE_COLUMNS = `id, event_id, name, capacity, max_per_order, price_cents,
-  sales_start, sales_end`;
+const TICKET_TYPE_COLUMNS = `t.id, t.event_id, t.name, t.capacity, t.max_per_order, t.price_cents,
+  t.sales_start, t.sales_end, i.sold, i.held`;
 
 /** SQL for the catalogue schema. Every call runs inside a UnitOfWork transaction. */
 @Injectable()
@@ -181,8 +184,10 @@ export class EventsRepository {
   async ticketTypes(tx: pg.PoolClient, eventIds: string[]): Promise<TicketTypeRow[]> {
     if (eventIds.length === 0) return [];
     const { rows } = await tx.query<TicketTypeRow>(
-      `select ${TICKET_TYPE_COLUMNS} from catalogue.ticket_types
-       where event_id = any($1::uuid[]) order by position, created_at`,
+      `select ${TICKET_TYPE_COLUMNS}
+       from catalogue.ticket_types t
+       join inventory.ticket_inventory i on i.ticket_type_id = t.id
+       where t.event_id = any($1::uuid[]) order by t.position, t.created_at`,
       [eventIds],
     );
     return rows;
@@ -271,7 +276,8 @@ export class EventsRepository {
 
   /**
    * Upcoming published events in a city (online events show in every city), soonest first.
-   * "Tonight", "this weekend" and "next 7 days" are worked out in the city's time zone.
+   * "Tonight", "this weekend" and "next 7 days" are worked out in the city's time zone, from
+   * `now` (passed in so tests can pin the clock).
    */
   async browse(
     tx: pg.PoolClient,
@@ -282,13 +288,14 @@ export class EventsRepository {
       price?: 'free' | 'paid';
       after?: { startsAt: string; id: string };
       limit: number;
+      now: Date;
     },
   ): Promise<BrowseRow[]> {
     const { rows } = await tx.query<BrowseRow>(
       `with bounds as (
-         select now() as now_at,
-                (now() at time zone $2)::date as today,
-                extract(isodow from now() at time zone $2)::int as dow
+         select $8::timestamptz as now_at,
+                ($8::timestamptz at time zone $2)::date as today,
+                extract(isodow from $8::timestamptz at time zone $2)::int as dow
        ),
        window_ as (
          select now_at as from_at,
@@ -330,6 +337,7 @@ export class EventsRepository {
         query.after?.startsAt ?? null,
         query.after?.id ?? null,
         query.limit,
+        query.now,
       ],
     );
     return rows;

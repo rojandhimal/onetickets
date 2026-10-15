@@ -8,7 +8,8 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import type { AppRequest } from '../src/modules/identity/index.js';
-import { seedOrganisation, seedUser, uniqueEmail } from './db.js';
+import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
+import pg from 'pg';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -163,6 +164,28 @@ describe('events and ticket types API', () => {
     await anon().get(events()).expect(401);
   });
 
+  it('refuses every change to an event from finance and door staff', async () => {
+    const event = await publishable();
+    const path = `${events()}/${event.id}`;
+    const type = event.ticketTypes[0]!;
+    const ticket = { ...type, id: undefined, sold: undefined };
+    for (const userId of [finance, door]) {
+      const calls = [
+        () => as(userId).get(path),
+        () => as(userId).patch(path, { version: event.version, name: 'Taken over' }),
+        () => as(userId).post(`${path}/publish`),
+        () => as(userId).post(`${path}/ticket-types`, ticket),
+        () => as(userId).patch(`${path}/ticket-types/${type.id}`, ticket),
+        () => as(userId).delete(`${path}/ticket-types/${type.id}`),
+        () => as(userId).put(`${path}/banner`, 'image/jpeg', Buffer.from([0xff, 0xd8, 0xff, 0xe0])),
+        () => as(userId).delete(`${path}/banner`),
+      ];
+      for (const call of calls) expect((await call()).status).toBe(403);
+    }
+    const unchanged = await as(owner).get(path).expect(200);
+    expect(unchanged.body).toMatchObject({ status: 'draft', version: event.version });
+  });
+
   it("never shows one organisation's event to another, even to a member of both", async () => {
     const event = await draft();
     const response = await as(owner)
@@ -257,6 +280,84 @@ describe('events and ticket types API', () => {
     expect(response.body).toMatchObject({ code: 'ends_before_start', field: 'endsAt' });
   });
 
+  it('gives every ticket type an inventory row the database never lets oversell (INV-1)', async () => {
+    const event = await draft();
+    const type = event.ticketTypes[0]!;
+    const pool = new pg.Pool({ connectionString: appDatabaseUrl() });
+    const asApp = async <T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> => {
+      const client = await pool.connect();
+      try {
+        await client.query('begin');
+        await client.query(
+          "select set_config('app.organisation_id', $1, true), set_config('app.user_id', $2, true)",
+          [org, owner],
+        );
+        return await work(client);
+      } finally {
+        await client.query('rollback');
+        client.release();
+      }
+    };
+    const inventory = () =>
+      withOwner(async (client) => {
+        const { rows } = await client.query(
+          'select capacity, sold, held from inventory.ticket_inventory where ticket_type_id = $1',
+          [type.id],
+        );
+        return rows;
+      });
+    try {
+      expect(await inventory()).toEqual([{ capacity: type.capacity, sold: 0, held: 0 }]);
+
+      for (const change of [
+        'set sold = 60, held = 41',
+        'set sold = capacity + 1',
+        'set held = -1',
+        'set capacity = 0',
+      ]) {
+        await expect(
+          asApp((client) =>
+            client.query(`update inventory.ticket_inventory ${change} where ticket_type_id = $1`, [
+              type.id,
+            ]),
+          ),
+        ).rejects.toThrow(/ticket_inventory_within_capacity|check constraint/);
+      }
+      await expect(
+        asApp((client) =>
+          client.query('delete from inventory.ticket_inventory where ticket_type_id = $1', [
+            type.id,
+          ]),
+        ),
+      ).rejects.toThrow(/permission denied/);
+
+      // Capacity changes reach inventory in the same transaction, and can't go below sold.
+      const edit = { ...type, id: undefined, sold: undefined, capacity: 40, maxPerOrder: 5 };
+      await as(owner).patch(`${events()}/${event.id}/ticket-types/${type.id}`, edit).expect(200);
+      expect(await inventory()).toEqual([{ capacity: 40, sold: 0, held: 0 }]);
+      await withOwner((client) =>
+        client.query('update inventory.ticket_inventory set sold = 30 where ticket_type_id = $1', [
+          type.id,
+        ]),
+      );
+      const shrink = await as(owner)
+        .patch(`${events()}/${event.id}/ticket-types/${type.id}`, { ...edit, capacity: 20 })
+        .expect(409);
+      expect(shrink.body.code).toBe('tickets_sold_or_held');
+      await as(owner)
+        .post(`${events()}/${event.id}/ticket-types`, { ...edit, name: 'Second' })
+        .expect(201);
+      const removed = await as(owner)
+        .delete(`${events()}/${event.id}/ticket-types/${type.id}`)
+        .expect(409);
+      expect(removed.body.code).toBe('tickets_sold_or_held');
+      const after = await as(owner).get(`${events()}/${event.id}`).expect(200);
+      expect(after.body.ticketTypes[0]).toMatchObject({ id: type.id, capacity: 40, sold: 30 });
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('keeps ticket types free while paid tickets are off', async () => {
     const event = await draft();
     const response = await as(owner)
@@ -270,6 +371,21 @@ describe('events and ticket types API', () => {
       })
       .expect(422);
     expect(response.body.code).toBe('paid_tickets_disabled');
+
+    const free = event.ticketTypes[0]!;
+    const edited = await as(owner)
+      .patch(`${events()}/${event.id}/ticket-types/${free.id}`, {
+        name: free.name,
+        capacity: free.capacity,
+        maxPerOrder: free.maxPerOrder,
+        priceCents: 1500,
+        salesStart: free.salesStart,
+        salesEnd: free.salesEnd,
+      })
+      .expect(422);
+    expect(edited.body).toMatchObject({ code: 'paid_tickets_disabled', field: 'priceCents' });
+    const after = await as(owner).get(`${events()}/${event.id}`).expect(200);
+    expect(after.body.ticketTypes[0].priceCents).toBe(0);
   });
 
   it('adds, edits and removes ticket types, returning the event with its new version', async () => {
@@ -353,11 +469,39 @@ describe('events and ticket types API', () => {
   });
 
   it('keeps drafts off the public page and out of browse', async () => {
-    const event = await publishable();
-    const slugs = await browseAll({ city: 'sydney' });
-    expect(slugs.length).toBeGreaterThanOrEqual(0);
-    const all = await anon().get('/public/events').query({ limit: '50' }).expect(200);
-    expect(JSON.stringify(all.body)).not.toContain(event.id);
+    const upcoming = await publish(await publishable());
+    const draftEvent = await publishable();
+    const past = await publish(await publishable());
+    await withOwner((client) =>
+      client.query(
+        `update catalogue.events
+            set starts_at = now() - interval '3 hours', ends_at = now() - interval '1 hour'
+          where id = $1`,
+        [past.id],
+      ),
+    );
+    const melbourne = await publish(
+      await publishable({ venue: { ...sydneyPlace, city: 'melbourne', suburb: 'Fitzroy' } }),
+    );
+
+    const sydney = await browseAll({ city: 'sydney' });
+    expect(sydney).toContain(upcoming.slug);
+    expect(sydney).not.toContain(past.slug);
+    expect(sydney).not.toContain(melbourne.slug);
+    const everything = [
+      ...sydney,
+      ...(await browseAll({ city: 'melbourne' })),
+      ...(await browseAll({ city: 'sydney', when: 'next_7_days' })),
+    ];
+    expect(everything).not.toContain(past.slug);
+    const published = await withOwner((client) =>
+      client.query<{ slug: string }>(
+        "select slug from catalogue.events where status = 'published'",
+      ),
+    );
+    const publishedSlugs = new Set(published.rows.map((row) => row.slug));
+    expect(everything.every((slug) => publishedSlugs.has(slug))).toBe(true);
+    await anon().get(`/public/events/${draftEvent.id}`).expect(404);
   });
 
   it('keeps a live event bookable: its venue and last ticket type stay', async () => {
