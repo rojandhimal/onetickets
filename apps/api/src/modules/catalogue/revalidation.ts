@@ -15,7 +15,10 @@ export class NoRevalidation extends PublicPageRevalidator {
   changed(): void {}
 }
 
-/** POSTs `{ slugs }` to the web app's revalidate route, authenticated with a shared secret. */
+/**
+ * POSTs `{ slugs }` to the web app's revalidate route, authenticated with a shared secret. A slug
+ * is set once, at publish, and never changes, so there is never an old slug to send too.
+ */
 export class WebRevalidator extends PublicPageRevalidator {
   private readonly logger = new Logger(WebRevalidator.name);
 
@@ -58,6 +61,9 @@ export function revalidatorFromEnv(env: NodeJS.ProcessEnv = process.env): Public
   const secret = env.REVALIDATE_SECRET;
   if (!secret) return new NoRevalidation();
   if (secret.length < 32) throw new Error('REVALIDATE_SECRET must be at least 32 characters');
-  if (!env.WEB_URL) throw new Error('WEB_URL is not set');
-  return new WebRevalidator(new URL('/internal/revalidate', env.WEB_URL), secret);
+  // The web app's private address (service discovery in AWS, `web` in compose), so the call
+  // doesn't go out through Cloudflare and back. The public WEB_URL is only the fallback.
+  const base = env.WEB_INTERNAL_URL || env.WEB_URL;
+  if (!base) throw new Error('WEB_INTERNAL_URL or WEB_URL must be set');
+  return new WebRevalidator(new URL('/internal/revalidate', base), secret);
 }

@@ -67,4 +67,15 @@ describe('revalidation signal', () => {
       revalidatorFromEnv({ REVALIDATE_SECRET: SECRET, WEB_URL: 'https://example.test' }),
     ).toBeInstanceOf(WebRevalidator);
   });
+
+  it('calls the web app on its private address when there is one', async () => {
+    const { seen, url } = await web(204);
+    const revalidator = revalidatorFromEnv({
+      REVALIDATE_SECRET: SECRET,
+      WEB_URL: 'https://onetickets.invalid',
+      WEB_INTERNAL_URL: url,
+    }) as WebRevalidator;
+    expect(await revalidator.send('a')).toBe(true);
+    expect(seen[0]!.request.url).toBe('/internal/revalidate');
+  });
 });

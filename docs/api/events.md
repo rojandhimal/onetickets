@@ -100,9 +100,12 @@ No session needed. Only published events are visible; drafts are `404 event_not_
   `no-store`, so a slug that has just gone live is never hidden by a cached miss and nothing private
   is ever cached. Banners are immutable (every upload gets a new key).
 - **Revalidation.** Publishing an event, and any later change to it while it's live (details, ticket
-  types, banner), makes the api `POST {WEB_URL}/internal/revalidate` with
+  types, banner), makes the api `POST {WEB_INTERNAL_URL}/internal/revalidate` (the web app's private address,
+  falling back to `WEB_URL`) with
   `Authorization: Bearer {REVALIDATE_SECRET}` and `{ "slugs": ["<slug>"] }` once the change is
-  committed. The web app drops what it cached for that event. The call times out after 2 s and a
+  committed. Slugs never change once published. The web app maps the slug to its own cache tags
+  (the event and browse); with several web tasks only the one that gets the call drops its copy at
+  once, and the rest catch up within the minute. The call times out after 2 s and a
   failure is only logged: the organiser's change still succeeds, and the page catches up within
   the minute above. Off when `REVALIDATE_SECRET` is unset.
 
