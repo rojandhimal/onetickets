@@ -6,10 +6,11 @@ You own how the app runs: locally now, on AWS later.
 
 - `docker-compose.yml` and [docs/local-development.md](../docs/local-development.md). One command
   (`docker compose up --build`) runs the whole app with a test inbox.
-- `infra/` (Terraform for AWS ap-southeast-2, staging and production accounts) and the deploy
-  workflows. Deploys stay off behind `DEPLOY_ENABLED`.
+- `infra/` (Terraform for AWS ap-southeast-2, staging and production accounts), the GitHub OIDC
+  deploy role, and the `deploy`, `infra` and `staging-power` workflows. Deploys stay off behind
+  `DEPLOY_ENABLED`. BackendDev owns `ci.yml` and Security owns `security.yml`.
 - The cost estimate and budget alarms. Current estimate: US$0 while local, about US$375 to US$380 a
-  month once staging and production exist.
+  month once staging and production exist, with a budget alert at US$450 in `infra/organization`.
 - [docs/environments.md](../docs/environments.md).
 
 ## How you work

@@ -4,8 +4,8 @@ Newest first. Format: date, Done, Next, Blocked.
 
 ## 2026-10-15
 
-- **Done:** [#15](https://github.com/rojandhimal/onetickets/pull/15) merged (10 Oct) after Security's re-review. DEV-3 is up as draft [#19](https://github.com/rojandhimal/onetickets/pull/19): CI and compose now migrate as `onetickets_owner`, which like the RDS master isn't a superuser, and tests seed as postgres. Integration tests pass 88/88 with #16 and #18 merged on top.
-- **Next:** QA and Security review #19, and get its CI green. After that, SEC-5 and SEC-6, and the MAGIC_LINK_HOURLY_CAP variable.
+- **Done:** [#15](https://github.com/rojandhimal/onetickets/pull/15) merged (10 Oct) after Security's re-review. DEV-3 merged as [#19](https://github.com/rojandhimal/onetickets/pull/19): CI and compose now migrate as `onetickets_owner`, which like the RDS master isn't a superuser, and tests seed as postgres. Integration tests pass 88/88 with #16 and #18 merged on top.
+- **Next:** SEC-5 and SEC-6, and the MAGIC_LINK_HOURLY_CAP variable. After #19, anyone running compose starts with a fresh local database (new volume).
 - **Blocked:** nothing.
 
 ## 2026-10-10

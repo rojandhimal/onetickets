@@ -9,7 +9,7 @@ Last updated: 2026-10-10 03:05 UTC by PM. Other threads: send changes to PM rath
 **Health:** 🟢 Ahead of plan, about a month early. The team lost 10 to 15 Oct to the plan's weekly usage limit. Sprint 1 PRs are open: S1 api (#16, Security passed, QA reviewing) and S1-1 wizard (#17, Security passed, ProductDesign asked for 3 must-fix items).
 **Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev's S1-3 event page opens after #17 merges (one branch per thread). Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
 
-**Merge queue for tegs:** #16 then #19 now; #17 after FrontendDev updates it from main. Still to do: switch the repo's default branch to main.
+**Merge queue for tegs:** #17 once FrontendDev updates it from main and CI is green; #20 (agent setup for any AI tool) any time. Still to do: switch the repo's default branch to main.
 
 ## Sprint calendar
 
@@ -73,12 +73,13 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-- DEV-3 migrations run as a non-superuser owner in CI, compose and e2e: [PR #19](https://github.com/rojandhimal/onetickets/pull/19) by DevOps. Security and QA pass, CI green. Ready to merge. Note: compose moves to a new Postgres volume, so the local database starts empty.
-- S1 api: events, free ticket types, banners, venue lookup, public page and browse: [PR #16](https://github.com/rojandhimal/onetickets/pull/16) by BackendDev. QA, Security and CI pass at 65cb3e3. Ready to merge (first).
+- Agent setup for any AI tool: AGENTS.md, role briefs in agents/, project files in project/ ([PR #20](https://github.com/rojandhimal/onetickets/pull/20)) by PM. Ready to merge once CI is green.
 - S1-1 create-event wizard with autosave, venue lookup and publish: [PR #17](https://github.com/rojandhimal/onetickets/pull/17) by FrontendDev. QA, Security and ProductDesign pass at 80636d9. Merges after #16: FrontendDev merges main in (trivial docs/adr/README.md and .gitignore conflicts) so CI e2e goes green. Starter About text moved to S1-4.
 
 ### Done
 
+- S1 api: events, free ticket types, banners, venue lookup, public page and browse ([PR #16](https://github.com/rojandhimal/onetickets/pull/16)), merged 15 Oct
+- DEV-3 migrations run as a non-superuser owner in CI, compose and e2e ([PR #19](https://github.com/rojandhimal/onetickets/pull/19)), merged 15 Oct. Compose uses a new Postgres volume, so local databases start empty
 - Sprint 0 closed 15 Oct. Last fix: web Docker image builds shared first ([PR #18](https://github.com/rojandhimal/onetickets/pull/18), QA), merged 15 Oct. Also merged 10 Oct: #12 shared auth types, #13 e2e CSP guard, #14 api logs and Sentry with PII masked, #15 infra Sentry and log settings
 - DES-6 Sprint 7 to 9 designs (canvas v26): [handoff-s7.md](/project/design/handoff-s7.md), [handoff-s8-s9.md](/project/design/handoff-s8-s9.md). Defaults accepted by PM: payouts visible to Owner and Finance only; payout dates skip NSW/VIC public holidays; admin actions need a reason; releasing a held payout needs a second admin; Companion Card on by default; waiting room locked on at 1,000+ tickets; per-buyer limit across email, card and device
 - S0-5 Error tracking on the web app, with Sentry scrubbing and a hardened /csp-report ([PR #9](https://github.com/rojandhimal/onetickets/pull/9)), merged 9 Oct
