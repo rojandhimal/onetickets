@@ -365,6 +365,25 @@ describe('events and ticket types API', () => {
     }
   });
 
+  it('refuses a ticket price over A$10,000 with 422, in the api and the database', async () => {
+    const event = await draft();
+    const type = event.ticketTypes[0]!;
+    const ticket = { ...type, id: undefined, sold: undefined };
+    for (const priceCents of [1_000_001, 2 ** 31]) {
+      const response = await as(owner)
+        .post(`${events()}/${event.id}/ticket-types`, { ...ticket, priceCents })
+        .expect(422);
+      expect(response.body).toMatchObject({ code: 'invalid_request', field: 'priceCents' });
+    }
+    await expect(
+      withOwner((client) =>
+        client.query('update catalogue.ticket_types set price_cents = 1000001 where id = $1', [
+          type.id,
+        ]),
+      ),
+    ).rejects.toThrow(/ticket_types_price_limit/);
+  });
+
   it('keeps ticket types free while paid tickets are off', async () => {
     const event = await draft();
     const response = await as(owner)
@@ -569,6 +588,39 @@ describe('events and ticket types API', () => {
         'venueName',
       ].sort(),
     );
+  });
+
+  it('shows the same "from" price on the browse card and the event page', async () => {
+    const live = await publish(await publishable());
+    const path = `${events()}/${live.id}`;
+    const ticket = { ...live.ticketTypes[0]!, id: undefined, sold: undefined, name: 'VIP' };
+    const withVip = await as(owner).post(`${path}/ticket-types`, ticket).expect(201);
+    // Paid tickets are off in the api, so set prices the way Sprint 4's flag will allow.
+    await withOwner((client) =>
+      client.query(
+        `update catalogue.ticket_types set price_cents = case name when 'VIP' then 4500 else 1200 end
+          where event_id = $1`,
+        [withVip.body.id],
+      ),
+    );
+    const page = await anon().get(`/public/events/${live.slug}`).expect(200);
+    const card = async (price?: string) => {
+      const slugs: { slug: string; priceFromAllInCents: number }[] = [];
+      let cursor: string | null = null;
+      do {
+        const response: request.Response = await anon()
+          .get('/public/events')
+          .query({ limit: '50', ...(price ? { price } : {}), ...(cursor ? { cursor } : {}) })
+          .expect(200);
+        slugs.push(...response.body.items);
+        cursor = response.body.nextCursor;
+      } while (cursor);
+      return slugs.find((item) => item.slug === live.slug);
+    };
+    expect(page.body.priceFromAllInCents).toBe(1200);
+    expect((await card())?.priceFromAllInCents).toBe(1200);
+    expect(await card('paid')).toBeDefined();
+    expect(await card('free')).toBeUndefined();
   });
 
   it('pages browse results with a cursor', async () => {

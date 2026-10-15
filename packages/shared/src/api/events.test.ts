@@ -19,6 +19,13 @@ const ticket = {
 } as const;
 
 describe('events contract', () => {
+  it('caps a ticket price at A$10,000 in whole cents', () => {
+    expect(ticketTypeInput.safeParse({ ...ticket, priceCents: 1_000_000 }).success).toBe(true);
+    expect(ticketTypeInput.safeParse({ ...ticket, priceCents: 1_000_001 }).success).toBe(false);
+    expect(ticketTypeInput.safeParse({ ...ticket, priceCents: 2 ** 31 }).success).toBe(false);
+    expect(ticketTypeInput.safeParse({ ...ticket, priceCents: 9.5 }).success).toBe(false);
+  });
+
   it('needs only a version to autosave', () => {
     expect(eventDraftPatch.parse({ version: 3 })).toEqual({ version: 3 });
     expect(eventDraftPatch.safeParse({ name: 'Pottery night' }).success).toBe(false);

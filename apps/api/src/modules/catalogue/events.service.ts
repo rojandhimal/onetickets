@@ -26,6 +26,7 @@ import {
   type TicketTypeRow,
 } from './events.repository.js';
 import { toPlainLine, toPlainText } from './plain-text.js';
+import { allInPriceCents, fromPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
@@ -295,8 +296,8 @@ export class EventsService {
 
   async browse(query: BrowseQuery): Promise<BrowseResponse> {
     const after = query.cursor ? decodeCursor(query.cursor) : undefined;
-    const rows = await this.uow.run({}, (tx) =>
-      this.events.browse(tx, {
+    const { rows, types } = await this.uow.run({}, async (tx) => {
+      const rows = await this.events.browse(tx, {
         city: query.city,
         timeZone: CITY_TIME_ZONES[query.city],
         when: query.when,
@@ -304,8 +305,10 @@ export class EventsService {
         after,
         limit: query.limit + 1,
         now: new Date(),
-      }),
-    );
+      });
+      const ids = rows.slice(0, query.limit).map((row) => row.id);
+      return { rows, types: await this.events.ticketTypes(tx, ids) };
+    });
     const page = rows.slice(0, query.limit);
     const last = page.at(-1);
     return {
@@ -319,8 +322,9 @@ export class EventsService {
         venueName: row.venue?.kind === 'place' ? row.venue.name : null,
         online: row.venue?.kind === 'online',
         banner: this.bannerDto(row),
-        // Free tickets only until Sprint 4; fees are added to paid prices then.
-        priceFromAllInCents: row.price_from_cents,
+        priceFromAllInCents: fromPriceCents(
+          types.filter((t) => t.event_id === row.id).map((t) => t.price_cents),
+        ),
       })),
       nextCursor:
         rows.length > query.limit && last
@@ -486,14 +490,11 @@ export class EventsService {
     const ticketTypes = types.map((t) => ({
       id: t.id,
       name: t.name,
-      allInPriceCents: t.price_cents,
+      allInPriceCents: allInPriceCents(t.price_cents),
       spotsLeft: t.capacity - t.sold - t.held,
       onSale: onSale(t.sales_start, t.sales_end, times(row), now),
       maxPerOrder: t.max_per_order,
     }));
-    const priced = ticketTypes.some((t) => t.onSale)
-      ? ticketTypes.filter((t) => t.onSale)
-      : ticketTypes;
     const venue = row.venue!;
     return {
       slug: row.slug!,
@@ -510,7 +511,7 @@ export class EventsService {
       cancellationPolicy: row.cancellation_policy,
       hasContactEmail: row.contact_email !== null,
       banner: this.bannerDto(row),
-      priceFromAllInCents: Math.min(...priced.map((t) => t.allInPriceCents), Infinity) || 0,
+      priceFromAllInCents: fromPriceCents(types.map((t) => t.price_cents)),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
       ticketTypes,
     };

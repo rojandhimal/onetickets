@@ -72,6 +72,7 @@ export interface EventChanges {
 }
 
 export interface BrowseRow extends EventRow {
+  /** Cheapest base price, only for the free/paid filter; cards use fromPriceCents(). */
   price_from_cents: number;
 }
 

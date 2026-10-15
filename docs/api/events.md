@@ -86,7 +86,11 @@ No session needed. Only published events are visible; drafts are `404 event_not_
   from 5:00 pm on D (or now, if later) to 5:00 am on D+1; `this_weekend` from 5:00 pm Friday (or
   now) to 5:00 am Monday, the current weekend from Friday to Monday 5:00 am and the coming one
   otherwise; `next_7_days` from now to 5:00 am on D+8. `price=paid` returns nothing until paid tickets exist.
-- **Prices** are all-in (fees included). Every ticket is free until Sprint 4, so they are 0.
+- **Prices** are all-in (fees included) and in whole cents, at most A$10,000 (`EVENT_LIMITS.priceCents`)
+  per ticket. Every ticket is free until Sprint 4, so they are 0. `priceFromAllInCents` on a browse
+  card and on the event page comes from the api's one pricing function: the cheapest all-in price
+  across the event's ticket types. `price=free` matches events with a free ticket type, which is
+  exactly when that price is 0. Never work out a price in the web app.
 - **Banners** are served by the api only while they are stored on local disk (development). In AWS
   the URL in `BannerDto.url` points at the CDN.
 
