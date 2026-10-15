@@ -18,7 +18,7 @@ test('a template becomes a draft that autosaves, resumes and publishes', async (
   await page.waitForURL(/\/organiser\/events\/new\/basics\?draft=/);
   const draftUrl = new URL(page.url());
   await expect(page.getByRole('heading', { level: 1 })).toHaveText("What's on?");
-  await expect(page.getByRole('listitem', { current: 'step' })).toHaveText('1 Basics');
+  await expect(page.locator('ol[aria-label="Steps"] [aria-current="step"]')).toHaveText('1 Basics');
   await expect(page.getByLabel('Event name')).toHaveAttribute('placeholder', /For example/);
   await expectAccessible(page);
 
