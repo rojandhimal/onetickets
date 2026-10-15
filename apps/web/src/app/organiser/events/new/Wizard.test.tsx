@@ -44,7 +44,7 @@ describe('create-event wizard', () => {
       'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
     });
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("What's on?");
     expect(screen.getByText(/Using the Workshop template/)).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('create-event wizard', () => {
       'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
     });
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
     await user.type(screen.getByLabelText('Date'), '2026-11-14');
     await user.type(screen.getByLabelText('Starts'), '21:00');
     await user.type(screen.getByLabelText('Ends'), '01:00');
@@ -99,7 +99,7 @@ describe('create-event wizard', () => {
       'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
     });
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
 
     const input = screen.getByRole('combobox', { name: 'Venue address' });
     await user.type(input, 'Sydenham');
@@ -119,7 +119,7 @@ describe('create-event wizard', () => {
   it('asks for an https link for online events', async () => {
     api({ 'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })) });
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
     await user.click(screen.getByRole('button', { name: 'Online' }));
     expect(screen.getByRole('button', { name: 'Online' })).toHaveAttribute('aria-pressed', 'true');
     await user.type(screen.getByLabelText('Link for attendees'), 'zoom.us/j/1');
@@ -135,7 +135,7 @@ describe('create-event wizard', () => {
       'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
     });
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
     await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Somewhere');
     await user.tab();
     expect(screen.getByRole('combobox', { name: 'Venue address' })).toHaveAccessibleDescription(
@@ -150,7 +150,7 @@ describe('create-event wizard', () => {
     api({});
     const pushState = vi.spyOn(window.history, 'pushState');
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
     await user.click(screen.getByRole('link', { name: /Next: tickets/ }));
     expect(pushState).toHaveBeenCalledWith(null, '', '/organiser/events/new/tickets?draft=evt_1');
     pushState.mockRestore();
@@ -159,7 +159,7 @@ describe('create-event wizard', () => {
   it('closes from the first step and keeps the draft', async () => {
     api({});
     const user = userEvent.setup();
-    render(<Wizard initialEvent={draftEvent()} />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
     await user.click(screen.getByRole('link', { name: 'Close and keep draft' }));
     expect(push).toHaveBeenCalledWith('/organiser');
   });
@@ -172,7 +172,7 @@ describe('create-event wizard', () => {
     it('explains what is missing instead of publishing', async () => {
       const fetch = api({});
       const user = userEvent.setup();
-      render(<Wizard initialEvent={readyEvent({ venue: null })} />);
+      render(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
 
       expect(screen.getByRole('link', { name: 'Back to details' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /3 Details/ })).not.toHaveTextContent('completed');
@@ -197,7 +197,7 @@ describe('create-event wizard', () => {
           json(readyEvent({ status: 'published', slug: 'screen-printing' })),
       });
       const user = userEvent.setup();
-      render(<Wizard initialEvent={readyEvent()} />);
+      render(<Wizard initialEvent={readyEvent()} userId="u_1" />);
 
       expect(screen.getByRole('link', { name: '1 Basics, completed' })).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Publish event' }));
@@ -219,7 +219,7 @@ describe('create-event wizard', () => {
           json({ statusCode: 422, code: 'not_ready', message: 'x', missing: ['ticket_type'] }, 422),
       });
       const user = userEvent.setup();
-      render(<Wizard initialEvent={readyEvent()} />);
+      render(<Wizard initialEvent={readyEvent()} userId="u_1" />);
       await user.click(screen.getByRole('button', { name: 'Publish event' }));
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'Add a ticket type to publish. Everything else is ready.',

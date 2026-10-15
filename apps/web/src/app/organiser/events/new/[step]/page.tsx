@@ -28,5 +28,5 @@ export default async function WizardStepPage({
   const event = await getEventDraft(session.organisation.id, draft);
   if (!event || event.status !== 'draft') notFound();
 
-  return <Wizard initialEvent={event} />;
+  return <Wizard initialEvent={event} userId={session.user.id} />;
 }

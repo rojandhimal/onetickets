@@ -11,6 +11,8 @@ export const AUTOSAVE_INTERVAL_MS = 10_000;
 
 type Options = {
   event: EventDraftDto;
+  /** The signed-in organiser; changes kept on the device belong to them alone. */
+  userId: string;
   /** The server's copy after each save. */
   onSaved?: (event: EventDraftDto) => void;
   /** Changes found on this device from an earlier offline session, before they're synced. */
@@ -28,6 +30,7 @@ type Options = {
  */
 export function useAutosave({
   event,
+  userId,
   onSaved,
   onRestore,
   onInvalid,
@@ -37,7 +40,7 @@ export function useAutosave({
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const id = event.id;
   const organisationId = event.organisationId;
-  const store = useRef(storeOption ?? defaultDraftStore()).current;
+  const store = useRef(storeOption ?? defaultDraftStore(userId)).current;
   const version = useRef(event.version);
   const pending = useRef<PendingChanges>({});
   const inFlight = useRef<Promise<void> | null>(null);

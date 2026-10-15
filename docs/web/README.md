@@ -85,7 +85,8 @@ and the stepper ticks are in `src/lib/wizard-model.ts`.
 The browser only calls `/api/*` on the web origin. `next.config.ts` rewrites those to `API_URL`, so the
 session cookie stays first-party and the api needs no CORS. Next forwards `Origin` and any incoming
 `X-Forwarded-For` unchanged. Nothing is stored in `localStorage`; the only thing kept on the device is
-unsynced wizard edits in IndexedDB (ADR 0016).
+unsynced wizard edits in IndexedDB. Those are tied to the signed-in organiser. They are wiped when
+someone else opens the wizard or the organiser signs out, and they expire after 7 days (ADR 0016).
 
 ## Security headers
 

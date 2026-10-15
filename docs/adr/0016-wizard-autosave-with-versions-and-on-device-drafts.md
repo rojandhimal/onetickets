@@ -35,6 +35,12 @@ again online, so two saves can race.
 - When a save can't reach the api, the pending changes go to IndexedDB (`onetickets` database,
   `event-drafts` store, keyed by event id) and the header shows "Saved on this phone". On the next
   load of that draft they are restored into the form and synced, then deleted from the device.
+- Computers get shared, so each entry records the organiser's user id and when it was saved
+  (Security review of #17). When the wizard opens for a different organiser, the whole database is
+  deleted before anything is read. Entries older than 7 days are dropped. `clearDeviceDrafts()`
+  deletes the database outright. The web app has no sign-out control yet; when it gets one, it calls
+  this, and the api's `POST /auth/sign-out` is asked to send `Clear-Site-Data: "storage"` as a
+  backstop.
 - A field the api refuses with 422 is dropped from the queue so the rest still saves.
 
 ## Consequences
@@ -44,6 +50,7 @@ again online, so two saves can race.
 - Offline edits live only in that browser. Clearing site data before reconnecting loses them, and a
   different device won't see them until they sync.
 - IndexedDB holds draft content (event name, times, venue, About text), never tokens or personal
-  data about attendees. It is cleared once synced.
+  data about attendees. It is cleared once synced, when someone else signs in on the same browser,
+  on sign-out, and after 7 days. Edits left offline for more than a week are lost.
 - Revisit if co-organisers start editing the same draft at the same time (S5 team roles): then
   field-level merge or presence becomes worth its cost.

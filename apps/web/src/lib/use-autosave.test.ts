@@ -23,7 +23,7 @@ describe('useAutosave', () => {
     vi.stubGlobal('fetch', fetch);
     const onSaved = vi.fn();
     const { result } = renderHook(() =>
-      useAutosave({ event: draftEvent(), onSaved, store: memoryDraftStore() }),
+      useAutosave({ event: draftEvent(), userId: 'u_1', onSaved, store: memoryDraftStore() }),
     );
 
     act(() => result.current.change({ name: 'Screen printing' }));
@@ -46,7 +46,7 @@ describe('useAutosave', () => {
     const fetch = vi.fn();
     vi.stubGlobal('fetch', fetch);
     const { result } = renderHook(() =>
-      useAutosave({ event: draftEvent(), store: memoryDraftStore() }),
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
     );
     await act(() => result.current.flush());
     expect(fetch).not.toHaveBeenCalled();
@@ -57,7 +57,7 @@ describe('useAutosave', () => {
     const fetch = vi.fn().mockResolvedValue(jsonResponse(draftEvent({ version: 2 })));
     vi.stubGlobal('fetch', fetch);
     const { result } = renderHook(() =>
-      useAutosave({ event: draftEvent(), store: memoryDraftStore() }),
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
     );
     act(() => result.current.change({ name: 'Gig night' }));
     await act(() => vi.advanceTimersByTimeAsync(9_000));
@@ -70,7 +70,7 @@ describe('useAutosave', () => {
     const store = memoryDraftStore();
     const fetch = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'));
     vi.stubGlobal('fetch', fetch);
-    const { result } = renderHook(() => useAutosave({ event: draftEvent(), store }));
+    const { result } = renderHook(() => useAutosave({ event: draftEvent(), userId: 'u_1', store }));
 
     act(() => result.current.change({ name: 'Trivia night' }));
     await act(() => result.current.flush());
@@ -92,7 +92,7 @@ describe('useAutosave', () => {
     const fetch = vi.fn().mockResolvedValue(jsonResponse(draftEvent({ version: 2 })));
     vi.stubGlobal('fetch', fetch);
     const onRestore = vi.fn();
-    renderHook(() => useAutosave({ event: draftEvent(), store, onRestore }));
+    renderHook(() => useAutosave({ event: draftEvent(), userId: 'u_1', store, onRestore }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     expect(onRestore).toHaveBeenCalledWith({ name: 'From the bus' });
@@ -116,7 +116,7 @@ describe('useAutosave', () => {
       .mockResolvedValueOnce(jsonResponse(draftEvent({ version: 6 })));
     vi.stubGlobal('fetch', fetch);
     const { result } = renderHook(() =>
-      useAutosave({ event: draftEvent(), store: memoryDraftStore() }),
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore() }),
     );
     act(() => result.current.change({ name: 'Mine' }));
     await act(() => result.current.flush());
@@ -139,7 +139,7 @@ describe('useAutosave', () => {
     vi.stubGlobal('fetch', fetch);
     const onInvalid = vi.fn();
     const { result } = renderHook(() =>
-      useAutosave({ event: draftEvent(), store: memoryDraftStore(), onInvalid }),
+      useAutosave({ event: draftEvent(), userId: 'u_1', store: memoryDraftStore(), onInvalid }),
     );
     act(() => result.current.change({ name: 'x' }));
     await act(() => result.current.flush());

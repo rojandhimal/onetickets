@@ -40,7 +40,7 @@ function serverFields(server: EventDraftDto) {
   return { version, updatedAt, ticketTypes, banner, slug, status };
 }
 
-export function Wizard({ initialEvent }: { initialEvent: EventDraftDto }) {
+export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; userId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const segment = pathname.split('/').pop() ?? '';
@@ -50,6 +50,7 @@ export function Wizard({ initialEvent }: { initialEvent: EventDraftDto }) {
   const [restored, setRestored] = useState(0);
   const { saveState, change, flush } = useAutosave({
     event: initialEvent,
+    userId,
     onSaved: (server) => setEvent((prev) => ({ ...prev, ...serverFields(server) })),
     onRestore: (changes) => {
       setEvent((prev) => applyChanges(prev, changes));
