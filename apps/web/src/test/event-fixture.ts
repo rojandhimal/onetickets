@@ -87,6 +87,7 @@ export function publicEvent(overrides: Partial<PublicEventDto> = {}): PublicEven
     hasContactEmail: true,
     banner: {
       url: '/api/public/banners/b1.webp',
+      ogUrl: '/api/public/banners/b1-og.jpg',
       width: 2160,
       height: 1080,
       focus: { x: 0.5, y: 0.25 },

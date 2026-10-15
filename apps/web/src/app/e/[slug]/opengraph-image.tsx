@@ -19,7 +19,8 @@ const TINTS: Record<string, { ground: string; ink: string }> = {
 
 /**
  * The banner as a data URL. The renderer won't fetch private addresses (like the api inside our
- * network) and can't decode WebP, so we fetch it ourselves and only use PNG or JPEG.
+ * network) and can't decode WebP, so we fetch the api's 1200 × 630 JPEG rendition (`ogUrl`) ourselves
+ * and only use PNG or JPEG.
  */
 async function bannerDataUrl(url: string): Promise<string | null> {
   const api = process.env.API_URL ?? 'http://localhost:3001';
@@ -45,7 +46,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     );
   }
   const banner =
-    isEventBannerShown() && event.banner ? await bannerDataUrl(event.banner.url) : null;
+    isEventBannerShown() && event.banner ? await bannerDataUrl(event.banner.ogUrl) : null;
   const where = event.venue.kind === 'online' ? 'Online' : event.venue.suburb;
   const caption = `${eventEyebrow(event.startsAt, event.timeZone)} · ${where}`.toUpperCase();
   const title = event.name.length > 70 ? `${event.name.slice(0, 68).trimEnd()}…` : event.name;
@@ -71,7 +72,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             position: 'absolute',
             inset: 0,
             objectFit: 'cover',
-            objectPosition: `${event.banner!.focus.x * 100}% ${event.banner!.focus.y * 100}%`,
           }}
         />
       ) : (

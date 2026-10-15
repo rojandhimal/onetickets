@@ -116,8 +116,8 @@ right-hand column from 768 px. Online events never show their link; buyers get i
 
 Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
-fetches the banner itself and uses it only when the api serves PNG or JPEG; otherwise it falls back
-to the template colour.
+fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
+or if that fetch fails, it falls back to the template colour.
 
 ## How the browser reaches the api
 
