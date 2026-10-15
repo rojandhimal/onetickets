@@ -44,19 +44,20 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: onetickets
-          POSTGRES_PASSWORD: onetickets
-          POSTGRES_DB: onetickets
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U onetickets"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      # Tests migrate and seed with this superuser, then run the api as an RLS-bound role.
-      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
+      # Migrate as onetickets_owner, which like the RDS master user is not a superuser; seed as
+      # the superuser (RLS is forced on the owner too); run the api as an RLS-bound role.
+      MIGRATION_DATABASE_URL: postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets
+      TEST_SUPERUSER_DATABASE_URL: postgres://postgres:postgres@localhost:5432/onetickets
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -66,6 +67,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @onetickets/shared build
+      - name: Create the database owner (as on RDS)
+        run: psql postgres://postgres:postgres@localhost:5432/postgres -f scripts/db/create-owner.sql
       - name: Integration tests
         run: pnpm test:integration
 
@@ -78,19 +81,19 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: onetickets
-          POSTGRES_PASSWORD: onetickets
-          POSTGRES_DB: onetickets
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U onetickets"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      # Migrate as the superuser; the api runs as onetickets_app (granted ot_app, RLS applies).
-      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@localhost:5432/onetickets
+      # Migrate as onetickets_owner (not a superuser, like RDS); the api runs as onetickets_app
+      # (granted ot_app, RLS applies).
+      MIGRATION_DATABASE_URL: postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets
       DATABASE_URL: postgres://onetickets_app:onetickets_app@localhost:5432/onetickets
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -101,6 +104,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: Create the database owner (as on RDS)
+        run: psql postgres://postgres:postgres@localhost:5432/postgres -f scripts/db/create-owner.sql
       - name: Migrate and create the api's database role
         run: ./e2e/setup-db.sh
       - name: Install Chromium

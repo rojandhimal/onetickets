@@ -50,7 +50,7 @@ pnpm format:check
 pnpm lint              # ESLint, module boundaries, and a self-test of the boundary rule
 pnpm typecheck
 pnpm test              # unit tests
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+pnpm test:integration  # needs Postgres: docker compose up -d postgres
 pnpm build && ./e2e/setup-db.sh && pnpm e2e  # browser and accessibility tests
 ```
 

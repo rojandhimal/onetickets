@@ -13,16 +13,18 @@ name: onetickets
 services:
   postgres:
     image: postgres:16
+    # postgres is the bootstrap superuser. On first start, create-owner.sql adds onetickets_owner
+    # and the onetickets database it owns: not a superuser, like the RDS master user.
     environment:
-      POSTGRES_USER: onetickets
-      POSTGRES_PASSWORD: onetickets
-      POSTGRES_DB: onetickets
+      POSTGRES_PASSWORD: postgres
     ports:
       - '127.0.0.1:5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/db/create-owner.sql:/docker-entrypoint-initdb.d/10-create-owner.sql:ro
     healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'onetickets', '-d', 'onetickets']
+      # Over TCP, which only opens once the init scripts have finished.
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'onetickets_owner', '-d', 'onetickets']
       interval: 2s
       timeout: 5s
       retries: 30
@@ -35,7 +37,7 @@ services:
       dockerfile: apps/api/Dockerfile
     command: ['node', 'dist/database/migrate.js']
     environment:
-      MIGRATION_DATABASE_URL: postgres://onetickets:onetickets@postgres:5432/onetickets
+      MIGRATION_DATABASE_URL: postgres://onetickets_owner:onetickets_owner@postgres:5432/onetickets
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,8 +47,8 @@ services:
     image: postgres:16
     environment:
       PGHOST: postgres
-      PGUSER: onetickets
-      PGPASSWORD: onetickets
+      PGUSER: onetickets_owner
+      PGPASSWORD: onetickets_owner
       PGDATABASE: onetickets
     command:
       - sh
@@ -124,5 +126,5 @@ services:
       - '127.0.0.1:8025:8025'
 
 volumes:
-  pgdata:
+  postgres-data:
   banners:
