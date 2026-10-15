@@ -39,7 +39,7 @@ pnpm format            # or format:check
 pnpm lint
 pnpm typecheck
 pnpm test
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+pnpm test:integration  # needs Postgres: docker compose up -d postgres
 ```
 
 For UI changes, also run the e2e suite (see [testing](docs/testing.md)).

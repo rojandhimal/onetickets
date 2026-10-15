@@ -30,5 +30,6 @@ Rules:
 | [0014](0014-local-docker-staging-later.md)                         | Local development with Docker; staging later; no LocalStack                  | Accepted | DevOps       |
 | [0015](0015-magic-links-and-server-side-sessions.md)               | Magic links and server-side sessions                                         | Proposed | BackendDev   |
 | [0016](0016-wizard-autosave-with-versions-and-on-device-drafts.md) | Autosave event drafts with a version check; offline edits kept on the device | Proposed | FrontendDev  |
+| [0017](0017-public-event-reads-and-plain-text-descriptions.md)     | Public event reads through an RLS policy, with plain-text descriptions       | Proposed | BackendDev   |
 
-The next free number is 0017.
+0018 (event page CSP) is claimed by FrontendDev. The next free number is 0019.

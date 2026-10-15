@@ -94,10 +94,12 @@ see them in the test inbox instead, set `MAIL_TRANSPORT=smtp` and uncomment `SMT
 
 #### Create the database schema
 
-Migrations run as the schema owner (`onetickets`, the Postgres superuser in Docker):
+Migrations run as the schema owner, `onetickets_owner`. Like the RDS master user in AWS, it owns
+the database and can create roles, but it is not a superuser, so a migration that needs one fails
+locally too:
 
 ```sh
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets \
+MIGRATION_DATABASE_URL=postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets \
   pnpm --filter @onetickets/api migrate
 ```
 
@@ -107,7 +109,7 @@ The api must not connect as a superuser, because superusers skip row-level secur
 as `onetickets_app`, a login role that only has the `ot_app` group role. Create it once:
 
 ```sh
-docker compose exec -T postgres psql -U onetickets -d onetickets -v ON_ERROR_STOP=1 <<'SQL'
+docker compose exec -T postgres psql -U onetickets_owner -d onetickets -v ON_ERROR_STOP=1 <<'SQL'
 do $$
 begin
   if not exists (select from pg_roles where rolname = 'onetickets_app') then
@@ -144,14 +146,14 @@ session cookie stays first-party.
 
 ### Environment variables
 
-| Variable                 | Used by     | Local value                                                          |
-| ------------------------ | ----------- | -------------------------------------------------------------------- |
-| `DATABASE_URL`           | api         | `postgres://onetickets_app:onetickets_app@localhost:5432/onetickets` |
-| `MIGRATION_DATABASE_URL` | api migrate | `postgres://onetickets:onetickets@localhost:5432/onetickets`         |
-| `PORT`                   | api         | `3001`                                                               |
-| `MFA_ENCRYPTION_KEY`     | api         | your own `openssl rand -base64 32`; the api won't start without it   |
-| `API_URL`                | web         | `http://localhost:3001`                                              |
-| `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard           |
+| Variable                 | Used by     | Local value                                                              |
+| ------------------------ | ----------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`           | api         | `postgres://onetickets_app:onetickets_app@localhost:5432/onetickets`     |
+| `MIGRATION_DATABASE_URL` | api migrate | `postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets` |
+| `PORT`                   | api         | `3001`                                                                   |
+| `MFA_ENCRYPTION_KEY`     | api         | your own `openssl rand -base64 32`; the api won't start without it       |
+| `API_URL`                | web         | `http://localhost:3001`                                                  |
+| `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard               |
 
 The api's full list, including the sign-in settings, is in
 [docs/backend/environment.md](backend/environment.md).
@@ -165,7 +167,7 @@ pnpm format            # fix formatting
 pnpm lint              # ESLint and module boundaries
 pnpm typecheck
 pnpm test              # unit tests
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+pnpm test:integration  # needs Postgres: docker compose up -d postgres
 ```
 
 Add a migration by creating the next numbered file in `apps/api/migrations` (for example
@@ -181,6 +183,12 @@ above; the api does not load `.env` by itself.
 yet. Run the "Create the api's login role" step.
 
 **`role "ot_app" does not exist`.** Migrations have not run. Run them, then create the login role.
+
+**`password authentication failed for user "onetickets_owner"`** (or `role "onetickets_owner"
+does not exist`). Your Postgres data predates the owner role. The stack now keeps it in a new
+volume, so `docker compose up` gives a fresh database; if you started Postgres another way, run
+`docker compose down -v`. The old volume, `onetickets_pgdata`, can be removed with
+`docker volume rm onetickets_pgdata`.
 
 **Port 5432 is already in use.** Another Postgres is running on your machine. Stop it, or change
 the left-hand port in `docker-compose.yml` and in both database URLs.
