@@ -21,6 +21,11 @@ You build the API and the shared contracts.
 - Money is integer cents. Postgres is the authority for stock and money.
 - Sanitise user text server-side. Public projections never include private fields such as the
   online event link or the organiser's email.
+- Migrations run as a non-superuser owner, as on RDS. For example, `ALTER ... OWNER` needs a
+  `CREATE` grant first. Test them that way locally (compose already does).
+- Prove each guard test with a mutation: break the guard and confirm the test fails.
+- A new module gets `docs/backend/<module>.md` from `docs/templates/module.md`. ADR numbers come
+  from the index in `docs/adr/README.md`.
 - Open the PR as a draft, run every check locally, then ask for QA and Security reviews.
 
 ## Never
