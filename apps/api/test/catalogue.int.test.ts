@@ -598,7 +598,10 @@ describe('events and ticket types API', () => {
     // Paid tickets are off in the api, so set prices the way Sprint 4's flag will allow.
     await withOwner((client) =>
       client.query(
-        `update catalogue.ticket_types set price_cents = case name when 'VIP' then 4500 else 1200 end
+        `update catalogue.ticket_types set price_cents = case name when 'VIP' then 4500 else 1200 end,
+           -- The cheaper type isn't on sale yet: "from" still counts it, on the card and the page.
+           sales_start = case name when 'VIP' then sales_start
+             else jsonb_build_object('kind', 'at', 'at', now() + interval '2 days') end
           where event_id = $1`,
         [withVip.body.id],
       ),
@@ -617,6 +620,12 @@ describe('events and ticket types API', () => {
       } while (cursor);
       return slugs.find((item) => item.slug === live.slug);
     };
+    expect(page.body.ticketTypes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ allInPriceCents: 1200, onSale: false }),
+        expect.objectContaining({ allInPriceCents: 4500, onSale: true }),
+      ]),
+    );
     expect(page.body.priceFromAllInCents).toBe(1200);
     expect((await card())?.priceFromAllInCents).toBe(1200);
     expect(await card('paid')).toBeDefined();
