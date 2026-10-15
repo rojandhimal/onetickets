@@ -93,8 +93,8 @@ test('publishing with something missing says what and moves focus to the checkli
 
   await page.goto(`/organiser/events/new/review?draft=${draft}`);
   await page.getByRole('button', { name: 'Publish event' }).click();
-  await expect(page.getByRole('alert')).toContainText('to publish.');
-  await expect(page.getByRole('alert')).toContainText('Everything else is ready.');
+  const alert = page.getByRole('alert').filter({ hasText: 'to publish.' });
+  await expect(alert).toContainText('Everything else is ready.');
   await expect(page.getByRole('list', { name: 'Needed to publish' })).toBeFocused();
   await expectAccessible(page);
 });

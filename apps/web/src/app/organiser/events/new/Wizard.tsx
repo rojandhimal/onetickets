@@ -96,7 +96,9 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
     if (lastStep.current === step) return;
     lastStep.current = step;
     update({ lastStep: step });
-  }, [step, update]);
+    // Save now: someone who reaches a step and leaves by the browser should come back to it.
+    void flush();
+  }, [flush, step, update]);
 
   // Move focus to the new step's heading, but not on first load.
   const headingRef = useRef<HTMLHeadingElement>(null);
