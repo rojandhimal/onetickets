@@ -217,7 +217,8 @@ describe('sign-in API (S0-3)', () => {
 
   it('signs out by revoking the session server-side', async () => {
     const { cookie } = await signIn(uniqueEmail('bye'), 'Bye');
-    await post('/auth/sign-out', {}, { cookie }).expect(204);
+    const out = await post('/auth/sign-out', {}, { cookie }).expect(204);
+    expect(out.headers['clear-site-data']).toBe('"storage"');
     const me = await request(app.getHttpServer()).get('/me').set('cookie', cookie).expect(401);
     expect(me.body.code).toBe('not_signed_in');
   });

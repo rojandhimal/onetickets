@@ -173,6 +173,8 @@ export class AuthController {
       sameSite: 'lax',
       path: '/',
     });
+    // Wipes what the web app keeps in the browser, such as offline event drafts in IndexedDB.
+    response.setHeader('Clear-Site-Data', '"storage"');
   }
 }
 
