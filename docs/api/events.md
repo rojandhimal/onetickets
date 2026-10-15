@@ -36,9 +36,11 @@ event_not_found`, the same as one that does not exist.
   draft in `current`.
 - **Plain text (SEC-3).** `about` and `accessibility.notes` are stored as plain text: HTML tags and
   comments, control characters, zero-width characters and direction overrides are removed. Render
-  them as text, never as HTML.
+  them as text, never as HTML. Single-line fields (the event name, ticket type names and a place
+  venue's name, address and suburb) get the same cleaning with line breaks collapsed to one space;
+  a name that is empty once cleaned gets `422 invalid_request`.
 - **Banner.** Send the image itself with `Content-Type: image/jpeg`, `image/png` or `image/webp`.
-  The api decodes it whatever the header says, turns it upright, crops it to 2:1 (at most
+  The file must start with a JPEG, PNG or WebP signature. The api decodes it whatever the header says, turns it upright, crops it to 2:1 (at most
   2160 × 1080), re-encodes it as WebP and drops all metadata (EXIF, GPS). Each upload gets a new
   URL. The crop focus is set with `bannerFocus` in the autosave. Each banner also gets a
   1200 × 630 JPEG for link previews (`BannerDto.ogUrl`), cut from the 2:1 banner.

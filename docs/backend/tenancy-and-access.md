@@ -28,7 +28,9 @@ route without one of these decorators:
   public event page and browse read with no organisation set. Drafts stay inside their
   organisation. The organiser's name reaches the public page through
   `catalogue.organiser_name()`, which returns only the name, and only for organisations with a
-  published event.
+  published event. The function is owned by `ot_public_reader`, a role nobody can log in as, with
+  column grants on `organisations (id, name)` and `events (organisation_id, status)` and read
+  policies scoped to that role alone.
 
 ## Adding a table
 

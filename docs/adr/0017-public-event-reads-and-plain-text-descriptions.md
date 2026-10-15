@@ -24,10 +24,13 @@ free-text descriptions that end up on public pages, in emails and in link previe
   type test and an api test check this.
 - **Organiser names through one narrow function.** `catalogue.organiser_name()` returns only the
   name, and only for organisations with a published event, instead of opening
-  `identity.organisations` to the public.
+  `identity.organisations` to the public. It runs as `ot_public_reader`, a no-login role that can
+  read only those columns, so the security-definer function holds no wider rights than it needs.
 - **Descriptions are plain text.** The api strips HTML tags and comments, control characters,
   zero-width characters and direction overrides before storing `about` and accessibility notes.
-  The web renders them as text, never as HTML.
+  The web renders them as text, never as HTML. Names, ticket type names and venue text get the
+  same cleaning on one line, so a direction override cannot disguise a name in browse or a link
+  preview.
 - **Banners are re-encoded.** Uploads are decoded, turned upright, cropped to 2:1 and re-encoded as
   WebP, so EXIF (including GPS) and anything hidden in the file are dropped. Each upload gets a new
   random key behind a storage interface (local disk now, S3 and CloudFront in AWS).
