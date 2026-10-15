@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { onSale } from '../src/modules/catalogue/sales-window.js';
 import type { AppRequest } from '../src/modules/identity/index.js';
 import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
 import pg from 'pg';
@@ -704,6 +705,82 @@ describe('events and ticket types API', () => {
       const onPage = page.body.ticketTypes.map((t: { onSale: boolean }) => t.onSale);
       expect(onPage).toEqual([true, true, false, true, false, true]);
       expect(inSql).toEqual(onPage);
+    });
+
+    it('agrees with sales-window.ts at every edge of every kind of window', async () => {
+      // Fixed times, so each sales start and end can be checked exactly on its edge and either
+      // side of it, including before publishing and while the event is under way.
+      const event = {
+        publishedAt: new Date('2027-03-01T00:00:00Z'),
+        startsAt: new Date('2027-03-10T09:00:00Z'),
+        endsAt: new Date('2027-03-10T12:00:00Z'),
+      };
+      const live = await publish(await publishable());
+      const starts = [
+        { kind: 'on_publish' as const },
+        { kind: 'at' as const, at: '2027-02-20T00:00:00.000Z' },
+        { kind: 'at' as const, at: '2027-03-05T00:00:00.000Z' },
+      ];
+      const ends = [
+        { kind: 'event_start' as const },
+        { kind: 'hour_before' as const },
+        { kind: 'day_before' as const },
+        { kind: 'event_end' as const },
+        { kind: 'at' as const, at: '2027-03-08T00:00:00.000Z' },
+      ];
+      const types = starts.flatMap((salesStart) =>
+        ends.map((salesEnd) => ({ salesStart, salesEnd })),
+      );
+      const edges = [
+        event.publishedAt,
+        event.startsAt,
+        event.endsAt,
+        new Date(event.startsAt.getTime() - HOUR),
+        new Date(event.startsAt.getTime() - 24 * HOUR),
+        ...starts.flatMap((s) => (s.kind === 'at' ? [new Date(s.at)] : [])),
+        ...ends.flatMap((e) => (e.kind === 'at' ? [new Date(e.at)] : [])),
+      ];
+      const moments = edges.flatMap((edge) =>
+        [-1, 0, 1].map((ms) => new Date(edge.getTime() + ms)),
+      );
+
+      const inSql = await withOwner(async (client) => {
+        await client.query(
+          `update catalogue.events set published_at = $2, starts_at = $3, ends_at = $4
+            where id = $1`,
+          [live.id, event.publishedAt, event.startsAt, event.endsAt],
+        );
+        await client.query('delete from catalogue.ticket_types where event_id = $1', [live.id]);
+        for (const [i, type] of types.entries()) {
+          await client.query(
+            `insert into catalogue.ticket_types (event_id, organisation_id, name, capacity,
+               max_per_order, sales_start, sales_end, position)
+             values ($1, $2, $3, 10, 2, $4, $5, $6)`,
+            [
+              live.id,
+              org,
+              `Type ${i}`,
+              JSON.stringify(type.salesStart),
+              JSON.stringify(type.salesEnd),
+              i,
+            ],
+          );
+        }
+        const { rows } = await client.query<{ on_sale: boolean }>(
+          `select catalogue.ticket_on_sale(t, e, m.at) as on_sale
+             from unnest($2::timestamptz[]) with ordinality as m (at, n)
+             cross join catalogue.ticket_types t join catalogue.events e on e.id = t.event_id
+            where t.event_id = $1 order by m.n, t.position`,
+          [live.id, moments],
+        );
+        return rows.map((row) => row.on_sale);
+      });
+      const inTs = moments.flatMap((now) =>
+        types.map((type) => onSale(type.salesStart, type.salesEnd, event, now)),
+      );
+      expect(inTs).toContain(true);
+      expect(inTs).toContain(false);
+      expect(inSql).toEqual(inTs);
     });
   });
 
