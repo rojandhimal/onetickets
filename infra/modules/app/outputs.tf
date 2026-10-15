@@ -65,3 +65,7 @@ output "certificate_validation_records" {
 output "uploads_bucket" {
   value = aws_s3_bucket.uploads.id
 }
+
+output "log_group_names" {
+  value = { for k, g in aws_cloudwatch_log_group.app : k => g.name }
+}

@@ -98,6 +98,17 @@ variable "api_sentry_dsn" {
   default     = ""
 }
 
+variable "api_magic_link_hourly_cap" {
+  description = "Sign-in emails the whole service may send in a rolling hour. Protects SES reputation; set well above peak sign-ins."
+  type        = number
+  default     = 300
+
+  validation {
+    condition     = var.api_magic_link_hourly_cap >= 1 && floor(var.api_magic_link_hourly_cap) == var.api_magic_link_hourly_cap
+    error_message = "api_magic_link_hourly_cap must be a whole number above 0."
+  }
+}
+
 variable "api_log_level" {
   type    = string
   default = "info"
