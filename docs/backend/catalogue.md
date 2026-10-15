@@ -81,5 +81,9 @@ this module.
 ## Known limits and follow-ups
 
 - SEC-15: per-user rate limit on banner uploads and one image job at a time.
-- Prices: `pricing.ts` is the one place buyer prices are worked out. Sprint 4 adds the fees there.
+- Prices: the "from" price rule (cheapest type on sale, else cheapest of all) is one SQL function,
+  `catalogue.from_price_cents` (migration 0006), used by browse, its free/paid filter and the event
+  page. Its on-sale test, `catalogue.ticket_on_sale`, repeats `sales-window.ts`, which still sets each
+  type's `onSale` flag; an integration test keeps the two in step. Fees go on top in `pricing.ts`
+  (Sprint 4), and only ever raise a price above 0, so free stays free.
 - Public responses don't send `Cache-Control` yet, and nothing revalidates a cache on publish.

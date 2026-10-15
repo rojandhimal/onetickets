@@ -26,7 +26,7 @@ import {
   type TicketTypeRow,
 } from './events.repository.js';
 import { toPlainLine, toPlainText } from './plain-text.js';
-import { allInPriceCents, fromPriceCents } from './pricing.js';
+import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
@@ -286,18 +286,18 @@ export class EventsService {
     return this.uow.run({}, async (tx) => {
       const event = await this.events.findPublished(tx, slug);
       if (!event) return null;
-      const [types, organiser] = await Promise.all([
-        this.events.ticketTypes(tx, [event.id]),
-        this.events.organiserName(tx, event.organisation_id),
-      ]);
-      return this.toPublicDto(event, types, organiser ?? '', new Date());
+      const now = new Date();
+      const types = await this.events.ticketTypes(tx, [event.id]);
+      const organiser = await this.events.organiserName(tx, event.organisation_id);
+      const fromCents = await this.events.fromPriceCents(tx, event.id, now);
+      return this.toPublicDto(event, types, organiser ?? '', fromCents, now);
     });
   }
 
   async browse(query: BrowseQuery): Promise<BrowseResponse> {
     const after = query.cursor ? decodeCursor(query.cursor) : undefined;
     const now = new Date();
-    const { rows, types } = await this.uow.run({}, async (tx) => {
+    const { rows } = await this.uow.run({}, async (tx) => {
       const rows = await this.events.browse(tx, {
         city: query.city,
         timeZone: CITY_TIME_ZONES[query.city],
@@ -307,8 +307,7 @@ export class EventsService {
         limit: query.limit + 1,
         now,
       });
-      const ids = rows.slice(0, query.limit).map((row) => row.id);
-      return { rows, types: await this.events.ticketTypes(tx, ids) };
+      return { rows };
     });
     const page = rows.slice(0, query.limit);
     const last = page.at(-1);
@@ -323,14 +322,7 @@ export class EventsService {
         venueName: row.venue?.kind === 'place' ? row.venue.name : null,
         online: row.venue?.kind === 'online',
         banner: this.bannerDto(row),
-        priceFromAllInCents: fromPriceCents(
-          types
-            .filter((t) => t.event_id === row.id)
-            .map((t) => ({
-              priceCents: t.price_cents,
-              onSale: onSale(t.sales_start, t.sales_end, times(row), now),
-            })),
-        ),
+        priceFromAllInCents: allInPriceCents(row.price_from_cents),
       })),
       nextCursor:
         rows.length > query.limit && last
@@ -491,6 +483,7 @@ export class EventsService {
     row: EventRow,
     types: TicketTypeRow[],
     organiser: string,
+    fromCents: number,
     now: Date,
   ): PublicEventDto {
     const ticketTypes = types.map((t) => ({
@@ -517,9 +510,7 @@ export class EventsService {
       cancellationPolicy: row.cancellation_policy,
       hasContactEmail: row.contact_email !== null,
       banner: this.bannerDto(row),
-      priceFromAllInCents: fromPriceCents(
-        types.map((t, i) => ({ priceCents: t.price_cents, onSale: ticketTypes[i]!.onSale })),
-      ),
+      priceFromAllInCents: allInPriceCents(fromCents),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
       ticketTypes,
     };
