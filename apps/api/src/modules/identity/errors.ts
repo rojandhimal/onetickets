@@ -2,8 +2,15 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 /** An HTTP error with a stable `code` the web app can switch on (see ApiErrorBody). */
 export class ApiError extends HttpException {
-  constructor(status: HttpStatus, code: string, message: string, field?: string) {
-    super({ statusCode: status, code, message, ...(field ? { field } : {}) }, status);
+  constructor(
+    status: HttpStatus,
+    code: string,
+    message: string,
+    field?: string,
+    /** Extra body fields for this code, e.g. `missing` on `not_ready`. */
+    extra: Record<string, unknown> = {},
+  ) {
+    super({ ...extra, statusCode: status, code, message, ...(field ? { field } : {}) }, status);
   }
 }
 
