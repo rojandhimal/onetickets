@@ -34,3 +34,11 @@ route without one of these decorators:
 
 `apps/api/test/rls.int.test.ts` fails CI if any module table lacks RLS, `FORCE` or an `ot_app`
 policy, so step 2 or 3 cannot be forgotten.
+
+## Backfills in migrations
+
+Migrations run as the owner, which `FORCE` fences like any other role, in CI, locally and on RDS.
+An `UPDATE` or `DELETE` on an existing table therefore matches no rows, without an error, unless
+a policy lets the owner in. Before the backfill, add a policy such as
+`create policy backfill on <table> to current_user using (true) with check (true)`, and drop it
+after the backfill in the same migration. Add a test that checks the backfilled rows.
