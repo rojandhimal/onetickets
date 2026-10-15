@@ -168,7 +168,7 @@ resource "aws_cloudwatch_log_metric_filter" "magic_link_cap" {
 
 resource "aws_cloudwatch_metric_alarm" "magic_link_cap" {
   alarm_name          = "${var.name}-magic-link-cap-reached"
-  alarm_description   = "Sign-in email cap reached: sign-in links are being refused. Check for a flood, or raise magic_link_hourly_cap."
+  alarm_description   = "Sign-in email cap reached: new sign-in links are refused for up to an hour (rolling window), even after this alarm returns to OK. Check for a flood, or raise magic_link_hourly_cap."
   namespace           = aws_cloudwatch_log_metric_filter.magic_link_cap.metric_transformation[0].namespace
   metric_name         = aws_cloudwatch_log_metric_filter.magic_link_cap.metric_transformation[0].name
   statistic           = "Sum"
@@ -177,6 +177,7 @@ resource "aws_cloudwatch_metric_alarm" "magic_link_cap" {
   comparison_operator = "GreaterThanOrEqualToThreshold"
   threshold           = 1
   treat_missing_data  = "notBreaching"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
+  # No ok_actions: the warning is logged once, when the cap is crossed, so the alarm goes back
+  # to OK after 5 minutes while links are still being refused. An "OK" email would mislead.
+  alarm_actions = [aws_sns_topic.alerts.arn]
 }
