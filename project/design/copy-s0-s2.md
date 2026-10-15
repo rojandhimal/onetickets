@@ -1,0 +1,183 @@
+# Final UX copy: Sprints 0 to 2
+
+Owner: ProductDesign. Build with this wording; it overrides the canvas where they differ. Canvas: [OneTickets UI Design](https://claude.ai/artifact/WZa21VJz8uyaJDJQFueSMv) (version 23). Placeholders in {braces}.
+
+## Voice
+
+- Plain Australian English, second person, short sentences. "Organiser", "cancelled", "colour", dates as "Sat 14 Nov", times as "10:00 am".
+- Say what happened and what to do next. No blame, no "Oops", no "Error:" prefixes, no exclamation marks except "You're going!".
+- Buttons say what they do, verb first: "Get 2 free tickets", not "Submit" or "Continue" where a specific verb fits.
+- Never hint whether an email has an account (sign-up, sign-in and My tickets all use the same "we've sent a link" copy).
+- Money is always all-in: "Free", "A$53.35", "From A$53.35 all-in".
+
+## Sprint 0: sign-up, sign-in, empty home (0a, 0b)
+
+| Where                                                               | Copy                                                                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 0a sign-up heading / subhead                                        | Run your first event tonight / Free events cost nothing. Sign up with just your email.                                              |
+| Google button                                                       | Continue with Google                                                                                                                |
+| Divider                                                             | or use your email                                                                                                                   |
+| Email label                                                         | Email                                                                                                                               |
+| Notice                                                              | No ABN or bank details needed now. We'll ask for them only when you first sell paid tickets.                                        |
+| Primary button / sending                                            | Email me a sign-in link / Sending link…                                                                                             |
+| Switch link                                                         | Already signed up? Sign in                                                                                                          |
+| Legal                                                               | By continuing you agree to the organiser terms and privacy policy.                                                                  |
+| /signin heading / subhead                                           | Welcome back / Sign in with Google or get a link by email.                                                                          |
+| /signin switch link                                                 | New to OneTickets? Sign up                                                                                                          |
+| Sent heading / body                                                 | Check your email / We've sent a link to **{email}**. Open it on any device within 15 minutes. Not there? Check your spam folder.    |
+| Sent actions                                                        | Use a different email · Didn't get it? Send it again · (while waiting) You can resend in {n}s                                       |
+| After resend (status)                                               | Sent again. Check your spam folder if it's not there.                                                                               |
+| Name step heading / subhead                                         | One last thing / Tell us who's running your events.                                                                                 |
+| Name field / hint                                                   | Organiser name / Shown on your event pages. Your own name is fine.                                                                  |
+| Name step button                                                    | Continue                                                                                                                            |
+| 0b greeting                                                         | Welcome, {first name} (fall back to "Welcome" with no name)                                                                         |
+| 0b empty state                                                      | No events yet / Pick a template to start. We'll fill in sensible defaults and you can change anything.                              |
+| Blank option                                                        | Start from a blank event                                                                                                            |
+| Template "Coming soon" chip (until S1-1 ships)                      | Coming soon · screen-reader text: "{template}, coming soon"                                                                         |
+| Template list for Finance and Door staff (they can't create events) | Only owners and admins can create events. Ask an owner to add you as an admin. (Finance and Door staff can't see who the owner is.) |
+| 0b warm notice                                                      | Selling paid tickets? You'll add your ABN and bank details when you create your first paid ticket. Free events never need them.     |
+
+**Errors (0a, /signin, name step)**
+
+| Case                 | Copy                                                                        |
+| -------------------- | --------------------------------------------------------------------------- |
+| Email empty          | Enter your email address                                                    |
+| No @                 | Add an @, like priya@example.com                                            |
+| Nothing after @      | Add the part after the @, like gmail.com                                    |
+| Organiser name empty | Enter an organiser name. Your own name is fine                              |
+| Name too long        | Keep it to 80 characters or fewer                                           |
+| Google didn't finish | Google sign-in didn't finish. Try again, or use your email instead.         |
+| Link expired or used | That sign-in link has expired or was already used. Send yourself a new one. |
+| Rate limited         | You've asked for a few links in a row. Wait a minute, then try again.       |
+| Send failed          | We couldn't send the link. Check your connection and try again.             |
+
+FrontendDev's current strings for all of the above are approved as they are; only the Sent body, resend status and sign-in/name-step copy are new.
+
+## Sprint 1: create, publish, browse (6 to 8c, 1, 2)
+
+| Where                              | Copy                                                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Wizard steps                       | 1 Basics · 2 Tickets · 3 Details · 4 Review                                                                       |
+| Autosave states                    | Draft saved · Saving… · Saved on this phone                                                                       |
+| Close (aria-label)                 | Close and keep draft                                                                                              |
+| Step 1 heading                     | What's on? / Using the {template} template. You can change anything later.                                        |
+| Banner empty                       | Add a banner image / Upload or take a photo. Without one we use your template colour.                             |
+| Banner hint                        | 2:1 works best (2160 × 1080 px). JPG or PNG up to 10 MB. (iPhones convert HEIC photos to JPG when you pick them.) |
+| Banner actions                     | Replace · Adjust crop · Remove                                                                                    |
+| Venue hint                         | Use the up and down arrows to pick a suggestion, Enter to choose.                                                 |
+| Online link hint                   | Only people with a ticket see this link.                                                                          |
+| Preview label                      | How attendees will see it                                                                                         |
+| Next buttons                       | Next: tickets · Next: details · Next: review                                                                      |
+| Step 2 free line                   | Free ticket. No fees for you or your guests.                                                                      |
+| Capacity label / hint              | How many tickets? / Your venue capacity                                                                           |
+| Stepper aria-labels                | 5 fewer tickets · 5 more tickets                                                                                  |
+| Add type / hint                    | Add another ticket type / For example members, kids or a group of four. Each type has its own number of tickets.  |
+| Step 3 heading                     | Tell people more / All optional, but events with these get more bookings.                                         |
+| About hint                         | Say what people will do and what to bring.                                                                        |
+| Accessibility hint                 | Shown near the top of your event page. Tick what's true for your venue.                                           |
+| Access free text / hint            | Anything else people should know? / For example parking, lighting, noise or a contact for access requests.        |
+| Contact email hint                 | Only shown to people with a ticket.                                                                               |
+| Step 4 heading                     | Check and publish                                                                                                 |
+| Checklist groups                   | Needed to publish · Nice to have                                                                                  |
+| Row actions                        | Edit · Add                                                                                                        |
+| Publish button / footnote          | Publish event / You can edit the event after it's live. We'll email anyone booked about big changes.              |
+| Published                          | Your event is live / Share the link and we'll tell you the moment someone books.                                  |
+| Copy button / status               | Copy → Copied / Link copied                                                                                       |
+| Share button                       | Share to Instagram, WhatsApp…                                                                                     |
+| Published links                    | See your event page · Back to your events                                                                         |
+| Browse filter groups (sr)          | When · Price                                                                                                      |
+| Browse note                        | Prices shown are what you pay. No fees added later.                                                               |
+| Browse headings                    | Coming up near you · On tonight · This weekend · Next 7 days                                                      |
+| Event page access row, nothing set | No accessibility details yet · Booked? Reply to your confirmation email to ask the organiser.                     |
+| Event page bar                     | Get tickets · {n} spots left                                                                                      |
+
+**Errors (Sprint 1)**
+
+| Case                                             | Copy                                                                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Event name empty                                 | Give your event a name                                                                                                   |
+| Date in the past                                 | Pick a date from today on                                                                                                |
+| End time same as start                           | End time needs to be after the start                                                                                     |
+| End time earlier than start (hint, not an error) | Ends the next day                                                                                                        |
+| Venue not picked from list                       | Pick an address from the list so people can find it                                                                      |
+| Online link not a URL                            | Add the full link, starting with https://                                                                                |
+| Capacity under 1                                 | Set at least 1 ticket                                                                                                    |
+| Max per order over capacity                      | Can't be more than {capacity}, the number of tickets                                                                     |
+| Sales end before start                           | Sales need to end after they start                                                                                       |
+| Banner too big / wrong type                      | That file is over 10 MB. Try a smaller photo. / Use a JPG or PNG image.                                                  |
+| Publish blocked                                  | **Add {missing item} to publish.** Everything else is ready. (Several: **Add a venue and a ticket type to publish.**)    |
+| Autosave failed while online                     | Couldn't save. We'll keep trying. (status, no alert; switches back to "Draft saved")                                     |
+| Header while the api refuses a field             | Couldn't save one field. Check the message under it. (status; the field keeps its value with the api's message under it) |
+
+## Sprint 2: checkout, tickets, My tickets (3, 4, 5)
+
+| Where                    | Copy                                                                                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Checkout heading         | Get your tickets                                                                                                     |
+| Hold notice              | We're holding {n} {ticket/tickets} for you while you finish. Take your time.                                         |
+| Ticket row meta          | Free · up to {n} per order · sold out row: Free · all taken + chip "Sold out"                                        |
+| Details heading / hint   | Who's the ticket for? / Both fields are required.                                                                    |
+| Email reassurance        | We'll email your tickets here. No account or password needed.                                                        |
+| Opt-in                   | Send me news about future events from {organiser} (optional)                                                         |
+| Button states            | Get {n} free {ticket/tickets} · Choose at least 1 ticket · Booking your {ticket/tickets}…                            |
+| Footnote                 | Free tickets can be released any time before the event. (Use the organiser's policy when it differs.)                |
+| Confirmation             | You're going! / We've also emailed your {ticket/tickets} to {email}                                                  |
+| Ticket pager             | Ticket {i} of {n} · Previous ticket · Next ticket                                                                    |
+| QR note                  | Screen brightness goes up while this is open so the door can scan it.                                                |
+| Offline chip             | Works offline                                                                                                        |
+| Ticket actions           | Add to calendar · Find more events                                                                                   |
+| My tickets tabs          | Upcoming · Past                                                                                                      |
+| Row status               | Show QR · Attended · Released                                                                                        |
+| My tickets help          | Bought tickets on another device? Use the link in your confirmation email and they'll show up here.                  |
+| Empty upcoming           | No upcoming tickets. · Find something on this weekend                                                                |
+| Signed out               | Find your tickets / Enter the email you booked with and we'll send you a link. No password needed. / Email me a link |
+| Signed out sent          | Check your email / If **{email}** has tickets, the link is on its way. It works for 15 minutes.                      |
+| Release ticket (confirm) | Release this ticket? / Your spot goes back on sale and the QR stops working. / Release ticket · Keep it              |
+| Event sold out bar       | All {n} taken · Sold out                                                                                             |
+| Held, not sold           | All taken right now. Check back in a few minutes.                                                                    |
+
+**Errors (Sprint 2)**
+
+| Case                             | Copy                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Name empty                       | Enter the name for the ticket                                                                                |
+| Email (same three as sign-up)    | Enter your email address · Add an @, like jordan@example.com · Add the part after the @, like gmail.com      |
+| Ran out at submit                | **Only {n} {type} {ticket was/tickets were} left.** We've changed your order to {n}. Check it and try again. |
+| Sold out at submit               | **Those tickets have just gone.** Nothing was booked. · Back to the event                                    |
+| Network failure on submit        | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                 |
+| Ticket link expired (My tickets) | That link has expired. Enter your email and we'll send a new one.                                            |
+
+## Emails (S0 to S2)
+
+**Sign-in link** (sign-up and sign-in use the same email)
+
+- Subject: Your OneTickets sign-in link
+- Preheader: It works for 15 minutes.
+- Body: Hi, here's your link to sign in to OneTickets. / [Sign in to OneTickets] / It works once, for 15 minutes, on any device. If you didn't ask for this, you can ignore this email; nobody can sign in without the link.
+
+**Ticket confirmation** (S2-3)
+
+- Subject: Your tickets for {event}, {Sat 14 Nov}
+- Preheader: {n} {ticket/tickets} · {venue suburb} · doors {time}
+- Body: Hi {first name}, you're going to **{event}**. / {date} · {start} to {end} / {venue}, {address} / QR code inline for each ticket, labelled "Ticket {i} of {n} · {type} · Ref {ref}" / Show the QR at the door. A screenshot or the attached PDF works too. / [See my tickets] (magic link to My tickets) · [Add to calendar] / Access: {summary or "Ask the organiser: {contact email}"} / Can't go? [Release your ticket] so someone else can have it. / Questions about the event? Reply to this email to reach {organiser}.
+- Footer: Sold by {organiser}. Sent by OneTickets. {Unsubscribe from {organiser}'s news, only if opted in}
+
+**My tickets link** (from "Find your tickets")
+
+- Subject: Your OneTickets tickets
+- Body: Here's your link to see your tickets. It works for 15 minutes. / [Open my tickets] / If you didn't ask for this, you can ignore this email.
+
+**Ticket released** (S2, attendee releases a free ticket)
+
+- Subject: You've released your ticket for {event}
+- Body: Your ticket for {event} on {date} is released and the QR no longer works. Changed your mind? [Get tickets again] while there are spots left.
+
+**Organiser: event published** (S1)
+
+- Subject: {event} is live
+- Body: Your event page is live at {link}. Share it anywhere: Instagram, WhatsApp, your newsletter. We'll email you when someone books.
+
+**Organiser: first booking** (S2; full first-sale notice in S6-2)
+
+- Subject: First booking for {event}
+- Body: {first name} just booked {n} {ticket/tickets}. You've got {sold} of {capacity} booked. [See your event]

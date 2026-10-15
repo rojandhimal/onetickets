@@ -84,14 +84,16 @@ only through its `index.ts`; see [apps/api/src/modules/README.md](apps/api/src/m
 
 ## Documentation
 
-| Doc                                              | Read it when                                                          |
-| ------------------------------------------------ | --------------------------------------------------------------------- |
-| [Running locally](docs/local-development.md)     | Running the whole app or developing, demo links, troubleshooting      |
-| [Architecture](docs/architecture.md)             | You need to know how the pieces fit and why                           |
-| [Contributing](CONTRIBUTING.md)                  | Opening a branch or pull request                                      |
-| [Web app](docs/web/README.md)                    | Working on the web app: pages, sign-in flow, env vars, error tracking |
-| [Testing](docs/testing.md)                       | Writing or running tests                                              |
-| [Security checklist](docs/security/checklist.md) | Touching auth, roles, personal data, money or secrets                 |
-| [Environments](docs/environments.md)             | Asking "where does this run?"                                         |
-| [Roadmap](docs/roadmap.md)                       | Asking "what's being built, and when?"                                |
-| [Decisions (ADRs)](docs/adr/README.md)           | Asking "why did we do it this way?"                                   |
+| Doc                                                    | Read it when                                                          |
+| ------------------------------------------------------ | --------------------------------------------------------------------- |
+| [Running locally](docs/local-development.md)           | Running the whole app or developing, demo links, troubleshooting      |
+| [Architecture](docs/architecture.md)                   | You need to know how the pieces fit and why                           |
+| [Contributing](CONTRIBUTING.md)                        | Opening a branch or pull request                                      |
+| [Web app](docs/web/README.md)                          | Working on the web app: pages, sign-in flow, env vars, error tracking |
+| [Testing](docs/testing.md)                             | Writing or running tests                                              |
+| [Security checklist](docs/security/checklist.md)       | Touching auth, roles, personal data, money or secrets                 |
+| [Environments](docs/environments.md)                   | Asking "where does this run?"                                         |
+| [Roadmap](docs/roadmap.md)                             | Asking "what's being built, and when?"                                |
+| [Decisions (ADRs)](docs/adr/README.md)                 | Asking "why did we do it this way?"                                   |
+| [AGENTS.md](AGENTS.md) and [agents/](agents/README.md) | Working with an AI agent, in any tool                                 |
+| [Project files](project/README.md)                     | Looking for the sprint board, progress, design handoffs or QA notes   |
