@@ -22,7 +22,7 @@ export class UnsupportedImageError extends Error {}
  * whatever the request's Content-Type says.
  */
 export async function processBanner(upload: Buffer): Promise<ProcessedBanner> {
-  let metadata: sharp.Metadata;
+  let metadata: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
   try {
     metadata = await sharp(upload, { limitInputPixels: 40_000_000 }).metadata();
   } catch {
