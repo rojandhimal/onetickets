@@ -23,15 +23,19 @@ pnpm --filter @onetickets/api test         # one package
 ## Integration tests
 
 Api endpoints, migrations and row-level security, against a real Postgres. They need Postgres
-running (`docker compose up -d postgres mailpit`) and the owner's connection string:
+running (`docker compose up -d postgres mailpit`):
 
 ```sh
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+pnpm test:integration
 ```
 
-The test setup migrates the database as the owner, then runs the api as `ot_app_test`, a login
-role with only `ot_app`, exactly like production. A superuser would skip row-level security and
-prove nothing.
+The test setup migrates the database as `onetickets_owner`, which owns the database and can create
+roles but is not a superuser, like the RDS master user. A migration that only works as a superuser
+fails here, not in staging. The api then runs as `ot_app_test`, a login role with only `ot_app`,
+exactly like production; a superuser would skip row-level security and prove nothing. Tests seed
+and inspect rows as the `postgres` superuser, because forced row-level security fences the owner
+too. `MIGRATION_DATABASE_URL` and `TEST_SUPERUSER_DATABASE_URL` override the two connections; the
+defaults match docker compose.
 
 ## End-to-end and accessibility tests
 

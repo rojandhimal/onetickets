@@ -3,7 +3,7 @@
 # the api connects as (granted ot_app, so row-level security applies, as in production).
 set -euo pipefail
 
-: "${MIGRATION_DATABASE_URL:=postgres://onetickets:onetickets@localhost:5432/onetickets}"
+: "${MIGRATION_DATABASE_URL:=postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets}"
 export MIGRATION_DATABASE_URL
 
 pnpm --filter @onetickets/api migrate
