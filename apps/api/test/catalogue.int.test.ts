@@ -599,7 +599,7 @@ describe('events and ticket types API', () => {
     await withOwner((client) =>
       client.query(
         `update catalogue.ticket_types set price_cents = case name when 'VIP' then 4500 else 1200 end,
-           -- The cheaper type isn't on sale yet: "from" still counts it, on the card and the page.
+           -- The cheaper type isn't on sale yet, so "from" is the cheapest one on sale.
            sales_start = case name when 'VIP' then sales_start
              else jsonb_build_object('kind', 'at', 'at', now() + interval '2 days') end
           where event_id = $1`,
@@ -626,8 +626,8 @@ describe('events and ticket types API', () => {
         expect.objectContaining({ allInPriceCents: 4500, onSale: true }),
       ]),
     );
-    expect(page.body.priceFromAllInCents).toBe(1200);
-    expect((await card())?.priceFromAllInCents).toBe(1200);
+    expect(page.body.priceFromAllInCents).toBe(4500);
+    expect((await card())?.priceFromAllInCents).toBe(4500);
     expect(await card('paid')).toBeDefined();
     expect(await card('free')).toBeUndefined();
   });

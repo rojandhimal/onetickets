@@ -288,7 +288,10 @@ export interface PublicEventDto {
   /** Whether the organiser left a contact email for attendees (the address itself is private). */
   hasContactEmail: boolean;
   banner: BannerDto | null;
-  /** Lowest all-in price across all the event's ticket types (the api's one pricing function). */
+  /**
+   * Lowest all-in price across the types on sale, or across all types if none is on sale (the
+   * api's one pricing function; browse cards use the same).
+   */
   priceFromAllInCents: number;
   spotsLeft: number;
   ticketTypes: PublicTicketTypeDto[];

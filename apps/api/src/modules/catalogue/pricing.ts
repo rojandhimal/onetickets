@@ -12,9 +12,11 @@ export function allInPriceCents(priceCents: number): number {
 
 /**
  * The "from" price on a browse card and the event page: the cheapest all-in price among the
- * event's ticket types, or 0 with none. It is free exactly when some ticket type costs nothing,
- * which is what browse's `price=free` filter matches in SQL.
+ * ticket types on sale now, or among all of them when none is (before sales open, or after they
+ * close), so an early bird that has finished stops pulling the price down. 0 with no types.
  */
-export function fromPriceCents(priceCents: readonly number[]): number {
-  return priceCents.length === 0 ? 0 : Math.min(...priceCents.map(allInPriceCents));
+export function fromPriceCents(types: readonly { priceCents: number; onSale: boolean }[]): number {
+  const onSale = types.filter((t) => t.onSale);
+  const counted = onSale.length > 0 ? onSale : types;
+  return counted.length === 0 ? 0 : Math.min(...counted.map((t) => allInPriceCents(t.priceCents)));
 }

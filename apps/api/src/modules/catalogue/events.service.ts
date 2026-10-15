@@ -296,6 +296,7 @@ export class EventsService {
 
   async browse(query: BrowseQuery): Promise<BrowseResponse> {
     const after = query.cursor ? decodeCursor(query.cursor) : undefined;
+    const now = new Date();
     const { rows, types } = await this.uow.run({}, async (tx) => {
       const rows = await this.events.browse(tx, {
         city: query.city,
@@ -304,7 +305,7 @@ export class EventsService {
         price: query.price,
         after,
         limit: query.limit + 1,
-        now: new Date(),
+        now,
       });
       const ids = rows.slice(0, query.limit).map((row) => row.id);
       return { rows, types: await this.events.ticketTypes(tx, ids) };
@@ -323,7 +324,12 @@ export class EventsService {
         online: row.venue?.kind === 'online',
         banner: this.bannerDto(row),
         priceFromAllInCents: fromPriceCents(
-          types.filter((t) => t.event_id === row.id).map((t) => t.price_cents),
+          types
+            .filter((t) => t.event_id === row.id)
+            .map((t) => ({
+              priceCents: t.price_cents,
+              onSale: onSale(t.sales_start, t.sales_end, times(row), now),
+            })),
         ),
       })),
       nextCursor:
@@ -511,7 +517,9 @@ export class EventsService {
       cancellationPolicy: row.cancellation_policy,
       hasContactEmail: row.contact_email !== null,
       banner: this.bannerDto(row),
-      priceFromAllInCents: fromPriceCents(types.map((t) => t.price_cents)),
+      priceFromAllInCents: fromPriceCents(
+        types.map((t, i) => ({ priceCents: t.price_cents, onSale: ticketTypes[i]!.onSale })),
+      ),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
       ticketTypes,
     };
