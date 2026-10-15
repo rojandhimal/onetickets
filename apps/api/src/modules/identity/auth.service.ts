@@ -44,6 +44,7 @@ export class AuthService {
       max: this.config.magicLinkHourlyCap,
       windowMs: ONE_HOUR,
       rolling: true,
+      // An AWS alarm matches this text (infra/modules/alarms); magic-link-cap.int.test.ts pins it.
       warning: `Sign-in email cap of ${this.config.magicLinkHourlyCap}/hour reached; refusing more`,
     });
     const token = await this.uow.run({}, (tx) => this.magicLinks.issue(tx, email, organiserName));
