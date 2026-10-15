@@ -24,7 +24,8 @@ ARG NEXT_PUBLIC_SENTRY_DSN=
 ENV API_URL=$API_URL \
     NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
     NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @onetickets/web build
+# The web app imports @onetickets/shared from its built dist, so build it first.
+RUN pnpm --filter @onetickets/shared build && pnpm --filter @onetickets/web build
 
 FROM node:22-alpine
 ENV NODE_ENV=production \
