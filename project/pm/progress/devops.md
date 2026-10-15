@@ -1,0 +1,27 @@
+# Progress: devops
+
+Newest first. Format: date, Done, Next, Blocked.
+
+## 2026-10-15
+
+- **Done:** [#15](https://github.com/rojandhimal/onetickets/pull/15) merged (10 Oct) after Security's re-review. DEV-3 is up as draft [#19](https://github.com/rojandhimal/onetickets/pull/19): CI and compose now migrate as `onetickets_owner`, which like the RDS master isn't a superuser, and tests seed as postgres. Integration tests pass 88/88 with #16 and #18 merged on top.
+- **Next:** QA and Security review #19, and get its CI green. After that, SEC-5 and SEC-6, and the MAGIC_LINK_HOURLY_CAP variable.
+- **Blocked:** nothing.
+
+## 2026-10-10
+
+- **Done:** [#15](https://github.com/rojandhimal/onetickets/pull/15) S0-5 infra and S1 banner storage. It adds the API Sentry DSN and LOG_LEVEL, sets SENTRY_RELEASE on every deploy, and raises staging log retention to 30 days. Locally, banners use a volume with BANNER_STORAGE=local. infra/README now has a "Before staging goes live" list (S3, CloudFront, BANNER_PUBLIC_BASE_URL). Fixed both of Security's blockers: Terraform env changes now reach the tasks on the next deploy, and deploys drop SENTRY_TEST_ROUTE.
+- **Next:** Security re-review and green CI on #15, then tegs merges. After that, SEC-5 and SEC-6, and the MAGIC_LINK_HOURLY_CAP variable.
+- **Blocked:** nothing. tegs still needs to switch the repo's default branch to main.
+
+## 2026-10-09 (later)
+
+- **Done:** One-command local stack merged ([#11](https://github.com/rojandhimal/onetickets/pull/11)): web, api, Postgres, migrations and Mailpit with `docker compose up --build`, a non-engineer guide in docs/run-locally.md, and Cloudflare quick-tunnel demo steps. Fixed #4's description to match what merged.
+- **Next:** After #8 merges, fold run-locally.md into docs/local-development.md (unless the docs thread does it during their merge). Then SEC-5 and SEC-6, and MAGIC_LINK_HOURLY_CAP as a Terraform variable for launch.
+- **Blocked:** nothing.
+
+## 2026-10-09
+
+- **Done:** S0-2 AWS Terraform and deploy pipeline merged ([#4](https://github.com/rojandhimal/onetickets/pull/4)): staging and production accounts only, minimal staging switched off out of hours, all marked "later". One-command local stack (web, api, Postgres, migrations, Mailpit) with a non-engineer guide and Cloudflare quick-tunnel demo steps is up as draft [#11](https://github.com/rojandhimal/onetickets/pull/11). Checked LocalStack (not adopted, see ADR 0014 on #8).
+- **Next:** Get #11 green and reviewed. Then SEC-5 and SEC-6 follow-ups, and applying the AWS stacks when tegs creates the accounts.
+- **Blocked:** nothing. Magic-link emails reach Mailpit once BackendDev's #10 merges.
