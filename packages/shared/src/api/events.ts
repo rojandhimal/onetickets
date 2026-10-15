@@ -203,6 +203,8 @@ export interface TicketTypeDto extends TicketTypeInput {
 export interface BannerDto {
   /** A 2:1 WebP rendition. The web never builds image URLs itself. */
   url: string;
+  /** 1200 × 630 JPEG of the same banner, for link previews (og:image). */
+  ogUrl: string;
   width: number;
   height: number;
   focus: { x: number; y: number };
