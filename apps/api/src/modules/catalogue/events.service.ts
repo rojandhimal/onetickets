@@ -11,6 +11,7 @@ import {
   type PublicEventDto,
   type PublishNotReadyBody,
   type TicketTypeInput,
+  type VenueInput,
 } from '@onetickets/shared';
 import type pg from 'pg';
 import { UnitOfWork } from '../../database/database.module.js';
@@ -24,7 +25,7 @@ import {
   EventsRepository,
   type TicketTypeRow,
 } from './events.repository.js';
-import { toPlainText } from './plain-text.js';
+import { toPlainLine, toPlainText } from './plain-text.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
@@ -132,11 +133,8 @@ export class EventsService {
     return result.saved;
   }
 
-  async addTicketType(
-    actor: Actor,
-    eventId: string,
-    input: TicketTypeInput,
-  ): Promise<EventDraftDto> {
+  async addTicketType(actor: Actor, eventId: string, raw: TicketTypeInput): Promise<EventDraftDto> {
+    const input = cleanTicketType(raw);
     this.refusePaid(input);
     return this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
@@ -155,8 +153,9 @@ export class EventsService {
     actor: Actor,
     eventId: string,
     ticketTypeId: string,
-    input: TicketTypeInput,
+    raw: TicketTypeInput,
   ): Promise<EventDraftDto> {
+    const input = cleanTicketType(raw);
     this.refusePaid(input);
     return this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
@@ -353,11 +352,14 @@ export class EventsService {
 
   private changesFrom(patch: EventDraftPatch): EventChanges {
     return {
-      name: patch.name,
+      name:
+        patch.name === undefined || patch.name === null
+          ? patch.name
+          : plainLineOrRefuse(patch.name, 'name'),
       starts_at: patch.startsAt,
       ends_at: patch.endsAt,
       time_zone: patch.timeZone === undefined ? undefined : validTimeZone(patch.timeZone),
-      venue: patch.venue,
+      venue: patch.venue ? cleanVenue(patch.venue) : patch.venue,
       city:
         patch.venue === undefined
           ? undefined
@@ -520,6 +522,29 @@ const ticketTypeNotFound = () =>
 function resolveTime(value: string | null | undefined, stored: Date | null): Date | null {
   if (value === undefined) return stored;
   return value === null ? null : new Date(value);
+}
+
+/** Single-line text that must not end up empty once spoofing characters are removed. */
+function plainLineOrRefuse(value: string, field: string): string {
+  const clean = toPlainLine(value);
+  if (!clean) {
+    throw new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, 'invalid_request', 'Required.', field);
+  }
+  return clean;
+}
+
+function cleanVenue(venue: VenueInput): VenueInput {
+  if (venue.kind === 'online') return venue;
+  return {
+    ...venue,
+    name: plainLineOrRefuse(venue.name, 'venue'),
+    address: plainLineOrRefuse(venue.address, 'venue'),
+    suburb: plainLineOrRefuse(venue.suburb, 'venue'),
+  };
+}
+
+function cleanTicketType(input: TicketTypeInput): TicketTypeInput {
+  return { ...input, name: plainLineOrRefuse(input.name, 'name') };
 }
 
 function times(row: EventRow): EventTimes {

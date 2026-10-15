@@ -22,3 +22,11 @@ export function toPlainText(input: string): string {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
+/**
+ * Single-line public text (event and ticket type names, venue names and addresses): the same
+ * clean-up as toPlainText, with line breaks and tabs collapsed into single spaces.
+ */
+export function toPlainLine(input: string): string {
+  return toPlainText(input).replace(/\s+/g, ' ');
+}

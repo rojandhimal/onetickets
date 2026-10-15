@@ -196,6 +196,44 @@ describe('events and ticket types API', () => {
     });
   });
 
+  it('keeps names and venues to one clean line, with no hidden or reordering characters', async () => {
+    const event = await draft();
+    const { body } = await as(owner)
+      .patch(`${events()}/${event.id}`, {
+        version: 0,
+        name: 'Free gig ‮gpj.exe​\nnow',
+        venue: {
+          kind: 'place',
+          placeId: 'p1',
+          name: 'The⁦ Hall',
+          address: '1 Main St\r\nLevel 2',
+          suburb: 'Newtown‍',
+          city: 'sydney',
+          lat: -33.89,
+          lng: 151.18,
+        },
+      })
+      .expect(200);
+    expect(body).toMatchObject({
+      name: 'Free gig gpj.exe now',
+      venue: { name: 'The Hall', address: '1 Main St Level 2', suburb: 'Newtown' },
+    });
+    await as(owner).patch(`${events()}/${event.id}`, { version: 1, name: '‮​' }).expect(422);
+    const ticket = await as(owner)
+      .post(`${events()}/${event.id}/ticket-types`, {
+        name: 'General‮ admission',
+        capacity: 10,
+        maxPerOrder: 2,
+        priceCents: 0,
+        salesStart: { kind: 'on_publish' },
+        salesEnd: { kind: 'event_start' },
+      })
+      .expect(201);
+    expect(ticket.body.ticketTypes.map((t: { name: string }) => t.name)).toContain(
+      'General admission',
+    );
+  });
+
   it('refuses a stale autosave and returns the current draft', async () => {
     const event = await draft();
     await as(owner).patch(`${events()}/${event.id}`, { version: 0, name: 'First' }).expect(200);
@@ -515,6 +553,10 @@ describe('events and ticket types API', () => {
         .put(path, 'image/jpeg', Buffer.from('<svg onload="alert(1)"/>'))
         .expect(415);
       expect(fake.body.code).toBe('unsupported_image');
+      const gif = await as(owner)
+        .put(path, 'image/png', Buffer.from('GIF89a\u0001\u0000\u0001\u0000'))
+        .expect(415);
+      expect(gif.body.code).toBe('unsupported_image');
       const big = await as(owner)
         .put(path, 'image/jpeg', Buffer.alloc(10 * 1024 * 1024 + 1))
         .expect(413);

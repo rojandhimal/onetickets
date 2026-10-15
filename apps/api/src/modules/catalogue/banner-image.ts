@@ -21,7 +21,25 @@ export class UnsupportedImageError extends Error {}
  * are dropped. Phone photos are turned upright first. Only JPEG, PNG and WebP are decoded,
  * whatever the request's Content-Type says.
  */
+/**
+ * JPEG, PNG or WebP by their first bytes, checked before any decoder sees the upload, so other
+ * formats the image library could parse (SVG, GIF, TIFF, HEIF) never reach it.
+ */
+export function looksLikeAllowedImage(upload: Buffer): boolean {
+  const jpeg = upload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
+  const png = upload
+    .subarray(0, 8)
+    .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const webp =
+    upload.subarray(0, 4).toString('latin1') === 'RIFF' &&
+    upload.subarray(8, 12).toString('latin1') === 'WEBP';
+  return jpeg || png || webp;
+}
+
 export async function processBanner(upload: Buffer): Promise<ProcessedBanner> {
+  if (!looksLikeAllowedImage(upload)) {
+    throw new UnsupportedImageError('Only JPEG, PNG or WebP images.');
+  }
   let metadata: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
   try {
     metadata = await sharp(upload, { limitInputPixels: 40_000_000 }).metadata();

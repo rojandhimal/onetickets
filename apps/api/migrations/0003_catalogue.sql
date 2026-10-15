@@ -101,7 +101,24 @@ create policy ticket_types_worker on catalogue.ticket_types to ot_worker
   using (true) with check (true);
 
 -- The organiser's name for a public event page, without opening identity.organisations to the
--- public: only organisations with a published event, and only their name.
+-- public: only organisations with a published event, and only their name. The function runs as
+-- ot_public_reader, a role nobody can log in as, which may read just enough for this.
+do $$
+begin
+  if not exists (select from pg_roles where rolname = 'ot_public_reader') then
+    create role ot_public_reader nologin;
+  end if;
+end
+$$;
+grant ot_public_reader to current_user;
+grant usage on schema identity, catalogue to ot_public_reader;
+grant select (id, name) on identity.organisations to ot_public_reader;
+grant select (organisation_id, status) on catalogue.events to ot_public_reader;
+create policy organisations_public_reader on identity.organisations for select
+  to ot_public_reader using (true);
+create policy events_public_reader on catalogue.events for select
+  to ot_public_reader using (status = 'published');
+
 create function catalogue.organiser_name(p_organisation_id uuid) returns text
   language sql stable security definer
   set search_path = catalogue, identity, pg_temp
@@ -113,14 +130,10 @@ create function catalogue.organiser_name(p_organisation_id uuid) returns text
         where e.organisation_id = o.id and e.status = 'published'
       )
   $$;
+alter function catalogue.organiser_name(uuid) owner to ot_public_reader;
 revoke all on function catalogue.organiser_name(uuid) from public;
 grant execute on function catalogue.organiser_name(uuid) to ot_app, ot_worker;
-
--- organiser_name() runs as the owner, which FORCE subjects to RLS, so the owner gets read
--- policies on the two tables it reads.
-create policy organisations_owner_read on identity.organisations for select to current_user
-  using (true);
-create policy events_owner_read on catalogue.events for select to current_user using (true);
+revoke ot_public_reader from current_user;
 
 grant select, insert, update on catalogue.events to ot_app;
 grant select, insert, update, delete on catalogue.ticket_types to ot_app;

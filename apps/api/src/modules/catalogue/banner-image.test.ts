@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import { processBanner, UnsupportedImageError } from './banner-image.js';
+import { looksLikeAllowedImage, processBanner, UnsupportedImageError } from './banner-image.js';
 
 async function jpeg(width: number, height: number, withExif = false): Promise<Buffer> {
   let image = sharp({
@@ -44,5 +44,21 @@ describe('processBanner', () => {
       .gif()
       .toBuffer();
     await expect(processBanner(gif)).rejects.toBeInstanceOf(UnsupportedImageError);
+  });
+
+  it('only lets JPEG, PNG and WebP signatures reach the decoder', async () => {
+    const make = (format: 'jpeg' | 'png' | 'webp' | 'gif' | 'tiff') =>
+      sharp({ create: { width: 4, height: 4, channels: 3, background: '#fff' } })
+        .toFormat(format)
+        .toBuffer();
+    for (const format of ['jpeg', 'png', 'webp'] as const) {
+      expect(looksLikeAllowedImage(await make(format))).toBe(true);
+    }
+    for (const format of ['gif', 'tiff'] as const) {
+      expect(looksLikeAllowedImage(await make(format))).toBe(false);
+    }
+    expect(looksLikeAllowedImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'))).toBe(
+      false,
+    );
   });
 });

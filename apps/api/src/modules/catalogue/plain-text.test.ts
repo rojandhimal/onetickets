@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toPlainText } from './plain-text.js';
+import { toPlainLine, toPlainText } from './plain-text.js';
 
 describe('toPlainText', () => {
   it('removes tags and comments but keeps their text', () => {
@@ -21,5 +21,12 @@ describe('toPlainText', () => {
 
   it('keeps paragraphs but no more than one blank line', () => {
     expect(toPlainText('  One\r\n\r\n\r\n\r\nTwo  \nThree\t \n')).toBe('One\n\nTwo\nThree');
+  });
+
+  it('keeps names on one line with no spoofing characters', () => {
+    expect(toPlainLine('Free gig \u202Egpj.exe')).toBe('Free gig gpj.exe');
+    expect(toPlainLine('Pot\u200Btery\u200D <b>night</b>\n\n with  friends\t')).toBe(
+      'Pottery night with friends',
+    );
   });
 });
