@@ -162,7 +162,8 @@
   font-weight: 600;
   padding: 0;
 }
-.field input {
+.field input,
+.field select {
   scroll-margin-bottom: 96px;
   height: 50px;
   padding: 0 14px;
@@ -170,10 +171,12 @@
   border-radius: var(--radius-control);
   border: 1.5px solid var(--line-field);
   background: var(--white);
+  font-family: inherit;
   font-size: 16px;
   color: var(--ink);
 }
-.field input[aria-invalid='true'] {
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'] {
   border-color: var(--error);
 }
 
@@ -682,4 +685,124 @@
   flex-direction: column;
   gap: 4px;
   font-size: 15px;
+}
+
+/* S1-2 free ticket types (artboard 8). */
+.ticketCard {
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticketCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.freeLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--success-ink);
+}
+
+.stepperRow {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  gap: 8px;
+  align-items: center;
+}
+
+.stepperButton {
+  height: 50px;
+  min-width: 44px;
+  border-radius: var(--radius-control);
+  border: 1.5px solid var(--line-button);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stepperButton:hover {
+  border-color: var(--ink);
+}
+
+.ticketRowActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.ticketEditButton {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--indigo);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ticketEditButton:hover {
+  background: var(--indigo-tint);
+}
+
+.ticketRemoveButton {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  flex: none;
+}
+.ticketRemoveButton:hover:not(:disabled) {
+  color: var(--error);
+  background: var(--error-tint);
+}
+.ticketRemoveButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.addTypeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addTypeButton {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--radius-button);
+  border: 1.5px dashed var(--line-field);
+  background: var(--white);
+  color: var(--indigo);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.addTypeButton:hover {
+  border-color: var(--indigo);
+  background: var(--indigo-tint);
 }

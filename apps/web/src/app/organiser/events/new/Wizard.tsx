@@ -19,6 +19,7 @@ import {
 import { BasicsStep, END_SAME_AS_START, type ServerErrors } from './BasicsStep';
 import { LiveScreen } from './LiveScreen';
 import { ReviewStep } from './ReviewStep';
+import { type TicketSaveState, TicketsStep } from './TicketsStep';
 import styles from './wizard.module.css';
 
 const SAVE_TEXT: Record<SaveState, string> = {
@@ -59,6 +60,8 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const [event, setEvent] = useState(initialEvent);
   const [restored, setRestored] = useState(0);
   const [serverErrors, setServerErrors] = useState<ServerErrors>({});
+  const [ticketSaveState, setTicketSaveState] = useState<TicketSaveState>('saved');
+  const ticketFlushRef = useRef<(() => Promise<void>) | null>(null);
   const { saveState, change, flush, accept } = useAutosave({
     event: initialEvent,
     userId,
@@ -95,6 +98,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   useEffect(() => {
     if (lastStep.current === step) return;
     lastStep.current = step;
+    setTicketSaveState('saved');
     update({ lastStep: step });
     // Save now: someone who reaches a step and leaves by the browser should come back to it.
     void flush();
@@ -114,6 +118,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const go = useCallback(
     (to: WizardStep) => (e?: MouseEvent) => {
       e?.preventDefault();
+      void ticketFlushRef.current?.();
       void flush();
       window.history.pushState(null, '', stepHref(to, event.id));
     },
@@ -123,6 +128,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const leave = useCallback(
     async (e: MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
+      await ticketFlushRef.current?.();
       await flush();
       router.push('/organiser');
     },
@@ -134,7 +140,9 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
 
   // A field the api refused isn't saved, so the header mustn't say everything is.
   const refused = Object.keys(serverErrors).length > 0;
-  const shownState = refused && saveState === 'saved' ? 'refused' : saveState;
+  const draftShownState: TicketSaveState = refused && saveState === 'saved' ? 'refused' : saveState;
+  const shownState: TicketSaveState =
+    step === 'tickets' && ticketSaveState !== 'saved' ? ticketSaveState : draftShownState;
 
   const back = previousStep(step);
   const next = nextStep(step);
@@ -155,7 +163,15 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
       );
       break;
     case 'tickets':
-      body = <TicketsSummary event={event} headingRef={headingRef} />;
+      body = (
+        <TicketsStep
+          event={event}
+          headingRef={headingRef}
+          flushRef={ticketFlushRef}
+          onTicketChanged={accept}
+          onSaveStateChange={setTicketSaveState}
+        />
+      );
       break;
     case 'details':
       body = <DetailsComingSoon headingRef={headingRef} />;
@@ -200,8 +216,8 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
             <span className={styles.title}>New event</span>
             <span role="status" className={`${styles.saveState} ${styles[shownState]}`}>
               {shownState === 'saved' && <Icon name="check" size={14} />}
-              {saveState === 'offline' && <Icon name="wifi-off" size={14} />}
-              {shownState === 'refused' ? REFUSED_TEXT : SAVE_TEXT[saveState]}
+              {shownState === 'offline' && <Icon name="wifi-off" size={14} />}
+              {shownState === 'refused' ? REFUSED_TEXT : SAVE_TEXT[shownState]}
             </span>
           </div>
           <ol aria-label="Steps" className={styles.steps}>
@@ -248,36 +264,6 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
 }
 
 type HeadingRef = React.RefObject<HTMLHeadingElement | null>;
-
-// S1-2 replaces this with the ticket type editor; until then the template's default type shows.
-function TicketsSummary({ event, headingRef }: { event: EventDraftDto; headingRef: HeadingRef }) {
-  return (
-    <main className={styles.body}>
-      <div className={styles.heading}>
-        <h1 ref={headingRef} tabIndex={-1}>
-          Tickets
-        </h1>
-        <span className={styles.lede}>Your template added a free ticket type to start with.</span>
-      </div>
-      <ul className={styles.card} aria-label="Ticket types">
-        {event.ticketTypes.map((t) => (
-          <li key={t.id} className={styles.row}>
-            <span className={styles.rowText}>
-              <span className={styles.rowLabel}>{t.name}</span>
-              <span className={styles.rowValue}>
-                Free · {t.capacity} tickets · up to {t.maxPerOrder} per order
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div className={`${screen.notice} ${screen.noticeInfo}`}>
-        <Icon name="info" />
-        <p>Editing ticket types is coming next. You can publish with this one.</p>
-      </div>
-    </main>
-  );
-}
 
 // S1-4 replaces this with About, Accessibility, Cancellations and the contact email.
 function DetailsComingSoon({ headingRef }: { headingRef: HeadingRef }) {

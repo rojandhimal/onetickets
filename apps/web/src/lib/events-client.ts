@@ -5,6 +5,7 @@ import type {
   PlaceSuggestionDto,
   PublishNotReadyBody,
   StaleDraftBody,
+  TicketTypeInput,
   VenueInput,
 } from '@onetickets/shared';
 
@@ -146,5 +147,77 @@ async function bannerResult(res: Response | null): Promise<BannerResult> {
   }
   if (res.status === 413) return { ok: false, kind: 'too-large' };
   if (res.status === 415 || res.status === 422) return { ok: false, kind: 'wrong-type' };
+  return { ok: false, kind: 'failed' };
+}
+
+export type TicketTypeResult =
+  | { ok: true; event: EventDraftDto }
+  | { ok: false; kind: 'invalid'; field?: string; message: string; code?: string }
+  | { ok: false; kind: 'conflict'; message: string; code?: string }
+  | { ok: false; kind: 'offline' }
+  | { ok: false; kind: 'failed' };
+
+export async function addTicketType(
+  ref: EventRef,
+  input: TicketTypeInput,
+): Promise<TicketTypeResult> {
+  return ticketTypeResult(
+    await call(`${eventPath(ref)}/ticket-types`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function updateTicketType(
+  ref: EventRef,
+  ticketTypeId: string,
+  input: TicketTypeInput,
+): Promise<TicketTypeResult> {
+  return ticketTypeResult(
+    await call(`${eventPath(ref)}/ticket-types/${encodeURIComponent(ticketTypeId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function removeTicketType(
+  ref: EventRef,
+  ticketTypeId: string,
+): Promise<TicketTypeResult> {
+  return ticketTypeResult(
+    await call(`${eventPath(ref)}/ticket-types/${encodeURIComponent(ticketTypeId)}`, {
+      method: 'DELETE',
+    }),
+  );
+}
+
+async function ticketTypeResult(res: Response | null): Promise<TicketTypeResult> {
+  if (!res) return { ok: false, kind: 'offline' };
+  if (res.ok) {
+    const event = await json<EventDraftDto>(res);
+    return event ? { ok: true, event } : { ok: false, kind: 'failed' };
+  }
+  if (res.status === 409) {
+    const body = await json<ApiErrorBody>(res);
+    return {
+      ok: false,
+      kind: 'conflict',
+      message: body?.message ?? 'Some of these tickets are already sold or held.',
+      code: body?.code,
+    };
+  }
+  if (res.status === 422) {
+    const body = await json<ApiErrorBody>(res);
+    if (body?.message)
+      return {
+        ok: false,
+        kind: 'invalid',
+        field: body.field,
+        message: body.message,
+        code: body.code,
+      };
+  }
   return { ok: false, kind: 'failed' };
 }
