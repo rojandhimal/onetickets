@@ -1,15 +1,15 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 2026-10-10 03:05 UTC by PM. Other threads: send changes to PM rather than editing this file directly.
+Last updated: 2026-10-16 00:35 UTC by PM. Other threads: send changes to PM rather than editing this file directly.
 
 ## Where we are
 
 **Phase:** Sprint 0 closed 15 Oct (QA accepted once #18 merged). Sprint 1 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
-**Health:** 🟢 Ahead of plan, about a month early. The team lost 10 to 15 Oct to the plan's weekly usage limit. Sprint 1 PRs are open: S1 api (#16, Security passed, QA reviewing) and S1-1 wizard (#17, Security passed, ProductDesign asked for 3 must-fix items).
-**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev's S1-3 event page opens after #17 merges (one branch per thread). Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
+**Health:** 🟢 Ahead of plan, about a month early. The team lost 10 to 15 Oct to the plan's weekly usage limit. The S1 api (#16) and the S1-1 wizard (#17) have merged; the S1-3 event page is next.
+**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev's S1-3 event page PR is next, then S1-2, S1-4 and S1-5 (one branch per thread). Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
 
-**Merge queue for tegs:** #17 once FrontendDev updates it from main and CI is green; #20 (agent setup for any AI tool) any time. Still to do: switch the repo's default branch to main.
+**Merge queue for tegs:** empty. Still to do: switch the repo's default branch to main. Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green.
 
 ## Sprint calendar
 
@@ -35,11 +35,11 @@ Last updated: 2026-10-10 03:05 UTC by PM. Other threads: send changes to PM rath
 
 WIP limit: 2 cards in progress per builder.
 
-Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test strategy, PR checks against acceptance criteria), DevOps (S0-2 Terraform and deploy pipeline, S0-5 infra alarms), Security reviewer (threat model, reviews of auth, RLS, PII), ProductDesign (owns the design canvas, handoff specs, Sprint 1 and 2 designs, research prep). tegs reviews and merges PRs. Repo documentation thread owns README and docs/. Everyone follows the [working agreement](/project/pm/working-agreement.md): each PR updates its docs, and each thread logs progress in pm/progress/. CI ownership: BackendDev owns the main CI workflow (QA adds the test harness to it), Security reviewer owns a separate security workflow, and DevOps owns the deploy workflows.
+Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test strategy, PR checks against acceptance criteria), DevOps (S0-2 Terraform and deploy pipeline, S0-5 infra alarms), Security reviewer (threat model, reviews of auth, RLS, migrations, PII), ProductDesign (owns the design canvas, handoff specs, Sprint 1 and 2 designs, research prep). tegs reviews and merges PRs. Repo documentation thread owns README and docs/. Everyone follows the [working agreement](/project/pm/working-agreement.md): each PR updates its docs, and each thread logs progress in pm/progress/. CI ownership: BackendDev owns the main CI workflow (QA adds the test harness to it), Security reviewer owns a separate security workflow, and DevOps owns the deploy workflows.
 
 ### Backlog
 
-- Sprint 1 stories S1-2, S1-4, S1-5 (FrontendDev after S1-3). S1-3 event page is built and opens after #17 merges. Banner shown by default (showBanner flag) until tegs answers. Designs: canvas v23, [handoff-s1.md](/project/design/handoff-s1.md)
+- Sprint 1 stories S1-2, S1-4, S1-5 (FrontendDev after S1-3). Banner shown by default (showBanner flag) until tegs answers. Designs: canvas v23, [handoff-s1.md](/project/design/handoff-s1.md)
 - ARCH-1 Blocking fix: Stripe charges use on_behalf_of so the organiser is the seller. Fold into S4-3 acceptance criteria before Sprint 4 planning ([architecture review](https://claude.ai/code/artifact/01a2857b-b93c-4784-bffa-af9f6962663f))
 - ARCH-2 Blocking fix: waiting room must not show "sold out" while tickets are only held. Fold into S9-1 acceptance criteria
 - SEC-1 Card-testing defences (Turnstile, rate limits per IP/email/card, Radar rules, decline-spike alert) move from S9-2 into S4-3
@@ -49,7 +49,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-7 Before S3-1/S6-6 reach real users: member invites become pending invites that need acceptance (BackendDev)
 - SEC-8 Before S7 payouts: user-level security log (audit log is per organisation) that emails and logs recovery-code use and MFA reset. The MFA-enabled email already shipped in #10 (BackendDev)
 - SEC-9 Before launch: scheduled cleanup of spent magic links (they hold emails, so Privacy Act retention), OAuth states, rate-limit rows and expired sessions (BackendDev)
-- SEC-10 Before public launch: Cloudflare rate-limit rules on sign-in and /csp-report, plus Turnstile on sign-in; strip the incoming sentry-trace header at the edge for callers other than the web app; set MAGIC_LINK_HOURLY_CAP well above peak and alarm on its warning, since about 10 IPs can fill it (DevOps, FrontendDev)
+- SEC-10 Before public launch: Turnstile on sign-in (FrontendDev). The MAGIC_LINK_HOURLY_CAP setting and its alarm are in [PR #21](https://github.com/rojandhimal/onetickets/pull/21) (DevOps). The Cloudflare rate limits and sentry-trace stripping moved to SEC-5
 - SEC-11 First staging deploy: QA checks that a spoofed X-Forwarded-For through the ALB still gets a 429 (QA)
 - SEC-13 Later: forwarded "Ask the organiser" contact form with rate limits, no email disclosure, abuse reporting (Security shapes; FrontendDev, BackendDev)
 - SEC-14 Must-have before Sprint 2 free checkout ships: enforce CSP across the whole site, not only /e/:slug, and review 'unsafe-inline' styles (ADR 0018) (FrontendDev, Security)
@@ -57,9 +57,9 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-15 Before launch: per-user rate limit on banner uploads and image processing concurrency 1, so one account can't starve the api (BackendDev)
 - SEC-16 When the web sign-out control is built: call clearDeviceDrafts() (FrontendDev). The api side, Clear-Site-Data on sign-out, shipped in #16
 - DES-7 Sprint 10 designs (canvas v29, [handoff-s10.md](/project/design/handoff-s10.md)). Defaults to confirm with tegs before Sprint 10: the founding offer waives only the OneTickets fee (card fees still apply); the data export link expires after 7 days. The Eventbrite and TryBooking export steps need checking before launch
-- BE-1 From QA's #16 review, not blocking (BackendDev unless noted): Cache-Control and revalidation on public pages; one pricing function (before Sprint 4); server-side place resolution; a priceCents maximum (contract change, tell FrontendDev); handle live events that move into the past; a narrower public projection than the events_public row policy
+- BE-1 From QA's #16 review, not blocking (BackendDev unless noted): server-side place resolution; handle live events that move into the past; a narrower public projection than the events_public row policy
 - ARCH-4 Before launch: choose a real venue-lookup provider for /places (it uses a fixed venue list today). Needs a cost line and tegs's sign-off (BackendDev)
-- SEC-5 Before Sprint 4: staging and production behind Cloudflare proxy, ALB limited to Cloudflare IP ranges (DevOps)
+- SEC-5 Before Sprint 4: staging and production behind Cloudflare proxy, ALB limited to Cloudflare IP ranges, Cloudflare rate-limit rules on sign-in and /csp-report. Acceptance (Security): TRUST_PROXY_HOPS=2 and stripping the incoming sentry-trace header for callers other than the web app ship in the same change that turns on Cloudflare proxying (DevOps)
 - SEC-6 Before production holds real data: Postgres sslmode=verify-full with RDS CA bundle (BackendDev, DevOps)
 - (Source: [threat model](/docs/security/threat-model.md), 16 ranked risks. Fold into the backlog doc at each sprint's planning)
 - ARCH-3 About 6 smaller fixes from the architecture review, to triage at Sprint 0 planning
@@ -68,16 +68,19 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### In progress
 
+- S1-3 public event page (FrontendDev): built; PR opens now that #17 has merged. Reviews: QA, Security (CSP per ADR 0018), ProductDesign
+- BE-1 Cache-Control and revalidation on public pages (BackendDev): built locally; PR opens now that #22 has merged. Adds REVALIDATE_SECRET (DevOps). Reviews: QA, Security
 - RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-- Agent setup for any AI tool: AGENTS.md, role briefs in agents/, project files in project/ ([PR #20](https://github.com/rojandhimal/onetickets/pull/20)) by PM. Ready to merge once CI is green.
-- S1-1 create-event wizard with autosave, venue lookup and publish: [PR #17](https://github.com/rojandhimal/onetickets/pull/17) by FrontendDev. QA, Security and ProductDesign pass at 80636d9. Merges after #16: FrontendDev merges main in (trivial docs/adr/README.md and .gitignore conflicts) so CI e2e goes green. Starter About text moved to S1-4.
-
 ### Done
 
+- S1-1 create-event wizard with autosave, venue lookup and publish ([PR #17](https://github.com/rojandhimal/onetickets/pull/17)), merged 15 Oct
+- BE-1 one "from" price rule for cards, page and filter, and the A$10,000 price cap ([PR #22](https://github.com/rojandhimal/onetickets/pull/22)), merged 15 Oct. Security reviewed it after merge: pass
+- SEC-10 cap: MAGIC_LINK_HOURLY_CAP setting and its alarm ([PR #21](https://github.com/rojandhimal/onetickets/pull/21)), merged 15 Oct. Turnstile on sign-in stays open under SEC-10
+- Agent setup for any AI tool: AGENTS.md, role briefs in agents/, project files in project/ ([PR #20](https://github.com/rojandhimal/onetickets/pull/20)), merged 15 Oct. Re-run `scripts/sync-project-files.sh` to refresh project/ in the repo
 - S1 api: events, free ticket types, banners, venue lookup, public page and browse ([PR #16](https://github.com/rojandhimal/onetickets/pull/16)), merged 15 Oct
 - DEV-3 migrations run as a non-superuser owner in CI, compose and e2e ([PR #19](https://github.com/rojandhimal/onetickets/pull/19)), merged 15 Oct. Compose uses a new Postgres volume, so local databases start empty
 - Sprint 0 closed 15 Oct. Last fix: web Docker image builds shared first ([PR #18](https://github.com/rojandhimal/onetickets/pull/18), QA), merged 15 Oct. Also merged 10 Oct: #12 shared auth types, #13 e2e CSP guard, #14 api logs and Sentry with PII masked, #15 infra Sentry and log settings
@@ -156,3 +159,5 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 | 2026-10-09 | ADRs live in docs/adr/NNNN-title.md, numbered by the index in #8: 0001 to 0003 FrontendDev, 0004 BackendDev RLS, 0005 to 0014 backfilled, 0015 BackendDev sign-in      | PM, Repo documentation |
 | 2026-10-15 | Sprint 0 closed; QA accepted once #18 merged                                                                                                                           | QA, PM                 |
 | 2026-10-15 | Agent setup is provider-independent: AGENTS.md, role briefs in agents/, and project files copied into project/ in the repo, so any AI tool can take over a role        | tegs, PM               |
+| 2026-10-15 | "From A$x" price uses the cheapest ticket type on sale, falling back to all types when none is on sale                                                                 | PM, QA                 |
+| 2026-10-16 | Security reviews every PR with a database migration, and nothing joins the merge queue until all its reviewers have passed it (#22 merged before Security saw it)      | Security, PM           |

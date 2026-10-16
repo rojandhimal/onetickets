@@ -2,6 +2,15 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 15 Oct 2026 (afternoon)
+
+- **Done:** SEC-10 cap and alarm [#21](https://github.com/rojandhimal/onetickets/pull/21#issuecomment-6193287440) fails QA at 688b756 on one point. The cap, log line, metric filter and wiring work against a live api. But the warning is logged only once, when the cap is crossed, so the alarm emails "OK" within 5 to 10 minutes while links are still being refused. I suggested dropping `ok_actions` on that alarm. BE-1 [#22](https://github.com/rojandhimal/onetickets/pull/22#issuecomment-6193404491) passes at 2208a16, with one test to add: a mutation going back to on-sale-only pricing on the page survives. I asked PM which ticket types the "from" price should count before Sprint 4. #17 still passes after main was merged in (7b6989f).
+- **Done (re-check):** #21 passes at 6132f8c. The alarm no longer sends an OK email, and the warning text is pinned by a test.
+- **Done (re-check):** #22 passes at 2c3ef7c. The new test catches the on-sale-only mutation.
+- **Done (re-check):** #22 passes at 0306ebf with PM's "from" rule. Three mutations, all caught. The free/paid filter still uses all types; that's documented, and I'll check it in Sprint 4. At 3be9651 the rule moved into one SQL function used by the card, the page and the filter, and it passes. I asked for a stronger SQL/TS on-sale parity test, not blocking, because four boundary mutations survive. At 478a91b it passes with nothing left: the edge-parity test catches all four.
+- **Next:** Run the Sprint 1 demo end to end once #17 merges.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 15 Oct 2026 (midday)
 
 - **Done:** S1-1 wizard [#17](https://github.com/rojandhimal/onetickets/pull/17#issuecomment-6191742931) passes its QA re-check at 80636d9, tested merged with #16, with all three blockers fixed. e2e passed 20/20 on two runs. A build made with the flag off works when the flag is turned on at runtime. Three mutations, all caught. The starter About text moves to S1-4.
