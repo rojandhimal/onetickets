@@ -348,4 +348,250 @@ describe('create-event wizard', () => {
       expect(fetch).not.toHaveBeenCalled();
     });
   });
+
+  describe('free ticket types (S1-2)', () => {
+    beforeEach(() => {
+      pathname = '/organiser/events/new/tickets';
+    });
+
+    it('steps capacity by ±5, edits sales windows, and saves with the updated version', async () => {
+      const updated = (capacity: number, salesEnd: unknown = { kind: 'event_start' }) =>
+        draftEvent({
+          lastStep: 'tickets',
+          version: 2,
+          ticketTypes: [
+            {
+              id: 'tt_1',
+              name: 'General admission',
+              capacity,
+              maxPerOrder: 10,
+              priceCents: 0,
+              salesStart: { kind: 'on_publish' },
+              salesEnd: salesEnd as never,
+              sold: 0,
+            },
+          ],
+        });
+      const fetch = api({
+        'PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1': (init) => {
+          const body = JSON.parse(init?.body as string);
+          return json(updated(body.capacity, body.salesEnd));
+        },
+      });
+      const user = userEvent.setup();
+      render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+
+      expect(screen.getByText('Free ticket. No fees for you or your guests.')).toBeInTheDocument();
+      expect(screen.getByLabelText('Ticket name')).toHaveValue('General admission');
+      expect(screen.getByLabelText('How many tickets?')).toHaveValue(40);
+      expect(screen.getByLabelText('Max per order')).toHaveValue(10);
+
+      await user.click(screen.getByRole('button', { name: '5 more tickets' }));
+      expect(screen.getByLabelText('How many tickets?')).toHaveValue(45);
+      await waitFor(() =>
+        expect(patches(fetch).at(-1)).toMatchObject({
+          name: 'General admission',
+          capacity: 45,
+          maxPerOrder: 10,
+          priceCents: 0,
+        }),
+      );
+
+      await user.click(screen.getByRole('button', { name: '5 fewer tickets' }));
+      expect(screen.getByLabelText('How many tickets?')).toHaveValue(40);
+
+      // Picking "Pick a date and time" reveals date and time inputs under that select.
+      await user.selectOptions(screen.getByLabelText('Sales end'), 'at');
+      await user.type(screen.getByLabelText('Sales end date'), '2026-11-14');
+      await user.clear(screen.getByLabelText('Sales end time'));
+      await user.type(screen.getByLabelText('Sales end time'), '09:30');
+      await user.tab();
+
+      await waitFor(() =>
+        expect(patches(fetch).at(-1)).toMatchObject({
+          salesEnd: { kind: 'at', at: '2026-11-14T09:30:00+11:00' },
+        }),
+      );
+    });
+
+    it('adds a second ticket type, collapses others to summary rows, switches and removes from a draft', async () => {
+      const twoTypes = draftEvent({
+        lastStep: 'tickets',
+        version: 2,
+        ticketTypes: [
+          {
+            id: 'tt_1',
+            name: 'General admission',
+            capacity: 40,
+            maxPerOrder: 10,
+            priceCents: 0,
+            salesStart: { kind: 'on_publish' },
+            salesEnd: { kind: 'event_start' },
+            sold: 0,
+          },
+          {
+            id: 'tt_2',
+            name: 'Members',
+            capacity: 10,
+            maxPerOrder: 2,
+            priceCents: 0,
+            salesStart: { kind: 'on_publish' },
+            salesEnd: { kind: 'event_start' },
+            sold: 0,
+          },
+        ],
+      });
+      const fetch = api({
+        'POST /api/organisations/org_1/events/evt_1/ticket-types': () => json(twoTypes, 201),
+        'DELETE /api/organisations/org_1/events/evt_1/ticket-types/tt_2': () =>
+          json(draftEvent({ lastStep: 'tickets', version: 3 })),
+      });
+      const user = userEvent.setup();
+      render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+
+      await user.click(screen.getByRole('button', { name: 'Add another ticket type' }));
+      // General admission collapses into a summary row.
+      const list = screen.getByRole('list', { name: 'Ticket types' });
+      expect(list).toHaveTextContent('General admission');
+      expect(list).toHaveTextContent('Free · 40 tickets · up to 10 per order');
+
+      await user.type(screen.getByLabelText('Ticket name'), 'Members');
+      await user.clear(screen.getByLabelText('How many tickets?'));
+      await user.type(screen.getByLabelText('How many tickets?'), '10');
+      await user.clear(screen.getByLabelText('Max per order'));
+      await user.type(screen.getByLabelText('Max per order'), '2');
+      await user.tab();
+
+      await waitFor(() =>
+        expect(fetch).toHaveBeenCalledWith(
+          '/api/organisations/org_1/events/evt_1/ticket-types',
+          expect.objectContaining({ method: 'POST' }),
+        ),
+      );
+
+      // Edit General admission: Members collapses to a summary row with its summary and remove button.
+      await user.click(screen.getByRole('button', { name: 'Edit' }));
+      expect(screen.getByLabelText('Ticket name')).toHaveValue('General admission');
+      expect(screen.getByRole('list', { name: 'Ticket types' })).toHaveTextContent(
+        'Free · 10 tickets · up to 2 per order',
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Remove Members ticket' }));
+      await waitFor(() =>
+        expect(fetch).toHaveBeenCalledWith(
+          '/api/organisations/org_1/events/evt_1/ticket-types/tt_2',
+          expect.objectContaining({ method: 'DELETE' }),
+        ),
+      );
+      expect(screen.queryByRole('list', { name: 'Ticket types' })).not.toBeInTheDocument();
+    });
+
+    it('validates capacity, max per order, and sales end after sales start inline', async () => {
+      const fetch = api({
+        'PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1': () =>
+          json(readyEvent({ lastStep: 'tickets', version: 2 })),
+      });
+      const user = userEvent.setup();
+      render(
+        <Wizard
+          initialEvent={readyEvent({
+            lastStep: 'tickets',
+            startsAt: '2026-11-14T10:00:00+11:00',
+            endsAt: '2026-11-14T13:00:00+11:00',
+          })}
+          userId="u_1"
+        />,
+      );
+
+      const capInput = screen.getByLabelText('How many tickets?');
+      await user.clear(capInput);
+      await user.type(capInput, '0');
+      await user.tab();
+      expect(capInput).toHaveAttribute('aria-invalid', 'true');
+      expect(capInput).toHaveAccessibleDescription(
+        expect.stringContaining('Set at least 1 ticket'),
+      );
+      expect(fetch).not.toHaveBeenCalled();
+
+      await user.clear(capInput);
+      await user.type(capInput, '10');
+      const maxInput = screen.getByLabelText('Max per order');
+      await user.clear(maxInput);
+      fetch.mockClear();
+      await user.type(maxInput, '15');
+      await user.tab();
+      expect(maxInput).toHaveAttribute('aria-invalid', 'true');
+      expect(maxInput).toHaveAccessibleDescription("Can't be more than 10, the number of tickets");
+      expect(fetch).not.toHaveBeenCalled();
+
+      await user.clear(maxInput);
+      await user.type(maxInput, '5');
+      await user.selectOptions(screen.getByLabelText('Sales start'), 'at');
+      await user.type(screen.getByLabelText('Sales start date'), '2026-11-14');
+      await user.clear(screen.getByLabelText('Sales start time'));
+      await user.type(screen.getByLabelText('Sales start time'), '12:00');
+      await user.selectOptions(screen.getByLabelText('Sales end'), 'at');
+      await user.type(screen.getByLabelText('Sales end date'), '2026-11-14');
+      await user.clear(screen.getByLabelText('Sales end time'));
+      fetch.mockClear();
+      await user.type(screen.getByLabelText('Sales end time'), '11:00');
+      await user.tab();
+
+      expect(screen.getByLabelText('Sales end')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByLabelText('Sales end')).toHaveAccessibleDescription(
+        'Sales need to end after they start',
+      );
+      expect(
+        screen.getByText("Couldn't save one field. Check the message under it."),
+      ).toHaveAttribute('role', 'status');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('surfaces 422 sales_end_before_start and 409 tickets_sold_or_held from the API', async () => {
+      const baseTicket = draftEvent().ticketTypes[0]!;
+      const second = { ...baseTicket, id: 'tt_2', name: 'VIP' };
+      api({
+        'PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1': () =>
+          json(
+            {
+              code: 'sales_end_before_start',
+              message: 'Sales need to end after they start',
+            },
+            422,
+          ),
+        'DELETE /api/organisations/org_1/events/evt_1/ticket-types/tt_2': () =>
+          json(
+            {
+              code: 'tickets_sold_or_held',
+              message: 'Tickets have already been claimed for this type.',
+            },
+            409,
+          ),
+      });
+      const user = userEvent.setup();
+      render(
+        <Wizard
+          initialEvent={readyEvent({
+            lastStep: 'tickets',
+            ticketTypes: [baseTicket, second],
+          })}
+          userId="u_1"
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: '5 more tickets' }));
+      await waitFor(() =>
+        expect(screen.getByLabelText('Sales end')).toHaveAccessibleDescription(
+          'Sales need to end after they start',
+        ),
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Remove VIP ticket' }));
+      await waitFor(() =>
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'Tickets have already been claimed for this type.',
+        ),
+      );
+    });
+  });
 });

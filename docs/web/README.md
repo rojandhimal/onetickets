@@ -74,7 +74,18 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
    hand over a JPEG copy of HEIC photos). "Adjust crop" sets the vertical focal point, previewed at
    the widest event page crop, and saves it as `bannerFocus` through autosave. Remove calls
    `DELETE …/banner`. Both return the event with a new `version`, which autosave takes over.
-2. **Tickets**: shows the template's free ticket type. Editing arrives with S1-2.
+2. **Tickets** (S1-2): edits free ticket types (`src/app/organiser/events/new/TicketsStep.tsx`).
+   While `paid_tickets` is off, every ticket card shows "Free ticket. No fees for you or your
+   guests." with no Free/Paid toggle (`priceCents` is always `0`). Fields are Ticket name, How many
+   tickets? (with ±5 stepper buttons and typed input), Max per order, Sales start (`When I publish`
+   or `Pick a date and time`) and Sales end (`At start time`, `1 hour before`, `1 day before`,
+   `When the event ends` or `Pick a date and time`). Custom sales start and end times are entered in
+   the event's time zone (`src/lib/zoned-time.ts`). When an event has more than one ticket type,
+   every type except the one being edited collapses to a summary row (`Free · {n} tickets · up to
+{m} per order`) with `Edit` and `Remove {name} ticket`. Changes call
+   `POST /organisations/:orgId/events/:id/ticket-types`,
+   `PATCH …/ticket-types/:typeId` and `DELETE …/ticket-types/:typeId`, each returning the refreshed
+   event with its new `version` so wizard autosave stays in sync.
 3. **Details**: placeholder until S1-4 (About, accessibility, cancellations, contact email).
 4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
    Publish button is never disabled; pressing it with something missing shows "Add … to publish.

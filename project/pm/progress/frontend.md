@@ -2,6 +2,19 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16
+
+- **Done:**
+  - [#17](https://github.com/rojandhimal/onetickets/pull/17) (S1-1 create-event wizard) and [#23](https://github.com/rojandhimal/onetickets/pull/23) (S1-3 public event page and share image) merged.
+  - Built S1-2 (free ticket types, Artboard 8) on `frontend/s1-2-ticket-types`:
+    - `TicketsStep` (`apps/web/src/app/organiser/events/new/TicketsStep.tsx`) replaces the step 2 summary placeholder with the full free ticket type editor (`Free ticket. No fees for you or your guests.`, no Free/Paid toggle while `paid_tickets` is off).
+    - Fields: `Ticket name`, `How many tickets?` (±5 stepper buttons with `5 fewer tickets` / `5 more tickets` and typed input), `Max per order`, `Sales start` (`When I publish`, `Pick a date and time`) and `Sales end` (`At start time`, `1 hour before`, `1 day before`, `When the event ends`, `Pick a date and time`), converting custom dates/times in `event.timeZone`.
+    - Multiple ticket types: non-active types collapse into summary rows (`Free · {n} tickets · up to {m} per order`) with `Edit` and `Remove {name} ticket`.
+    - Inline validation for capacity (`Set at least 1 ticket`), max per order (`Can't be more than {capacity}, the number of tickets`), and sales window (`Sales need to end after they start`), plus API 422/409 error handling and `version` sync with wizard autosave.
+    - Added unit tests (`Wizard.test.tsx`), Playwright E2E coverage (`e2e/tests/wizard.spec.ts`), and updated `docs/web/README.md`.
+- **Next:** get QA, ProductDesign and Security reviews on S1-2, then once S1-2 merges open S1-4 (accessibility and event details) followed by S1-5 (browse upcoming events).
+- **Blocked:** nothing.
+
 ## 2026-10-15 (13:30 UTC)
 
 - **Done:**
