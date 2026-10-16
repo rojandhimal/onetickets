@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (1:55 pm AEDT merge handoff)
+
+- **Done:** Confirmed [#25](https://github.com/rojandhimal/onetickets/pull/25) merged as `70747fc` and [#26](https://github.com/rojandhimal/onetickets/pull/26) as `3191149` at 1:52 pm AEDT, after PM completed their ready transitions. [#28](https://github.com/rojandhimal/onetickets/pull/28) also merged as `4946cc0`. Cleared the old queue, moved all three to Done, retained their reviewed-head evidence, and refreshed the roadmap. Corrected the web cache documentation to match the merged per-task fan-out and fallback behaviour. Local format/lint/typecheck, 187 unit tests, 106 Postgres integration tests, build and 24 browser/axe/CSP tests pass on the merged implementation. Historical role logs and QA evidence remain intact; AWS is still unapplied.
+- **Next:** FrontendDev starts S1-2 from latest main, then S1-4 and S1-5. BackendDev and DevOps refresh their own logs and continue remaining BE-1 / SEC-5 / SEC-6 work as applicable. QA accepts Sprint 1 only after all required stories merge and the integrated publish-and-browse pass succeeds; PM completes each ready transition when required reviews and CI pass.
+- **Blocked:** S1-2 has no pending merge dependency. RES-1 recruitment and owner staging setup still block real-organiser/staging evidence; live-project copy-back waits for the shared folder to be available.
+
 ## 2026-10-16 (1:20 pm AEDT merge follow-up)
 
 - **Done:** [QA-1 #29](https://github.com/rojandhimal/onetickets/pull/29) merged at 1:19 pm AEDT as `8494333`, with QA, Security and all five CI/security checks green at `21c018c`. Moved QA-1 to Done on the board and brought main into the PM branch. [#28](https://github.com/rojandhimal/onetickets/pull/28) also passed [final QA](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206555424) and all five checks at `99bb486`; it temporarily returns to draft while the follow-up records #29's merge. Checklist reconciliation is complete; Sprint 1 acceptance remains pending.
