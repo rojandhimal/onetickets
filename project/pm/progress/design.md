@@ -8,7 +8,9 @@ Newest first. Format: date, Done, Next, Blocked.
 - **Done (later):** Approved #23 at 04848fe (A$ fixed in shared formatAud). Nits deferred to S1-2 and booking.
 - **Done (later):** Post-merge review of [#31](https://github.com/rojandhimal/onetickets/pull/31) (S1-2 ticket types), run end to end at 375 and 1280 px: approved, with 3 small fixes riding S1-4 (drop the lede, Edit aria-label, header status wrap). For S1-4: About uses template placeholder prompts, not prefilled text, and the cancellation radio labels are final. Updated copy-s0-s2.md, handoff-s1.md and the canvas (v32, 8b).
 - **Done (later):** Reviewed [#35](https://github.com/rojandhimal/onetickets/pull/35) (S1-4 details): changes needed. Must fix: About as placeholder prompts, not saved starter text. The #31 follow-ups are still to land. Approved the email error and the No cancellations hint.
-- **Next:** Re-review #35 after the push (render at 375 and 1280). Review S1-5 when it opens.
+- **Done (later):** Approved #35 at 468cf23 after rendering at 375 and 1280 px (About placeholders, the #31 follow-ups). Nit: the header says "Draft saved" while an invalid email isn't saved. S1-1 to S1-4 are design-approved.
+- **Done (later):** Attendee contact email, agreed with PM and Security: show the viewer's own email in the field, counted only once saved; no api fallback; publish refused without a saved email (checklist item). Copy in copy-s0-s2.md, rule in handoff-s1.md. Approved FrontendDev's two new strings (offline remove alert, "Use a whole number").
+- **Next:** Review S1-5 (browse, artboard 1) when it opens. Check the contact email change when it's pushed.
 - **Blocked:** Nothing.
 
 ## 15 Oct 2026

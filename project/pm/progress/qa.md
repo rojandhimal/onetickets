@@ -2,6 +2,28 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 16 Oct 2026 (late afternoon: #36, #37, #38, #39)
+
+- **Done:**
+  - [#36](https://github.com/rojandhimal/onetickets/pull/36#issuecomment-6214279962) passes at 9314016.
+  - [#37](https://github.com/rojandhimal/onetickets/pull/37#issuecomment-6214281067) passes at e585e44, with one wording nit: pg_catalog is searched first unless the session lists it later.
+  - #38: Security's catch is fixed. The api log sits in a hidden folder that upload-artifact skipped, so 0012d4a adds `include-hidden-files`.
+  - [#39](https://github.com/rojandhimal/onetickets/pull/39#issuecomment-6214319585) SEC-5 passes at 2a21efc. The ALB takes only Cloudflare ranges. A spoofed XFF can't move the rate-limit key or the api client IP; I checked locally that the Next rewrite passes XFF through unchanged. Staging is api-staging.<domain>. Five notes are on the PR, none blocking.
+- **Next:** CI green on #38 at 0012d4a. Re-check #35. Review S1-5, then Sprint 1 acceptance on main.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
+## 16 Oct 2026 (afternoon: #32, #33, QA-2, #34, #35)
+
+- **Done:**
+  - [#32](https://github.com/rojandhimal/onetickets/pull/32#issuecomment-6209417345) passes: one-way copies, merged progress logs and exit 1 on a board conflict all work. Deletes don't propagate.
+  - [#33](https://github.com/rojandhimal/onetickets/pull/33#issuecomment-6209423168) passes: retention values match the infra.
+  - QA-2 root-caused. The test left Basics before the picked venue's lookup and autosave finished, so publish was refused for a missing venue. A 1.5 s delay on the place lookup reproduces it every time. Fixed in [#38](https://github.com/rojandhimal/onetickets/pull/38) with the `pickMarrickville` helper, plus a trace upload when CI fails.
+  - Updated checklist rows 1.3 and 4.4 for the About placeholder prompts.
+  - [#34](https://github.com/rojandhimal/onetickets/pull/34#issuecomment-6214131905) passes: the SQL copy and the api agree on 30,000 fuzzed strings, and all 3 mutations were caught.
+  - [#35](https://github.com/rojandhimal/onetickets/pull/35#issuecomment-6214251389) S1-4 at 67e2c86: rows 4.1 to 4.4 and the 1.3 prompts pass. One fix needed: a mistyped edit erases the saved contact email, and publish then substitutes the publisher's sign-in email. The #31 offline ticket fix (row 1.6) isn't on the branch yet. QA script: qa/scripts/qa35.spec.ts.
+- **Next:** Drive #38 to green. Re-check #35 for the contact-email fix and the offline ticket fix. Review S1-5, then Sprint 1 acceptance on main.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 16 Oct 2026 (S1-2 #31 post-merge)
 
 - **Done:** Reviewed [#31](https://github.com/rojandhimal/onetickets/pull/31#issuecomment-6209383998) on main at ff36249. Rows 2.1 to 2.7 pass (unit 122/122, e2e 26/26, integration 106/106, plus the QA script qa/scripts/qa31.spec.ts at 375 and 1280 px). One finding must be fixed before Sprint 1 acceptance (it rides S1-4): ticket edits made offline show "Saved on this phone" but are kept only in memory, are not retried when back online, and are lost when the draft is reopened (row 1.6). Three nits are on the PR. Also re-checked #25 at 26d788e (BE-4): pass.

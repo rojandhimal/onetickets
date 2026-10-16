@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (evening)
+
+- **Done:** QA and Security passed [#34](https://github.com/rojandhimal/onetickets/pull/34) at c5acdb3, and all five checks are green there. I marked it ready for review, and PM has queued it for tegs.
+- **Next:** When #34 merges, restart claude/backend-mo4kfg from main and do DEV-4 (Docker image builds in PR checks). After that, the publish contact-email fallback if Security and ProductDesign put it in the api. Then live events moved into the past, server-side place resolution, and the narrower public projection.
+- **Blocked:** nothing.
+
 ## 2026-10-16 (later)
 
 - **Done:** tegs merged #25, which includes BE-4's fan-out to every web task. I opened draft [#34](https://github.com/rojandhimal/onetickets/pull/34) for QA's #23 finding:
