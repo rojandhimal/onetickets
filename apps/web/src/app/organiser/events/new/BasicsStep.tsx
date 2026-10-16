@@ -66,6 +66,7 @@ export function BasicsStep({
   onChange,
   onBlur,
   onBannerChanged,
+  onLookup,
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
@@ -73,6 +74,7 @@ export function BasicsStep({
   onChange: (changes: PendingChanges) => void;
   onBlur: () => void;
   onBannerChanged: (event: EventDraftDto) => void;
+  onLookup?: (done: Promise<void>) => void;
 }) {
   const tz = event.timeZone;
   const start = event.startsAt ? isoToWallClock(event.startsAt, tz) : null;
@@ -272,6 +274,7 @@ export function BasicsStep({
             serverError={venueError}
             onChange={changePlace}
             onBlur={onBlur}
+            onLookup={onLookup}
           />
         ) : (
           <div className={styles.field}>

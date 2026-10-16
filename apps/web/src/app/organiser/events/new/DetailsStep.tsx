@@ -40,10 +40,13 @@ export function DetailsStep({
   serverErrors = {},
   onChange,
   onBlur,
+  onLocalError,
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
   serverErrors?: ServerErrors;
+  /** A mistake caught here and not sent, so the header doesn't say everything is saved. */
+  onLocalError?: (field: 'contactEmail', message: string | null) => void;
   onChange: (changes: PendingChanges) => void;
   onBlur: () => void;
 }) {
@@ -73,18 +76,29 @@ export function DetailsStep({
     onBlur();
   }
 
+  // The address is sent when the field is left, and only when it's valid or cleared: a half-typed
+  // one never replaces the saved address. It stays on screen with the error until it's fixed.
   function changeEmail(text: string) {
     setEmail(text);
     const trimmed = text.trim();
-    if (emailError && (!trimmed || EMAIL.test(trimmed))) setEmailError(null);
-    onChange({ contactEmail: EMAIL.test(trimmed) ? trimmed.toLowerCase() : null });
+    if (emailError && (!trimmed || EMAIL.test(trimmed))) {
+      setEmailError(null);
+      onLocalError?.('contactEmail', null);
+    }
   }
 
   function checkEmail() {
     const trimmed = email.trim();
-    setEmailError(trimmed && !EMAIL.test(trimmed) ? CONTACT_EMAIL_ERROR : null);
+    const valid = !trimmed || EMAIL.test(trimmed);
+    const error = valid ? null : CONTACT_EMAIL_ERROR;
+    setEmailError(error);
+    onLocalError?.('contactEmail', error);
+    if (valid) onChange({ contactEmail: trimmed ? trimmed.toLowerCase() : null });
     onBlur();
   }
+
+  // Leaving the step drops the half-typed address; the saved one shows again on return.
+  useEffect(() => () => onLocalError?.('contactEmail', null), [onLocalError]);
 
   const aboutError = serverErrors.about ?? null;
   const accessError = serverErrors.accessibility ?? null;

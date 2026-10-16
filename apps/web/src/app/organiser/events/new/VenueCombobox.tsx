@@ -17,12 +17,15 @@ export function VenueCombobox({
   serverError = null,
   onChange,
   onBlur,
+  onLookup,
 }: {
   value: Place | null;
   /** The api refused the venue (422); shown until the organiser picks again. */
   serverError?: string | null;
   onChange: (venue: Place | null) => void;
   onBlur: () => void;
+  /** Picking a suggestion looks the place up before it can be saved; this resolves after. */
+  onLookup?: (done: Promise<void>) => void;
 }) {
   const id = useId();
   const listId = `${id}-list`;
@@ -71,13 +74,17 @@ export function VenueCombobox({
     searchFor.current = null;
     setOpen(false);
     setQuery(item.name);
-    const place = await getPlace(item.placeId);
-    if (place?.kind !== 'place') {
-      setError("We couldn't load that address. Try again.");
-      return;
-    }
-    setQuery(`${place.name}, ${place.suburb}`);
-    onChange(place);
+    const done = (async () => {
+      const place = await getPlace(item.placeId);
+      if (place?.kind !== 'place') {
+        setError("We couldn't load that address. Try again.");
+        return;
+      }
+      setQuery(`${place.name}, ${place.suburb}`);
+      onChange(place);
+    })();
+    onLookup?.(done);
+    await done;
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {

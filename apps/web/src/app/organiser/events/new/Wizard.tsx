@@ -84,6 +84,31 @@ export function Wizard({
   const [ticketSaveState, setTicketSaveState] = useState<TicketSaveState>('saved');
   const ticketFlushRef = useRef<(() => Promise<void>) | null>(null);
   const ticketStore = useRef(ticketStoreOption ?? defaultDraftStore<TicketEdits>(userId)).current;
+  // Work that has to finish before a save means anything, like looking up a picked venue.
+  const lookups = useRef(new Set<Promise<void>>());
+  const [lookingUp, setLookingUp] = useState(0);
+  const trackLookup = useCallback((done: Promise<void>) => {
+    lookups.current.add(done);
+    setLookingUp((n) => n + 1);
+    void done.finally(() => {
+      lookups.current.delete(done);
+      setLookingUp((n) => n - 1);
+    });
+  }, []);
+  const settle = useCallback(async () => {
+    while (lookups.current.size) await Promise.allSettled([...lookups.current]);
+  }, []);
+  // Mistakes caught here, never sent: the last saved value stays, so the header mustn't say saved.
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const localError = useCallback((field: string, message: string | null) => {
+    setLocalErrors((prev) => {
+      if ((prev[field] ?? null) === message) return prev;
+      const next = { ...prev };
+      if (message) next[field] = message;
+      else delete next[field];
+      return next;
+    });
+  }, []);
   // Ticket edits still on this phone, for steps other than Tickets (which reports its own).
   const [ticketsPending, setTicketsPending] = useState(false);
   const { saveState, change, flush, accept } = useAutosave({
@@ -162,10 +187,11 @@ export function Wizard({
 
   /** Everything this phone holds goes to the api first, so publishing sees the latest. */
   const flushAll = useCallback(async () => {
+    await settle();
     await ticketFlushRef.current?.();
     await syncTickets();
     await flush();
-  }, [flush, syncTickets]);
+  }, [flush, settle, syncTickets]);
 
   /** Step changes stay on this page so typing in flight is never lost. */
   const go = useCallback(
@@ -181,28 +207,34 @@ export function Wizard({
         return;
       }
       void ticketFlushRef.current?.();
-      void flush();
+      void settle().then(() => flush());
       window.history.pushState(null, '', stepHref(to, event.id));
     },
-    [event.id, flush, step, ticketSaveState],
+    [event.id, flush, settle, step, ticketSaveState],
   );
 
   const leave = useCallback(
     async (e: MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
+      await settle();
       await ticketFlushRef.current?.();
       await flush();
       router.push('/organiser');
     },
-    [flush, router],
+    [flush, router, settle],
   );
 
   const [published, setPublished] = useState<EventDraftDto | null>(null);
   if (published) return <LiveScreen event={published} />;
 
   // A field the api refused isn't saved, so the header mustn't say everything is.
-  const refused = Object.keys(serverErrors).length > 0;
-  const draftShownState: TicketSaveState = refused && saveState === 'saved' ? 'refused' : saveState;
+  const refused = Object.keys(serverErrors).length + Object.keys(localErrors).length > 0;
+  const draftShownState: TicketSaveState =
+    lookingUp > 0 && saveState === 'saved'
+      ? 'saving'
+      : refused && saveState === 'saved'
+        ? 'refused'
+        : saveState;
   const shownState: TicketSaveState =
     step === 'tickets' && ticketSaveState !== 'saved'
       ? ticketSaveState
@@ -225,6 +257,7 @@ export function Wizard({
           onChange={update}
           onBlur={() => void flush()}
           onBannerChanged={accept}
+          onLookup={trackLookup}
         />
       );
       break;
@@ -247,6 +280,7 @@ export function Wizard({
           event={event}
           headingRef={headingRef}
           serverErrors={serverErrors}
+          onLocalError={localError}
           onChange={update}
           onBlur={() => void flush()}
         />

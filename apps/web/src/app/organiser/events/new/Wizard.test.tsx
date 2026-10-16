@@ -840,3 +840,47 @@ describe('ticket mistakes', () => {
     pushState.mockRestore();
   });
 });
+
+describe('details and basics save state', () => {
+  it('never saves a mistyped contact email over the saved one', async () => {
+    pathname = '/organiser/events/new/details';
+    const fetch = api({
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ contactEmail: 'jo@example.test' })} userId="u_1" />);
+    const email = screen.getByLabelText('Contact email for attendees');
+    await user.clear(email);
+    await user.type(email, 'jo@example');
+    await user.tab();
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      await screen.findByText("Couldn't save one field. Check the message under it."),
+    ).toHaveAttribute('role', 'status');
+    await waitFor(() => expect(patches(fetch).length).toBeGreaterThan(0));
+    expect(patches(fetch).some((p) => 'contactEmail' in p)).toBe(false);
+  });
+
+  it('says it is saving while a picked venue is looked up', async () => {
+    pathname = '/organiser/events/new/basics';
+    let release: () => void = () => undefined;
+    api({
+      'GET /api/places/search': () =>
+        json({ items: [{ placeId: 'pl_1', name: 'The Print Shed', address: 'Marrickville' }] }),
+      'GET /api/places/pl_1': () =>
+        new Promise<Response>((resolve) => {
+          release = () => resolve(json(readyEvent().venue));
+        }),
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Print');
+    await user.click(await screen.findByRole('option', { name: /The Print Shed/ }));
+    expect(screen.getByRole('banner').querySelector('[role="status"]')).toHaveTextContent(
+      'Saving…',
+    );
+    release();
+    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
+  });
+});
