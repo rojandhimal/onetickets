@@ -43,7 +43,9 @@ locals {
   # Paths that send a sign-in email or check a sign-in code. In the browser
   # they go through the web app's /api rewrite; the api hostname serves them
   # without the prefix. The free plan can only match on the path, not the
-  # host or method, so the list holds both forms.
+  # host or method, so the list holds both forms. The api (Express) ignores
+  # case and a trailing slash, so the rule lowercases the path and lists each
+  # path with and without the slash.
   sign_in_paths = [
     "/api/auth/magic-link",
     "/api/auth/magic-link/verify",
@@ -52,8 +54,8 @@ locals {
     "/auth/magic-link/verify",
     "/auth/mfa/verify",
   ]
-  sign_in_expression = "http.request.uri.path in {${join(" ", formatlist("\"%s\"", local.sign_in_paths))}}"
-  csp_expression     = "http.request.uri.path eq \"/csp-report\""
+  sign_in_expression = "lower(http.request.uri.path) in {${join(" ", formatlist("\"%s\"", flatten([for path in local.sign_in_paths : [path, "${path}/"]])))}}"
+  csp_expression     = "lower(http.request.uri.path) in {\"/csp-report\" \"/csp-report/\"}"
 
   # Per client IP, per Cloudflare data centre. Each limit sits well above
   # what a person does: a sign-in takes two or three of these requests, and a
@@ -148,7 +150,7 @@ resource "cloudflare_ruleset" "request_headers" {
     # traces into the web app's pages are unaffected.
     [{
       description = "Drop client trace headers on the way to the api"
-      expression  = "(http.host in {${join(" ", formatlist("\"%s\"", local.api_hosts))}}) or (http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(http.request.uri.path, \"/api/\"))"
+      expression  = "(http.host in {${join(" ", formatlist("\"%s\"", local.api_hosts))}}) or (http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(lower(http.request.uri.path), \"/api/\"))"
       action      = "rewrite"
       action_parameters = {
         headers = {
