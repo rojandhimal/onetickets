@@ -28,12 +28,12 @@ QA [accepted Sprint 0 on 15 October](../project/qa/sprint-0-acceptance.md), incl
 (S0-5) and the web Docker build fix (#18). AWS remains unapplied; its deploy, email, Google sign-in
 and observability checks carry forward to the first staging deploy.
 
-Sprint 1 started early on 10 October. The events API (#16), create-event wizard (S1-1, #17) and
-public event page (S1-3, #23) have merged. FrontendDev's next stories are free ticket types (S1-2),
-accessibility and other event details (S1-4), then browse (S1-5). Public cache headers and revalidation
-of every web task (#25), its infra wiring (#26), the PM handoff (#28) and checklist reconciliation
-(#29) have also merged. AWS remains unapplied. The [live board](../project/pm/board.md) records the
-reviewed heads and the remaining handoff; S1-2 is next.
+Sprint 1 started early on 10 October. The events API (#16), create-event wizard (S1-1, #17), free
+ticket types (S1-2, #31) and public event page (S1-3, #23) have merged, along with public cache
+headers and revalidation of every web task (#25) and its infra wiring (#26). FrontendDev's next
+stories are accessibility and other event details (S1-4), then browse (S1-5). AWS remains
+unapplied. The [live board](../project/pm/board.md) has the review evidence and the remaining
+handoff.
 
 Sprint 1 closes only after S1-1 through S1-5 merge and QA accepts the integrated publish-and-browse
 journey. SEC-14 (site-wide enforced CSP) remains required before Sprint 2 free checkout ships.

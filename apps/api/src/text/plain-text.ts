@@ -37,8 +37,10 @@ export function toPlainText(input: string): string {
 }
 
 /**
- * Single-line public text (event and ticket type names, venue names and addresses): the same
- * clean-up as toPlainText, with line breaks and tabs collapsed into single spaces.
+ * Single-line public text (organisation, event and ticket type names, venue names and addresses):
+ * the same clean-up as toPlainText, with line breaks and tabs collapsed into single spaces.
+ * Shared by every module, so it lives outside them. Migration 0007 repeats it in SQL once, to
+ * clean organisation names stored before it applied.
  */
 export function toPlainLine(input: string): string {
   return toPlainText(input).replace(/\s+/g, ' ');

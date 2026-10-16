@@ -1,42 +1,25 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 16 Oct 2026, 1:55 pm AEDT (02:55 UTC) by PM. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 16 Oct 2026, 10:55 UTC by PM. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
 **Phase:** Sprint 0 closed 15 Oct (QA accepted once #18 merged). Sprint 1 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
-**Health:** 🟢 Ahead of plan, about a month early. The S1 api (#16), S1-1 wizard (#17), S1-3 event page (#23), public cache/revalidation (#25) and its infra wiring (#26) have merged. QA-1 (#29) and the PM handoff (#28) have also merged. S1-2, S1-4 and S1-5 remain next; Sprint 1 is not accepted yet.
-**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev picks up S1-2, then S1-4, then S1-5 (one branch per role; at most two active cards). No PR for those three stories is open at this audit. Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
+**Health:** 🟢 Ahead of plan, about a month early. The S1 api (#16), S1-1 wizard (#17), S1-2 free ticket types (#31), S1-3 event page (#23), public cache and revalidation (#25) and its infra (#26) have merged. S1-4 and S1-5 remain; Sprint 1 is not accepted yet.
+**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev's S1-4 (accessibility and event details) is in review as #35, and S1-5 (browse) follows once it merges. One branch per role, at most two active cards. Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
 
-**Merge queue for tegs:** cleared. [#25](https://github.com/rojandhimal/onetickets/pull/25) merged as `70747fc` and [#26](https://github.com/rojandhimal/onetickets/pull/26) as `3191149`, both at 1:52 pm AEDT on 16 Oct. Their reviewed heads and evidence are preserved below. Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green. PM completes the ready transition when those gates pass; it does not need another author handoff. tegs merges. Recheck if a head changes.
-
-QA-1 [#29](https://github.com/rojandhimal/onetickets/pull/29) merged as `8494333` at 1:19 pm AEDT;
-PM's handoff [#28](https://github.com/rojandhimal/onetickets/pull/28) merged as `4946cc0` at 1:41 pm.
-FrontendDev can start S1-2 from the latest main. AWS remains unapplied and deploys remain disabled.
-
-### Review evidence and handoff
-
-| PR                                                       | Reviewed head | Review evidence                                                                                                                                                                                                                                                                                                   | Handoff                                                                                       |
-| -------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [#25](https://github.com/rojandhimal/onetickets/pull/25) | `26d788e`     | [QA re-check](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6205540604) passes at this head, including two web instances, a failed instance and mutation checks. Security's re-check also passes at `26d788e`. All five CI/security checks pass.                                                 | Merged `70747fc`. BackendDev refreshes its own log and picks the next remaining BE-1 item.    |
-| [#26](https://github.com/rojandhimal/onetickets/pull/26) | `b35323c`     | [QA pass](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6205444555) at this head. Security passed `c54f287`; the only later diff clarifies fan-out and ALB defence in depth in `infra/README.md`. All nine CI/security/infra checks pass. The combined two-instance re-check is recorded on #25. | Merged `3191149`. DevOps refreshes its own log; SEC-5/SEC-6 and staging prerequisites remain. |
-
-The role logs lag GitHub: BackendDev still plans to open #25, DevOps still plans the already-merged
-SEC-10 cap, and FrontendDev still plans the already-merged S1-3. Each owner updates their own log;
-PM does not overwrite it. QA's merged QA-1 entry carries the earlier S1 review evidence; Security
-and ProductDesign should carry their #23–#26 verdicts into their next entries. Docs' old ADR-link
-task is already complete in the ADR index.
+**Merge queue for tegs:** empty. Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green. Each review comes from that role's own agent, not from the author's subagents. tegs merges. AWS remains unapplied and deploys remain disabled.
 
 ### Sprint 1 acceptance handoff
 
 - QA-1 reconciled checklist rows 1.3, 3.2 and 4.3 in merged #29, with starter About explicit in
-  row 4.4. The accepted rules are: starter About ships in S1-4; event HTML is `private, no-store`
+  row 4.4. The accepted rules are: each template's About guidance ships in S1-4 as placeholder prompts, not prefilled text (ProductDesign, 16 Oct); event HTML is `private, no-store`
   with a 60-second Next data cache and API revalidation; public pages never expose contact email.
 - Public cache headers and per-task revalidation are now on main via #25/#26. QA's next integrated
   acceptance pass uses that merged implementation; the earlier combined-branch reviews remain
   historical evidence, not a substitute for acceptance on main.
-- Once S1-2, S1-4 and S1-5 merge, QA runs the integrated template → ticket types → accessibility
+- Once S1-4 and S1-5 merge, QA runs the integrated template → ticket types → accessibility
   → publish → guest event page → city/date browse journey at 375 px and 1280 px, with axe and the
   CSP guard. Consolidate the merged-story review evidence in the Sprint 1 acceptance note.
 - Keep staging-only checks explicit: 4G p75 performance, real chat previews, AWS deploys, SES,
@@ -75,10 +58,11 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 - DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
 - DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
+- QA-2 Flaky e2e on main (QA; FrontendDev if the cause is app code): `[mobile] a published event has a public page anyone can open` timed out waiting for the published-event link on #33's first attempt (docs-only diff), passed on re-run. Root-cause it before S1-4 review; no retries or skips. Consider uploading Playwright traces on failure
 - DEV-4 Follow-up from [Sprint 0 acceptance](/project/qa/sprint-0-acceptance.md) (BackendDev owns CI, DevOps supports): add Docker image build coverage to PR checks so a web image failure like #18 is caught before merge. Track separately from Sprint 1 feature acceptance
 - DEV-5 Before first AWS staging (BackendDev and DevOps, Security review): finish the S3 banner adapter and the S3/CloudFront/public-base-URL wiring in [infra's staging prerequisites](/infra/README.md). Local banner storage remains the current setup; AWS stays unapplied
+- SEC-19 Wording follow-up from QA's #33 review (Security): the new Database migrations line says every SQL function pins `search_path`, but `identity.current_organisation_id()` and `current_user_id()` (0001) don't. They only call `current_setting`, so either exempt functions that touch only `pg_catalog` or pin them in a later migration. Not a Sprint 1 blocker
 - SEC-17 Optional hardening from #16 / #19 (BackendDev, Security review): use column-scoped update grants so `ot_app` cannot change `ticket_types.event_id`, and document how owner backfills work under FORCE RLS. [Security notes](/project/pm/progress/security.md); not a Sprint 1 blocker
-- SEC-18 Documentation follow-up (Security): sync the sign-out/on-device-data checklist line, agreed log retention and ADR 0018 conditions into the security docs. Already requested in the [Security progress log](/project/pm/progress/security.md)
 - ARCH-1 Blocking fix: Stripe charges use on_behalf_of so the organiser is the seller. Fold into S4-3 acceptance criteria before Sprint 4 planning ([architecture review](https://claude.ai/code/artifact/01a2857b-b93c-4784-bffa-af9f6962663f))
 - ARCH-2 Blocking fix: waiting room must not show "sold out" while tickets are only held. Fold into S9-1 acceptance criteria
 - SEC-1 Card-testing defences (Turnstile, rate limits per IP/email/card, Radar rules, decline-spike alert) move from S9-2 into S4-3
@@ -90,13 +74,14 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-9 Before launch: scheduled cleanup of spent magic links (they hold emails, so Privacy Act retention), OAuth states, rate-limit rows and expired sessions (BackendDev)
 - SEC-10 Before public launch: Turnstile on sign-in (FrontendDev). The MAGIC_LINK_HOURLY_CAP setting and its alarm are in [PR #21](https://github.com/rojandhimal/onetickets/pull/21) (DevOps). The Cloudflare rate limits and sentry-trace stripping moved to SEC-5
 - SEC-11 First staging deploy: QA checks that a spoofed X-Forwarded-For through the ALB still gets a 429 (QA)
-- SEC-13 Later: forwarded "Ask the organiser" contact form with rate limits, no email disclosure, abuse reporting (Security shapes; FrontendDev, BackendDev)
+- SEC-13 Later: forwarded "Ask the organiser" contact form with rate limits, no email disclosure, abuse reporting (Security shapes; FrontendDev, BackendDev). Attendee confirmation emails carry the organiser's address in Reply-To only
 - SEC-14 Must-have before Sprint 2 free checkout ships: enforce CSP across the whole site, not only /e/:slug, and review 'unsafe-inline' styles (ADR 0018) (FrontendDev, Security)
 - DEV-2 After AWS accounts exist: AWS Agent Toolkit on tegs's machine with a read-only staging profile, for logs, costs and failed deploys. Not in the repo, not for the cloud threads (DevOps)
 - SEC-15 Before launch: per-user rate limit on banner uploads and image processing concurrency 1, so one account can't starve the api (BackendDev)
 - SEC-16 When the web sign-out control is built: call clearDeviceDrafts() (FrontendDev). The api side, Clear-Site-Data on sign-out, shipped in #16
 - DES-7 Sprint 10 designs (canvas v29, [handoff-s10.md](/project/design/handoff-s10.md)). Defaults to confirm with tegs before Sprint 10: the founding offer waives only the OneTickets fee (card fees still apply); the data export link expires after 7 days. The Eventbrite and TryBooking export steps need checking before launch
-- BE-1 From QA's #16 and #23 reviews, not blocking (BackendDev unless noted): server-side place resolution; handle live events that move into the past; a narrower public projection than the events_public row policy; clean organisation names with `toOneLine`
+- BE-1 From QA's #16 and #23 reviews, not blocking (BackendDev unless noted). Organisation names cleaned with `toOneLine` are in #34 (Review). BackendDev's order after that: DEV-4, then live events that move into the past, then server-side place resolution, then a narrower public projection than the events_public row policy
+- ARCH-5 Before the Sprint 9 load test: if QA 3.3 (p75 LCP < 1.5 s on 4G) misses on staging, revisit event-page caching: hash-based CSP or edge-cached HTML instead of private, no-store (FrontendDev, Security)
 - ARCH-4 Before launch: choose a real venue-lookup provider for /places (it uses a fixed venue list today). Needs a cost line and tegs's sign-off (BackendDev)
 - SEC-5 Before Sprint 4: staging and production behind Cloudflare proxy, ALB limited to Cloudflare IP ranges, Cloudflare rate-limit rules on sign-in and /csp-report. Acceptance (Security): TRUST_PROXY_HOPS=2 and stripping the incoming sentry-trace header for callers other than the web app ship in the same change that turns on Cloudflare proxying (DevOps)
 - SEC-6 Before production holds real data: Postgres sslmode=verify-full with RDS CA bundle (BackendDev, DevOps)
@@ -105,11 +90,9 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
-- **Next: S1-2 free ticket types** (FrontendDev): artboard 8 and [S1 handoff](/project/design/handoff-s1.md), using the existing shared/API contract. Name, capacity ±5 and typed values, max per order, sales start/end presets and custom dates, collapsed summaries and draft removal. Free-only in S1; field validation and save failures must be accessible. Reviews: QA and ProductDesign; Security if on-device storage or another security trigger changes
-- **Then: S1-4 accessibility and event details** (FrontendDev): artboard 8b, including the starter About text deferred from S1-1, character counts, accessibility fieldset, cancellations and private attendee contact email. Empty public accessibility copy follows the final copy sheet, with no mailto. Reviews: QA, ProductDesign and Security (personal data)
-- **Then: S1-5 browse upcoming events** (FrontendDev): artboard 1, Sydney/Melbourne, deselectable When/Price filters, city-zone time windows, API-supplied from-price, accessible cards/count and empty state. No search/category expansion. Links to `/e/` stay plain anchors. Reviews: QA and ProductDesign; Security for any CSP/sanitisation change
+- **Next: S1-5 browse upcoming events** (FrontendDev): artboard 1, Sydney/Melbourne, deselectable When/Price filters, city-zone time windows, API-supplied from-price, accessible cards/count and empty state. No search/category expansion. Links to `/e/` stay plain anchors. Reviews: QA and ProductDesign; Security for any CSP/sanitisation change Starts once #35 merges (one branch per role)
 
-All three use the [final copy sheet](/project/design/copy-s0-s2.md), runtime flags, and e2e/axe/CSP
+It uses the [final copy sheet](/project/design/copy-s0-s2.md), runtime flags, and e2e/axe/CSP
 checks at both required widths. Move a card to In progress when its owner starts it.
 
 ### In progress
@@ -119,11 +102,15 @@ checks at both required widths. Move a card to In progress when its owner starts
 
 ### Review
 
-No feature PRs are in review at this audit. This PM merge-status handoff follows the normal QA
-and CI gates; it does not block FrontendDev starting S1-2.
+- S1-2 post-merge: Security and ProductDesign passed #31 (16 Oct), and Design's three small fixes ride #35. [QA](https://github.com/rojandhimal/onetickets/pull/31#issuecomment-6209383998) passed rows 2.1 to 2.7 but found that offline ticket edits say "Saved on this phone" while being held only in memory, then lost on reopen (row 1.6). The fix and QA's three nits ride #35; S1-2 is accepted once that merges.
+- S1-4 accessibility and event details ([draft PR #35](https://github.com/rojandhimal/onetickets/pull/35), FrontendDev): opened 16 Oct. Needs QA, ProductDesign and Security (personal data). Security passed it at `fff22b1`, and will re-check the rework's diff. Design asked for changes and approved both copy lines. Rework: About as placeholder prompts rather than a saved starter paragraph, offline ticket edits persisted and retried (QA's #31 finding), Design's three #31 fixes and QA's #31 nits
+- BE-1 organisation-name cleanup ([draft PR #34](https://github.com/rojandhimal/onetickets/pull/34), BackendDev): has a migration, so it needs QA and Security. Security passed it at `c5acdb3` (whitespace fix) with CI green; QA still to review
 
 ### Done
 
+- SEC-18 security docs: migrations scope, sign-out device data, ADR 0018 link rule, log retention ([PR #33](https://github.com/rojandhimal/onetickets/pull/33)), merged 16 Oct at `d309ce5`. [QA pass](https://github.com/rojandhimal/onetickets/pull/33#issuecomment-6209423168) at `59e0f0f`; one wording follow-up (SEC-19)
+- PM two-way project sync and the independent-review rule ([PR #32](https://github.com/rojandhimal/onetickets/pull/32)), merged 16 Oct at `5e6bad1`. [QA pass](https://github.com/rojandhimal/onetickets/pull/32#issuecomment-6209417345) at `67a6faf`; its four notes are handled in the next sync PR
+- S1-2 free ticket types in the wizard: name, capacity ±5, max per order, sales windows in the event's time zone, several types ([PR #31](https://github.com/rojandhimal/onetickets/pull/31)), merged 16 Oct. CI green on `064b2b9`; independent post-merge review in Review above
 - BE-1 public cache headers and revalidation of every web task ([PR #25](https://github.com/rojandhimal/onetickets/pull/25)), merged 16 Oct at `70747fc`; reviewed head `26d788e`, QA and Security pass, all five checks green
 - BE-1 / QA 3.2 revalidation infra ([PR #26](https://github.com/rojandhimal/onetickets/pull/26)), merged 16 Oct at `3191149`; reviewed head `b35323c`, QA and Security evidence above, all nine checks green. Infra is written only; AWS remains unapplied
 - PM Sprint 1 handoff and review-evidence audit ([PR #28](https://github.com/rojandhimal/onetickets/pull/28)), merged 16 Oct at `4946cc0`; reviewed head `2cf0a7a`, [QA pass](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206645290), all five checks green
@@ -133,7 +120,7 @@ and CI gates; it does not block FrontendDev starting S1-2.
 - S1-1 create-event wizard with autosave, venue lookup and publish ([PR #17](https://github.com/rojandhimal/onetickets/pull/17)), merged 15 Oct
 - BE-1 one "from" price rule for cards, page and filter, and the A$10,000 price cap ([PR #22](https://github.com/rojandhimal/onetickets/pull/22)), merged 15 Oct. Security reviewed it after merge: pass
 - SEC-10 cap: MAGIC_LINK_HOURLY_CAP setting and its alarm ([PR #21](https://github.com/rojandhimal/onetickets/pull/21)), merged 15 Oct. Turnstile on sign-in stays open under SEC-10
-- Agent setup for any AI tool: AGENTS.md, role briefs in agents/, project files in project/ ([PR #20](https://github.com/rojandhimal/onetickets/pull/20)), merged 15 Oct. Re-run `scripts/sync-project-files.sh` to refresh project/ in the repo
+- Agent setup for any AI tool: AGENTS.md, role briefs in agents/, project files in project/ ([PR #20](https://github.com/rojandhimal/onetickets/pull/20)), merged 15 Oct. Sync both ways with `node scripts/sync-project-files.mjs`
 - S1 api: events, free ticket types, banners, venue lookup, public page and browse ([PR #16](https://github.com/rojandhimal/onetickets/pull/16)), merged 15 Oct
 - DEV-3 migrations run as a non-superuser owner in CI, compose and e2e ([PR #19](https://github.com/rojandhimal/onetickets/pull/19)), merged 15 Oct. Compose uses a new Postgres volume, so local databases start empty
 - Sprint 0 closed 15 Oct. Last fix: web Docker image builds shared first ([PR #18](https://github.com/rojandhimal/onetickets/pull/18), QA), merged 15 Oct. Also merged 10 Oct: #12 shared auth types, #13 e2e CSP guard, #14 api logs and Sentry with PII masked, #15 infra Sentry and log settings
@@ -192,26 +179,29 @@ and CI gates; it does not block FrontendDev starting S1-2.
 
 ## Decisions log
 
-| Date       | Decision                                                                                                                                                               | By                     |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 2026-10-08 | Light Agile: 2-week sprints, Kanban, demo to real organisers each sprint                                                                                               | tegs                   |
-| 2026-10-08 | Free tickets and QR check-in ship before paid checkout                                                                                                                 | tegs (sprint backlog)  |
-| 2026-10-08 | Hired engineers build the MVP; Sprint 0 starts 2 Nov as planned                                                                                                        | tegs                   |
-| 2026-10-08 | Superseded hiring: Claude BackendDev and FrontendDev threads build, orchestrated by PM; Sprint 0 starts now                                                            | tegs                   |
-| 2026-10-08 | Added QA, DevOps and Security reviewer threads                                                                                                                         | tegs                   |
-| 2026-10-08 | Added ProductDesign thread; it owns the design canvas                                                                                                                  | tegs                   |
-| 2026-10-08 | Sign-in asks email only; new accounts give organiser name after the magic link (no account enumeration)                                                                | PM                     |
-| 2026-10-09 | Scale down dev and staging                                                                                                                                             | tegs                   |
-| 2026-10-09 | Every PR updates its docs; every thread keeps a progress log ([working agreement](/project/pm/working-agreement.md))                                                   | tegs, PM               |
-| 2026-10-09 | Run locally with Docker for now; staging and AWS set up later                                                                                                          | tegs                   |
-| 2026-10-09 | No LocalStack (non-commercial free tier, no RDS/ECS, SES v1 only); local dev uses docker compose Postgres, local mail and a local signing key. Dev AWS account dropped | DevOps, PM             |
-| 2026-10-08 | PM thread owns this board and runs a weekly check-in                                                                                                                   | tegs                   |
-| 2026-10-10 | Log retention 30 days staging, 90 days production                                                                                                                      | PM, Security           |
-| 2026-10-10 | Rolling sprints: once a sprint is done and QA has accepted it, the next one starts right away instead of waiting for the planned date                                  | tegs                   |
-| 2026-10-09 | AWS Agent Toolkit: skip until AWS accounts exist, then read-only on tegs's machine only                                                                                | DevOps, PM             |
-| 2026-10-09 | ADRs live in docs/adr/NNNN-title.md, numbered by the index in #8: 0001 to 0003 FrontendDev, 0004 BackendDev RLS, 0005 to 0014 backfilled, 0015 BackendDev sign-in      | PM, Repo documentation |
-| 2026-10-15 | Sprint 0 closed; QA accepted once #18 merged                                                                                                                           | QA, PM                 |
-| 2026-10-15 | Agent setup is provider-independent: AGENTS.md, role briefs in agents/, and project files copied into project/ in the repo, so any AI tool can take over a role        | tegs, PM               |
-| 2026-10-15 | "From A$x" price uses the cheapest ticket type on sale, falling back to all types when none is on sale                                                                 | PM, QA                 |
-| 2026-10-16 | Security reviews every PR with a database migration, and nothing joins the merge queue until all its reviewers have passed it (#22 merged before Security saw it)      | Security, PM           |
-| 2026-10-16 | Event-page HTML stays private, no-store (ADR 0018); 60 s Next data cache, public API Cache-Control and /internal/revalidate fan-out to every web task cover QA 3.2     | PM, Security, QA       |
+| Date       | Decision                                                                                                                                                                                        | By                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-08 | Light Agile: 2-week sprints, Kanban, demo to real organisers each sprint                                                                                                                        | tegs                   |
+| 2026-10-08 | Free tickets and QR check-in ship before paid checkout                                                                                                                                          | tegs (sprint backlog)  |
+| 2026-10-08 | Hired engineers build the MVP; Sprint 0 starts 2 Nov as planned                                                                                                                                 | tegs                   |
+| 2026-10-08 | Superseded hiring: Claude BackendDev and FrontendDev threads build, orchestrated by PM; Sprint 0 starts now                                                                                     | tegs                   |
+| 2026-10-08 | Added QA, DevOps and Security reviewer threads                                                                                                                                                  | tegs                   |
+| 2026-10-08 | Added ProductDesign thread; it owns the design canvas                                                                                                                                           | tegs                   |
+| 2026-10-08 | Sign-in asks email only; new accounts give organiser name after the magic link (no account enumeration)                                                                                         | PM                     |
+| 2026-10-09 | Scale down dev and staging                                                                                                                                                                      | tegs                   |
+| 2026-10-09 | Every PR updates its docs; every thread keeps a progress log ([working agreement](/project/pm/working-agreement.md))                                                                            | tegs, PM               |
+| 2026-10-09 | Run locally with Docker for now; staging and AWS set up later                                                                                                                                   | tegs                   |
+| 2026-10-09 | No LocalStack (non-commercial free tier, no RDS/ECS, SES v1 only); local dev uses docker compose Postgres, local mail and a local signing key. Dev AWS account dropped                          | DevOps, PM             |
+| 2026-10-08 | PM thread owns this board and runs a weekly check-in                                                                                                                                            | tegs                   |
+| 2026-10-10 | Log retention 30 days staging, 90 days production                                                                                                                                               | PM, Security           |
+| 2026-10-10 | Rolling sprints: once a sprint is done and QA has accepted it, the next one starts right away instead of waiting for the planned date                                                           | tegs                   |
+| 2026-10-09 | AWS Agent Toolkit: skip until AWS accounts exist, then read-only on tegs's machine only                                                                                                         | DevOps, PM             |
+| 2026-10-09 | ADRs live in docs/adr/NNNN-title.md, numbered by the index in #8: 0001 to 0003 FrontendDev, 0004 BackendDev RLS, 0005 to 0014 backfilled, 0015 BackendDev sign-in                               | PM, Repo documentation |
+| 2026-10-15 | Sprint 0 closed; QA accepted once #18 merged                                                                                                                                                    | QA, PM                 |
+| 2026-10-15 | Agent setup is provider-independent: AGENTS.md, role briefs in agents/, and project files copied into project/ in the repo, so any AI tool can take over a role                                 | tegs, PM               |
+| 2026-10-15 | "From A$x" price uses the cheapest ticket type on sale, falling back to all types when none is on sale                                                                                          | PM, QA                 |
+| 2026-10-16 | Security reviews every PR with a database migration, and nothing joins the merge queue until all its reviewers have passed it (#22 merged before Security saw it)                               | Security, PM           |
+| 2026-10-16 | Event-page HTML stays private, no-store (ADR 0018); 60 s Next data cache, public API Cache-Control and /internal/revalidate fan-out to every web task cover QA 3.2                              | PM, Security, QA       |
+| 2026-10-16 | project/ in the repo and the Claude shared folder sync both ways (scripts/sync-project-files.mjs). Agents in other tools edit project/ through PRs; Claude threads keep using the shared folder | tegs, PM               |
+| 2026-10-16 | Each review comes from that role's own agent session, not the author's subagents. #31's in-tool reviews are followed by QA and ProductDesign after merge                                        | PM                     |
+| 2026-10-16 | Template About guidance in S1-4 is placeholder prompts, not prefilled text, so nothing unedited is published. QA checklist row 4.4 follows; the three cancellation labels are final             | ProductDesign, PM      |

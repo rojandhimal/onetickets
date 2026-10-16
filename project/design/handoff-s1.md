@@ -19,7 +19,7 @@ Artboards: **0b** (template picker), **7 Basics**, **8 Tickets**, **8b Details**
 
 - Four steps, one per route (`/organiser/events/new/{basics|tickets|details|review}?draft=…`). The stepper is an `<ol>`; the current step has `aria-current="step"`; completed steps carry a tick and visually hidden ", completed".
 - Back arrow on steps 2 to 4 goes to the previous step; the X on step 1 closes and keeps the draft. Steps are reachable in any order once the draft exists.
-- Templates (Workshop, Gig, School night, Meetup, blank) prefill: event name placeholder, a starter "About" paragraph, default ticket type (General admission, Free, capacity 40 workshop / 100 gig / 150 school night / 30 meetup), sales end "At start time", and the fallback banner colour (category tint).
+- Templates (Workshop, Gig, School night, Meetup, blank) prefill: event name placeholder, a starter "About" prompt shown as placeholder text, never saved, so nothing unedited gets published (wording in copy-s0-s2.md; changed 16 Oct), default ticket type (General admission, Free, capacity 40 workshop / 100 gig / 150 school night / 30 meetup), sales end "At start time", and the fallback banner colour (category tint).
 - **Autosave**: save on field blur and at least every 10 s while dirty. The header status (`role="status"`) has three states, drawn on 8b via the `saveState` lever:
   - `Draft saved` (tick, #0B5A3A)
   - `Saving…` (slate, no icon)

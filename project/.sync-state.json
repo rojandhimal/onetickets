@@ -1,0 +1,126 @@
+{
+  "design/copy-s0-s2.md": {
+    "repo": "229541b9b572861e8e4483fd1999a12d32e1745185602a8b2a302deca48f7b15",
+    "shared": "769a7532d81aa81a11d1c957978d4eecff26444b6d35e8020bcb31a0da8968ca"
+  },
+  "design/handoff-s0.md": {
+    "repo": "ab15ba69db9ae13e515346bcc6aa45c12acb23de87e0b9837732292d7408ffe3",
+    "shared": "449839489bae2b5ecf24da6b07229e2151d5843e3c2c1e6118d4c6bc4fcc36d5"
+  },
+  "design/handoff-s1.md": {
+    "repo": "d4e7d9a5bd35cee5ba87ba7b0eaa5d651f365046f97df1a04166561d55f9a1b6",
+    "shared": "03fda4d2244e0bb000941884fcf38f0b585944fd4767ef5165b799b556d8465c"
+  },
+  "design/handoff-s10.md": {
+    "repo": "87b06341cea90294b0768fb523b98359aab456dc581ddd09fd1346dadb54f851",
+    "shared": "1d73edfd1a02a336d608761d49e16368d73409308b305226f9ba5e80e30d30a0"
+  },
+  "design/handoff-s2.md": {
+    "repo": "0373bb185c3b6a44b289e79941c658daa63019a20f0fda4d5d2b1cb0c74818a7",
+    "shared": "3aeaaad5e43112a6719971506e885aa0c0f6cd3f63a1760da065b9311733c48c"
+  },
+  "design/handoff-s3.md": {
+    "repo": "9d6ba82636c668d8f867a7fa358e588af28834b86c09b349281ebc73da61907c",
+    "shared": "1b0999bc3f7adf3cde350aeacab9439bdd06c05e28f532d245f892fca06ceee3"
+  },
+  "design/handoff-s4.md": {
+    "repo": "336044087d6880b476a64bf50e80bc79593153c80d394325ff87a063cb5a2f35",
+    "shared": "5dc819741d4b3ab30f144ced4cbc06df99bd2bbe1d71b78f67d6bf53217ef501"
+  },
+  "design/handoff-s5-s6.md": {
+    "repo": "68e0d0e8dbebe93409e61d20cbde60c45779bd9cbe0bcff48fa92779ab199270",
+    "shared": "dba3e7de2e89b3a299d213419c8a6f5b24b4dfd8cb1df640945ea4022d4f4565"
+  },
+  "design/handoff-s7.md": {
+    "repo": "cd4abbf17d5fb12d680f879a37738c66035934d7242c440699dd947c3a2c1b66",
+    "shared": "5334c4ac7a0b1b889cb9de06d8970ad72aaad3904f5cb56fd463a818cf0ab2ec"
+  },
+  "design/handoff-s8-s9.md": {
+    "repo": "39fe407338c1acafaef851441c71828479618a7ed46c4e4da0cf35554ac0e92c",
+    "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
+  },
+  "pm/board.md": {
+    "repo": "468a25d9c93b1b402a9d1f50fe76623d7262512da7dc85d86430bdf527ac03c6",
+    "shared": "4e5d0688c6600e268a070166d3b31bdb9f08696ea0d13245f58478868d735c66"
+  },
+  "pm/owner-setup.md": {
+    "repo": "f803444f18f7804000c68f03a17b5ba1be17badb40deec74ed44df098f503fa6",
+    "shared": "dcebb27a1b316982d0ab59c6ccf71adc20f0fbe69fcc259cd6bae03f204d8907"
+  },
+  "pm/progress/backend.md": {
+    "repo": "927b2e7152b854504c884eeb30a543a743aa12872f12bcef39d92a4bb3de5bd1",
+    "shared": "d174f21e6878bf960c4cf52f8e9e7695341acc6ea84acc0d088c22ae27cf4baa"
+  },
+  "pm/progress/design.md": {
+    "repo": "2a9ac33554c7aef9b06249b2e62b845a906ac67ef93d326f97dd1582c94d035f",
+    "shared": "194560f9fd6bc1d27f1d2fd2976769ac2af8745f65ce9c31aff7a70df7421f4d"
+  },
+  "pm/progress/devops.md": {
+    "repo": "3470dfde3f629d4d7979b3e9df802f0e6709744088cfc47214c3be1ed183204f",
+    "shared": "c56ce0349c77145f7a9bb157420529ab259e5d39f32f67612ef72f021b790ebb"
+  },
+  "pm/progress/docs.md": {
+    "repo": "cd7780b485ab452b15b6d3792cce5d7deea537fcf377aa3c8e0821ef7f8d247a",
+    "shared": "cb19594e57a256a11b0906a75f6ee5b58d6bfaac8eff86f27efe5396f6ed0397"
+  },
+  "pm/progress/frontend.md": {
+    "repo": "1f6dea48c459db54a1f5249998873878594ea891f089ed3e21bfd4df35e59e2e",
+    "shared": "ed83e2dd0016b741c3e66ed6fc894c7b711d30d04361a522127a6e7146a3c2e4"
+  },
+  "pm/progress/pm.md": {
+    "repo": "a7946478f92b3a0dcd47cf3a506b17188e8631df998f233d36b62cceb731b2e1",
+    "shared": "a7946478f92b3a0dcd47cf3a506b17188e8631df998f233d36b62cceb731b2e1"
+  },
+  "pm/progress/qa.md": {
+    "repo": "d79a841d9a483612e2e560c778341f16bd38498eb1cfce6ca43a1c742c8ea9c0",
+    "shared": "c566e22cc81fcb20d99d9279428e1ae9b0f4fe24826b82bda66c8413010e6327"
+  },
+  "pm/progress/security.md": {
+    "repo": "50d8fad7c4fbb5f49c0daf513d65b0e3314877a9e5a22a32a4197347d1671d27",
+    "shared": "a330bc3dd0f3ef668679ebc13dbeb49763dcb3408e27f2add2c0796f0f1020dd"
+  },
+  "pm/working-agreement.md": {
+    "repo": "32ab49805f9177da287d35f166332b3220c9619c6fb9699abdf412eea1b7e3b6",
+    "shared": "248d10023f4b123fc37f40be9a15863437bf5100120199ae522dd73e7da3b11d"
+  },
+  "qa/sprint-0-acceptance.md": {
+    "repo": "f72de63d28e16991dc6b53b45d33c69acefcbd241ce66763a88fe3dfc12fcd24",
+    "shared": "f72de63d28e16991dc6b53b45d33c69acefcbd241ce66763a88fe3dfc12fcd24"
+  },
+  "qa/sprint-0-checklist.md": {
+    "repo": "1cda950a83a47436e72669306cc975306821adf5be178c17f60ce439ddb1f6f8",
+    "shared": "309a7ac8e867198c29d76cab4922eea24fcca4117aaf11b5bf918963b422f39a"
+  },
+  "qa/sprint-1-checklist.md": {
+    "repo": "b50075be9cb4406841321918f6950b803fc7e4fa04d373bc1a9c75c552975186",
+    "shared": "81e1bcd0816ba25fc773a8d12711e8638596be0bb51b24ed7e7765cc38eaf8de"
+  },
+  "qa/test-strategy.md": {
+    "repo": "43830bbceec2e8c5c2c99c05c4915513f77d6456e012571f4ad1b2b620585399",
+    "shared": "1134da075d3a0e47884e7534f4b791e8a40b60815ca9e80cb7d2be585ed780cb"
+  },
+  "research/discovery-interview-guide.md": {
+    "repo": "9b2e5f408e5a198760fec6709588d3d0fe952588f5460dded4802f7cbcd61087",
+    "shared": "d24c88241dc6930393d826b80487ca825f8e95d2e4598fe5ea5e1e18579e8b1e"
+  },
+  "research/recruitment-pack.md": {
+    "repo": "aac810244174df4ee6b2e3b1c7c7ad1ebe06892602c3696f5c9e5b4ea5fee722",
+    "shared": "4ada75e129eb17338d4ed5752f77e05a0de178903f9aeec7d26bb54c38720ae3"
+  },
+  "research/session-notes-template.md": {
+    "repo": "dcc5a2d5ae321ead5236ec4374ae7dd541511e440a73f0b664123e32217b9eec",
+    "shared": "56c08379c4626a6887d29eef92fd2b961ecb74ea5873c61fee2d6ee5b1e0ed4f"
+  },
+  "research/usability-test-plan-s1-s2.md": {
+    "repo": "d804f23797cdc7621714c3802076eba4be9bb4fb6860307f2795ec2056b1eb91",
+    "shared": "ce5be1ba1a33bb270301b1ed425e4407ed964752cda744aefcc4ccf485cb2830"
+  },
+  "social/drafts.md": {
+    "repo": "31d321f4e9f5d7c6ac428ab29fffe99b5542fb762ff02d7b9acbbc6fe0ba6e3d",
+    "shared": "31d321f4e9f5d7c6ac428ab29fffe99b5542fb762ff02d7b9acbbc6fe0ba6e3d"
+  },
+  "social/voice-and-tone.md": {
+    "repo": "84946a8409482d979dcf8c657ea4921be36c0f1d8c27da09a86d89e7b61ff481",
+    "shared": "ed9dff687c8faefd96cb3078fdfde37d1013562332906c2cd41a773db8833920"
+  }
+}

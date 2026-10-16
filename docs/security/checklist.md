@@ -1,8 +1,8 @@
 # Security checklist (Definition of Done)
 
-Owner: Security reviewer thread. Last updated: 2026-10-09. Background and reasons: [threat-model.md](threat-model.md).
+Owner: Security reviewer thread. Last updated: 2026-10-16. Background and reasons: [threat-model.md](threat-model.md).
 
-How to use it: every story ticks **Always**. A story that touches an area below also ticks that section. In the PR description, list the sections that apply and mark anything not met as "N/A because..." or "follow-up: card id". The Security reviewer reviews any PR that touches sign-in, roles, payments, QR tickets, the scanner or personal data.
+How to use it: every story ticks **Always**. A story that touches an area below also ticks that section. In the PR description, list the sections that apply and mark anything not met as "N/A because..." or "follow-up: card id". The Security reviewer reviews any PR that touches sign-in, sessions, roles or RLS, database migrations, payments, QR tickets, the scanner, uploads, infrastructure or personal data (AGENTS.md rule 5).
 
 ## Always (every PR)
 
@@ -26,6 +26,15 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] State-changing requests check `Origin`/`Sec-Fetch-Site` or a CSRF token
 - [ ] Redirect targets after sign-in are relative paths only
 - [ ] No tokens in `localStorage` or `sessionStorage`
+- [ ] Sign-out removes data kept on the device: the api sends `Clear-Site-Data: "storage"` and the web app deletes its own stores (offline drafts in IndexedDB, any cached personal data), so the next person on a shared device sees none of it
+
+## Database migrations
+
+- [ ] Runs as the migration owner, never as `ot_app`; new tables are `ENABLE` and `FORCE ROW LEVEL SECURITY` with policies in the same migration
+- [ ] Grants are the minimum: no `DELETE` or whole-table `UPDATE` where column grants will do; nothing granted to `PUBLIC`
+- [ ] A backfill under FORCE RLS adds a temporary `to current_user` policy and drops it in the same migration, and a test proves the rows changed (otherwise it silently matches 0 rows)
+- [ ] SQL functions are `SECURITY INVOKER`; any `SECURITY DEFINER` function has a written reason and `set search_path = <its schema>, pg_temp`. An invoker function that reads or writes app tables also pins `search_path`. Exempt: invoker functions whose bodies use only built-ins (for example `identity.current_organisation_id()`, which calls `current_setting`), because `pg_catalog` is always searched first and the function runs with the caller's rights anyway (SEC-19, 2026-10-16)
+- [ ] Invariants the money or stock rules depend on are `CHECK` constraints or triggers, not only app code
 
 ## Roles and tenancy (S0-4, S6-3, S6-6)
 
@@ -59,6 +68,8 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] Emails, names, phones, addresses, IPs, auth headers, cookies, tokens and Stripe secrets are masked in logs, Sentry and traces (tested)
 - [ ] No request or response bodies sent to Sentry; URL query strings stripped; Session Replay off or fully masked
 - [ ] New personal data fields are listed in the privacy notes with a reason and retention period
+- [ ] Contact details organisers enter for attendees (email, phone) never appear on public pages or public api responses, and a test checks the public response for them
+- [ ] Application logs are kept 30 days in staging and 90 days in production; VPC flow logs 30 days; the audit log 1 year in Postgres (SEC-9). Longer retention needs a Security decision
 - [ ] Exports of personal data are permission-checked and audit-logged
 
 ## Web front end
@@ -66,6 +77,9 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] User-authored content (event descriptions etc.) is sanitised on the server with an allowlist; no raw `dangerouslySetInnerHTML`
 - [ ] Security headers set: CSP, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, HSTS
 - [ ] Third-party scripts limited to Stripe and agreed analytics, listed in the CSP
+- [ ] Until SEC-14 enforces the CSP on every page, every link into `/e/` is a plain `<a>`, not Next's `<Link>`, so the event page always loads its own enforced CSP ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
+- [ ] No checkout or payment page ships until the CSP is enforced site-wide (SEC-14, ADR 0018)
+- [ ] Pages that depend on the session or set cookies are `no-store`; shared-cache headers only on public, cookie-free responses
 
 ## CI and infrastructure (S0-1, S0-2)
 

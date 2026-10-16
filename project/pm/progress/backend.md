@@ -2,6 +2,21 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (later)
+
+- **Done:** tegs merged #25, which includes BE-4's fan-out to every web task. I opened draft [#34](https://github.com/rojandhimal/onetickets/pull/34) for QA's #23 finding:
+  - Organisation names are now stored as one line of plain text, and a markup-only name gets 422.
+  - The sanitiser moved to apps/api/src/text.
+  - Migration 0007 cleans the names already stored, through a backfill policy. A test checks the SQL copy against the api on 2,015 inputs, and mutation checks pass.
+- **Next:** QA and Security on #34. Then DEV-4 (Docker builds in PR checks), live events moved into the past, server-side place resolution, and the narrower public projection.
+- **Blocked:** nothing.
+
+## 2026-10-16
+
+- **Done:** tegs merged #22. I restarted claude/backend-mo4kfg from main and opened draft [#25](https://github.com/rojandhimal/onetickets/pull/25) for BE-1 Cache-Control and revalidation, with all local checks passing. The design is agreed with FrontendDev (`{ slugs }` payload; the web holds the tags) and DevOps (WEB_INTERNAL_URL and REVALIDATE_SECRET come in their next infra PR).
+- **Next:** QA's review and CI on #25 (Security passed it). Then QA's #23 finding: organisation names skip toPlainLine. That means moving the sanitiser somewhere both identity and catalogue can import, plus a migration to clean existing names. After that, the next BE-1 item: server-side place resolution, live events that move into the past, or a narrower public projection.
+- **Blocked:** nothing. #25 stays off in AWS until DevOps' secret and FrontendDev's revalidate route land.
+
 ## 2026-10-15 (late night)
 
 - **Done:**
