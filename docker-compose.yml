@@ -90,6 +90,10 @@ services:
       MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       # GOOGLE_CLIENT_ID is left unset, so Google sign-in stays off.
       # Uploaded event banners are kept in the banners volume, so they survive rebuilds.
+      # After a publish the api tells the web app to drop its cached public pages, with a
+      # secret both share. Locally a fixed value; AWS generates one in Secrets Manager.
+      WEB_INTERNAL_URL: http://web:3000
+      REVALIDATE_SECRET: local-only-revalidate-secret
       BANNER_STORAGE: local
       BANNER_DIR: /app/var/banners
     ports:
@@ -114,6 +118,7 @@ services:
     environment:
       API_URL: http://api.onetickets.internal:3001
       FEATURE_EVENT_WIZARD: ${FEATURE_EVENT_WIZARD:-false}
+      REVALIDATE_SECRET: local-only-revalidate-secret
     ports:
       - '127.0.0.1:3000:3000'
     depends_on:

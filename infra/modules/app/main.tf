@@ -32,6 +32,7 @@ locals {
 
   internal_namespace = "onetickets.internal"
   internal_api_url   = "http://api.${local.internal_namespace}:3001"
+  internal_web_url   = "http://web.${local.internal_namespace}:3000"
 
   services = {
     api = {
@@ -53,12 +54,16 @@ locals {
         { name = "MAGIC_LINK_HOURLY_CAP", value = tostring(var.api_magic_link_hourly_cap) },
         # SENTRY_RELEASE (the commit) is added by infra/scripts/deploy.sh.
         { name = "SENTRY_DSN", value = var.api_sentry_dsn },
+        # The API tells the web app to drop cached public pages after a publish, over the
+        # private network rather than through Cloudflare and the load balancer.
+        { name = "WEB_INTERNAL_URL", value = local.internal_web_url },
       ]
       secrets = [
         { name = "DATABASE_URL", valueFrom = "${var.db_app_secret_arn}:url::" },
         { name = "MFA_ENCRYPTION_KEY", valueFrom = "${aws_secretsmanager_secret.api.arn}:mfa_encryption_key::" },
         { name = "GOOGLE_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.google_oauth.arn}:client_id::" },
         { name = "GOOGLE_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.google_oauth.arn}:client_secret::" },
+        { name = "REVALIDATE_SECRET", valueFrom = "${aws_secretsmanager_secret.api.arn}:revalidate_secret::" },
       ]
       command = null
     }
@@ -78,7 +83,9 @@ locals {
         { name = "API_URL", value = local.internal_api_url },
         { name = "FEATURE_EVENT_WIZARD", value = "false" },
       ]
-      secrets = []
+      secrets = [
+        { name = "REVALIDATE_SECRET", valueFrom = "${aws_secretsmanager_secret.api.arn}:revalidate_secret::" },
+      ]
       command = null
     }
   }
@@ -207,6 +214,12 @@ resource "random_bytes" "mfa_encryption_key" {
   length = 32
 }
 
+# Shared by the API and web: the API sends it when asking the web app to drop
+# cached public pages (POST /internal/revalidate). Safe to rotate at any time.
+resource "random_bytes" "revalidate_secret" {
+  length = 32
+}
+
 resource "aws_secretsmanager_secret" "api" {
   name                    = "${var.name}/api"
   description             = "Generated API secrets"
@@ -218,6 +231,7 @@ resource "aws_secretsmanager_secret_version" "api" {
   secret_id = aws_secretsmanager_secret.api.id
   secret_string = jsonencode({
     mfa_encryption_key = random_bytes.mfa_encryption_key.base64
+    revalidate_secret  = random_bytes.revalidate_secret.hex
   })
 }
 
@@ -329,12 +343,13 @@ resource "aws_vpc_security_group_ingress_rule" "tasks_from_alb" {
   to_port                      = 3001
 }
 
-# The web app forwards /api calls to the API directly over the private network.
+# Over the private network, the web app forwards /api calls to the API (3001)
+# and the API asks the web app to revalidate cached pages (3000).
 resource "aws_vpc_security_group_ingress_rule" "tasks_from_tasks" {
   security_group_id            = aws_security_group.tasks.id
   referenced_security_group_id = aws_security_group.tasks.id
   ip_protocol                  = "tcp"
-  from_port                    = 3001
+  from_port                    = 3000
   to_port                      = 3001
 }
 
@@ -343,8 +358,11 @@ resource "aws_service_discovery_private_dns_namespace" "internal" {
   vpc  = var.vpc_id
 }
 
-resource "aws_service_discovery_service" "api" {
-  name = "api"
+# api.onetickets.internal and web.onetickets.internal.
+resource "aws_service_discovery_service" "app" {
+  for_each = local.services
+
+  name = each.key
 
   dns_config {
     namespace_id   = aws_service_discovery_private_dns_namespace.internal.id
@@ -358,6 +376,11 @@ resource "aws_service_discovery_service" "api" {
 
   # ECS reports task health to Cloud Map, so unhealthy tasks leave DNS.
   health_check_custom_config {}
+}
+
+moved {
+  from = aws_service_discovery_service.api
+  to   = aws_service_discovery_service.app["api"]
 }
 
 # Tasks call Postgres, AWS APIs and third parties (Stripe, Google).
@@ -442,6 +465,29 @@ resource "aws_lb_target_group" "app" {
     interval            = 15
     healthy_threshold   = 2
     unhealthy_threshold = 3
+  }
+}
+
+# /internal/* on the web app is only for the API, which calls it over the
+# private network. Refuse it at the load balancer so the internet never reaches
+# it, whatever the shared secret.
+resource "aws_lb_listener_rule" "internal_paths" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 5
+
+  condition {
+    path_pattern {
+      values = ["/internal", "/internal/*"]
+    }
+  }
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not found"
+      status_code  = "404"
+    }
   }
 }
 
@@ -632,11 +678,8 @@ resource "aws_ecs_service" "app" {
     container_port   = each.value.port
   }
 
-  dynamic "service_registries" {
-    for_each = each.key == "api" ? [1] : []
-    content {
-      registry_arn = aws_service_discovery_service.api.arn
-    }
+  service_registries {
+    registry_arn = aws_service_discovery_service.app[each.key].arn
   }
 
   lifecycle {
