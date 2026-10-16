@@ -1,3 +1,5 @@
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 import { Logger } from '@nestjs/common';
 
 /**
@@ -15,9 +17,20 @@ export class NoRevalidation extends PublicPageRevalidator {
   changed(): void {}
 }
 
+/** Every address a hostname resolves to (Cloud Map returns one A record per web task). */
+export type ResolveAll = (hostname: string) => Promise<string[]>;
+
+const resolveAll: ResolveAll = async (hostname) =>
+  (await lookup(hostname, { all: true })).map((entry) => entry.address);
+
 /**
  * POSTs `{ slugs }` to the web app's revalidate route, authenticated with a shared secret. A slug
  * is set once, at publish, and never changes, so there is never an old slug to send too.
+ *
+ * Each web task keeps its own data cache, so over plain HTTP (the private address) the call goes
+ * to every address the hostname resolves to, in parallel and within one timeout. Over HTTPS (the
+ * public WEB_URL fallback) the certificate names the host, so it goes once through the load
+ * balancer and the other tasks catch up within the cache's minute.
  */
 export class WebRevalidator extends PublicPageRevalidator {
   private readonly logger = new Logger(WebRevalidator.name);
@@ -26,6 +39,7 @@ export class WebRevalidator extends PublicPageRevalidator {
     private readonly endpoint: URL,
     private readonly secret: string,
     private readonly timeoutMs = 2000,
+    private readonly resolve: ResolveAll = resolveAll,
   ) {
     super();
   }
@@ -34,24 +48,51 @@ export class WebRevalidator extends PublicPageRevalidator {
     void this.send(slug);
   }
 
-  /** Resolves once the web app answered or the attempt failed; never rejects. */
+  /** Resolves once every web task answered or failed, true if all of them took it; never rejects. */
   async send(slug: string): Promise<boolean> {
+    const signal = AbortSignal.timeout(this.timeoutMs);
+    const targets = await this.targets();
+    const results = await Promise.all(targets.map((target) => this.post(target, slug, signal)));
+    return results.every(Boolean);
+  }
+
+  private async targets(): Promise<URL[]> {
+    const { hostname, protocol } = this.endpoint;
+    if (protocol !== 'http:' || isIP(hostname)) return [this.endpoint];
     try {
-      const response = await fetch(this.endpoint, {
+      const addresses = await this.resolve(hostname);
+      if (addresses.length === 0) return [this.endpoint];
+      return addresses.map((address) => {
+        const target = new URL(this.endpoint);
+        target.hostname = isIP(address) === 6 ? `[${address}]` : address;
+        return target;
+      });
+    } catch {
+      return [this.endpoint];
+    }
+  }
+
+  private async post(target: URL, slug: string, signal: AbortSignal): Promise<boolean> {
+    try {
+      const response = await fetch(target, {
         method: 'POST',
         headers: {
           authorization: `Bearer ${this.secret}`,
           'content-type': 'application/json',
         },
         body: JSON.stringify({ slugs: [slug] }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal,
       });
       if (!response.ok) {
-        this.logger.warn(`Revalidating /e/${slug} failed with HTTP ${response.status}`);
+        this.logger.warn(
+          `Revalidating /e/${slug} at ${target.host} failed with HTTP ${response.status}`,
+        );
       }
       return response.ok;
     } catch (error) {
-      this.logger.warn(`Revalidating /e/${slug} failed: ${(error as Error).name}`);
+      this.logger.warn(
+        `Revalidating /e/${slug} at ${target.host} failed: ${(error as Error).name}`,
+      );
       return false;
     }
   }

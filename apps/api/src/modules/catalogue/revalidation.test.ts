@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NoRevalidation, revalidatorFromEnv, WebRevalidator } from './revalidation.js';
 
 const SECRET = 'a'.repeat(32);
@@ -55,6 +55,44 @@ describe('revalidation signal', () => {
     server = undefined;
 
     expect(await new WebRevalidator(new URL(hanging.url), SECRET, 500).send('a')).toBe(false);
+  });
+
+  it('reaches every web task the private hostname resolves to', async () => {
+    const { seen, url } = await web(204);
+    const port = new URL(url).port;
+    const endpoint = new URL(`http://web.onetickets.internal:${port}/internal/revalidate`);
+    const twoTasks = new WebRevalidator(endpoint, SECRET, 500, async (hostname) => {
+      expect(hostname).toBe('web.onetickets.internal');
+      return ['127.0.0.1', '127.0.0.1'];
+    });
+    expect(await twoTasks.send('a')).toBe(true);
+    expect(seen).toHaveLength(2);
+
+    // One task down: the others still get it, and the result says not all did.
+    const oneDown = new WebRevalidator(endpoint, SECRET, 500, async () => [
+      '127.0.0.1',
+      '127.0.0.2',
+    ]);
+    expect(await oneDown.send('b')).toBe(false);
+    expect(seen.map((s) => JSON.parse(s.body).slugs[0])).toEqual(['a', 'a', 'b']);
+
+    // A failed lookup falls back to the hostname itself, which fails without throwing.
+    const noDns = new WebRevalidator(endpoint, SECRET, 500, async () => {
+      throw new Error('ENOTFOUND');
+    });
+    expect(await noDns.send('c')).toBe(false);
+  });
+
+  it('calls a public https address once, as named', async () => {
+    const resolve = vi.fn(async () => ['10.0.0.1', '10.0.0.2']);
+    const revalidator = new WebRevalidator(
+      new URL('https://onetickets.invalid/internal/revalidate'),
+      SECRET,
+      200,
+      resolve,
+    );
+    expect(await revalidator.send('a')).toBe(false);
+    expect(resolve).not.toHaveBeenCalled();
   });
 
   it('is off without a secret and refuses a short one', () => {

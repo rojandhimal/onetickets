@@ -104,8 +104,10 @@ No session needed. Only published events are visible; drafts are `404 event_not_
   falling back to `WEB_URL`) with
   `Authorization: Bearer {REVALIDATE_SECRET}` and `{ "slugs": ["<slug>"] }` once the change is
   committed. Slugs never change once published. The web app maps the slug to its own cache tags
-  (the event and browse); with several web tasks only the one that gets the call drops its copy at
-  once, and the rest catch up within the minute. The call times out after 2 s and a
+  (the event and browse). Each web task has its own cache, so on the private (http) address the
+  api posts to every address the hostname resolves to (one Cloud Map record per task), in
+  parallel. On the public https fallback it posts once, and the other tasks catch up within the
+  minute. The calls time out after 2 s together and a
   failure is only logged: the organiser's change still succeeds, and the page catches up within
   the minute above. Off when `REVALIDATE_SECRET` is unset.
 
