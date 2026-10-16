@@ -39,7 +39,12 @@ type Place = Extract<VenueInput, { kind: 'place' }>;
 type Mode = 'place' | 'online';
 
 /** Messages from the api for fields it refused (422), keyed by patch field. */
-export type ServerErrors = Partial<Record<'name' | 'startsAt' | 'endsAt' | 'venue', string>>;
+export type ServerErrors = Partial<
+  Record<
+    'name' | 'startsAt' | 'endsAt' | 'venue' | 'about' | 'accessibility' | 'contactEmail',
+    string
+  >
+>;
 
 export const END_SAME_AS_START = 'End time needs to be after the start';
 export const ONLINE_LINK_ERROR = 'Add the full link, starting with https://';

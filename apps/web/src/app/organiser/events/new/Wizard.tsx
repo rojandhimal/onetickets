@@ -17,6 +17,7 @@ import {
   stepHref,
 } from '@/lib/wizard-model';
 import { BasicsStep, END_SAME_AS_START, type ServerErrors } from './BasicsStep';
+import { DetailsStep } from './DetailsStep';
 import { LiveScreen } from './LiveScreen';
 import { ReviewStep } from './ReviewStep';
 import { type TicketSaveState, TicketsStep } from './TicketsStep';
@@ -35,6 +36,17 @@ export function refusedMessage(message: string, code?: string): string {
   if (code === 'required_when_live') return 'A live event needs this. Add it back to keep it live.';
   return /^[a-z_]+$/.test(message) ? 'Check this and try again.' : message;
 }
+
+// Fields that show the api's message under them; anything else is the api's to explain.
+const SHOWN_ERRORS = new Set<string>([
+  'name',
+  'startsAt',
+  'endsAt',
+  'venue',
+  'about',
+  'accessibility',
+  'contactEmail',
+]);
 
 const REFUSED_TEXT = "Couldn't save one field. Check the message under it.";
 
@@ -73,7 +85,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
     },
     // The value stays on screen with the api's message under it; the rest of the draft saves.
     onInvalid: (field, message, code) => {
-      if (field === 'name' || field === 'startsAt' || field === 'endsAt' || field === 'venue')
+      if (field && SHOWN_ERRORS.has(field))
         setServerErrors((prev) => ({ ...prev, [field]: refusedMessage(message, code) }));
     },
   });
@@ -174,7 +186,16 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
       );
       break;
     case 'details':
-      body = <DetailsComingSoon headingRef={headingRef} />;
+      body = (
+        <DetailsStep
+          key={restored}
+          event={event}
+          headingRef={headingRef}
+          serverErrors={serverErrors}
+          onChange={update}
+          onBlur={() => void flush()}
+        />
+      );
       break;
     case 'review':
       body = (
@@ -260,25 +281,5 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
         </div>
       )}
     </div>
-  );
-}
-
-type HeadingRef = React.RefObject<HTMLHeadingElement | null>;
-
-// S1-4 replaces this with About, Accessibility, Cancellations and the contact email.
-function DetailsComingSoon({ headingRef }: { headingRef: HeadingRef }) {
-  return (
-    <main className={styles.body}>
-      <div className={styles.heading}>
-        <h1 ref={headingRef} tabIndex={-1}>
-          Tell people more
-        </h1>
-        <span className={styles.lede}>All optional, but events with these get more bookings.</span>
-      </div>
-      <div className={`${screen.notice} ${screen.noticeInfo}`}>
-        <Icon name="info" />
-        <p>About, accessibility and cancellations are coming next. You can skip this step.</p>
-      </div>
-    </main>
   );
 }

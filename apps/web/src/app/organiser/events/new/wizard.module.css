@@ -175,8 +175,22 @@
   font-size: 16px;
   color: var(--ink);
 }
+.field textarea {
+  scroll-margin-bottom: 96px;
+  min-height: 120px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  border: 1.5px solid var(--line-field);
+  background: var(--white);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+}
 .field input[aria-invalid='true'],
-.field select[aria-invalid='true'] {
+.field select[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
   border-color: var(--error);
 }
 
@@ -805,4 +819,67 @@
 .addTypeButton:hover {
   border-color: var(--indigo);
   background: var(--indigo-tint);
+}
+
+/* Details (artboard 8b): grouped choices in a card, counts beside the hints. */
+.hintRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--slate);
+}
+.count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.fieldset > .groupLegend {
+  font-size: 17px;
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 4px;
+}
+.groupHint {
+  font-size: 13px;
+  color: var(--slate);
+  margin-bottom: 4px;
+}
+.choiceList {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 14px;
+  border: 1px solid var(--line-divider);
+  border-radius: 16px;
+  background: var(--white);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.choice + .choice {
+  border-top: 1px solid var(--line-divider);
+}
+.choice input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--indigo);
+}
+.choiceTall {
+  align-items: flex-start;
+  padding: 14px 0;
+}
+.choiceText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.choiceText .hint {
+  font-weight: 400;
 }

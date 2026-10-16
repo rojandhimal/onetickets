@@ -86,7 +86,23 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
    `POST /organisations/:orgId/events/:id/ticket-types`,
    `PATCH …/ticket-types/:typeId` and `DELETE …/ticket-types/:typeId`, each returning the refreshed
    event with its new `version` so wizard autosave stays in sync.
-3. **Details**: placeholder until S1-4 (About, accessibility, cancellations, contact email).
+3. **Details** (`DetailsStep.tsx`, artboard 8b), all optional:
+   - **About this event**, up to 2,000 characters. A template draft starts with that template's
+     paragraph (`STARTER_ABOUT` in `src/lib/templates.ts`); the api's create call takes only the
+     template, so `StartDraft` saves the paragraph with one `PATCH` straight after creating the
+     draft. A blank event starts empty.
+   - **Accessibility**: a fieldset of six checkboxes (saved in list order, whatever order they were
+     ticked in) and "Anything else people should know?", up to 500 characters.
+   - **Cancellations**: any time (the default), up to 24 hours before, or none, with the same
+     wording the event page uses.
+   - **Contact email for attendees**. It is only for people with a ticket: the public event page
+     and its api response carry `hasContactEmail`, never the address, and the page has no `mailto`.
+     A mistyped address shows "Enter an email address, like name@example.com" on blur and isn't
+     saved until it's fixed; the api runs its own check too.
+
+   The two long fields show a count ("168 / 2,000") beside their hint. Screen readers hear "1,832
+   characters left" through a polite live region once typing pauses, not on every key.
+
 4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
    Publish button is never disabled; pressing it with something missing shows "Add … to publish.
    Everything else is ready." and moves focus to the checklist. After `POST /organisations/:orgId/events/:id/publish` the

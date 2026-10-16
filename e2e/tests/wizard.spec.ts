@@ -190,3 +190,90 @@ test('free ticket types step steps capacity, adds and removes types, and validat
   await expect(status(page)).toHaveText('Draft saved');
   await expect(page.getByRole('list', { name: 'Ticket types' })).toHaveCount(0);
 });
+
+test('step 3 holds About, accessibility, cancellations and a private contact email', async ({
+  page,
+  context,
+}) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  await page.getByLabel('Event name').fill('Risograph zine morning');
+  await page.getByLabel('Date').fill(`${nextYear}-11-28`);
+  await page.getByLabel('Starts').fill('09:30');
+  await page.getByLabel('Ends').fill('12:00');
+  await page.getByRole('combobox', { name: 'Venue address' }).fill('Marrickville');
+  await page.getByRole('option', { name: /Marrickville Town Hall/ }).click();
+  await page.getByLabel('Event name').focus();
+  await expect(status(page)).toHaveText('Draft saved');
+
+  // The template's starter About is already there, with its count (row 4.4).
+  await page.getByRole('link', { name: 'Next: tickets' }).click();
+  await page.getByRole('link', { name: 'Next: details' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tell people more');
+  const about = page.getByLabel('About this event');
+  await expect(about).toHaveValue(/hands-on session/);
+  await expect(about).toHaveAccessibleDescription(/The Workshop template starts you off\./);
+  await expect(about).toHaveAttribute('maxlength', '2000');
+  await expectAccessible(page);
+
+  await about.fill('Print your own zine on a risograph. Bring a few drawings.');
+  await expect(about).toHaveAccessibleDescription(
+    'Say what people will do and what to bring. 57 / 2,000',
+  );
+
+  // Accessibility fieldset (row 4.1).
+  const access = page.getByRole('group', { name: 'Accessibility' });
+  for (const label of [
+    'Step-free access',
+    'Accessible toilet',
+    'Hearing loop',
+    'Seating available',
+    'Auslan interpreter',
+    'Quiet space',
+  ])
+    await expect(access.getByRole('checkbox', { name: label })).toBeVisible();
+  await access.getByRole('checkbox', { name: 'Hearing loop' }).check();
+  await access.getByRole('checkbox', { name: 'Step-free access' }).check();
+  const notes = page.getByLabel('Anything else people should know?');
+  await expect(notes).toHaveAttribute('maxlength', '500');
+  await notes.fill('Lift from the car park on Fisher St.');
+  await expect(notes).toHaveAccessibleDescription(/36 \/ 500$/);
+
+  // Cancellations and the contact email, which is checked before it saves (row 4.4).
+  await page.getByRole('radio', { name: 'Up to 24 hours before' }).check();
+  const contact = page.getByLabel('Contact email for attendees');
+  await contact.fill('zines@example');
+  await notes.focus();
+  await expect(contact).toHaveAttribute('aria-invalid', 'true');
+  await contact.fill('zines@example.test');
+  await notes.focus();
+  await expect(contact).not.toHaveAttribute('aria-invalid');
+  await expect(status(page)).toHaveText('Draft saved');
+  await expectAccessible(page);
+
+  // Everything saved survives a reload.
+  await page.reload();
+  await expect(page.getByLabel('About this event')).toHaveValue(/risograph/);
+  await expect(page.getByRole('checkbox', { name: 'Hearing loop' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Up to 24 hours before' })).toBeChecked();
+  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+
+  // Published, the page shows the summary row and the full list (row 4.2) but never the email.
+  await page.getByRole('link', { name: 'Next: review' }).click();
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  const path = await page.getByRole('link', { name: 'See your event page' }).getAttribute('href');
+  await context.clearCookies();
+  await page.goto(path!);
+  const facts = page.locator('dl');
+  await expect(facts.locator('strong', { hasText: 'Step-free access' })).toBeVisible();
+  await expect(facts).toContainText('Hearing loop ·');
+  await expect(facts).toContainText('Cancel up to 24 hours before');
+  const section = page.getByRole('region', { name: 'Accessibility' });
+  await expect(section.getByRole('listitem')).toHaveText(['Step-free access', 'Hearing loop']);
+  await expect(section).toContainText('Lift from the car park on Fisher St.');
+  await expect(page.getByRole('region', { name: 'About' })).toContainText('risograph');
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  expect(await page.content()).not.toContain('zines@example.test');
+  await expectAccessible(page);
+});

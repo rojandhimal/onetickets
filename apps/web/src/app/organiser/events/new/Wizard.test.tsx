@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { STARTER_ABOUT } from '@/lib/templates';
 import { draftEvent, readyEvent } from '@/test/event-fixture';
+import { CONTACT_EMAIL_ERROR } from './DetailsStep';
 import { Wizard } from './Wizard';
 
 let pathname = '/organiser/events/new/basics';
@@ -593,5 +595,124 @@ describe('create-event wizard', () => {
         ),
       );
     });
+  });
+});
+
+describe('details step', () => {
+  beforeEach(() => {
+    pathname = '/organiser/events/new/details';
+  });
+
+  const saved = () =>
+    api({ 'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })) });
+
+  it('starts a template draft from its About text and counts characters', async () => {
+    saved();
+    const user = userEvent.setup();
+    const about = STARTER_ABOUT.workshop;
+    render(<Wizard initialEvent={draftEvent({ about })} userId="u_1" />);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tell people more');
+    const field = screen.getByLabelText('About this event');
+    expect(field).toHaveValue(about);
+    expect(field).toHaveAccessibleDescription(
+      `The Workshop template starts you off. Say what people will do and what to bring. ${about.length} / 2,000`,
+    );
+
+    await user.clear(field);
+    await user.type(field, 'Bring an old shirt.');
+    expect(field).toHaveAccessibleDescription(
+      'Say what people will do and what to bring. 19 / 2,000',
+    );
+    expect(field).toHaveAttribute('maxlength', '2000');
+  });
+
+  it('saves accessibility features in list order with the notes', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const group = screen.getByRole('group', { name: 'Accessibility' });
+    expect(group).toHaveAccessibleDescription(
+      "Shown near the top of your event page. Tick what's true for your venue.",
+    );
+    await user.click(screen.getByRole('checkbox', { name: 'Quiet space' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Step-free access' }));
+    await user.type(screen.getByLabelText('Anything else people should know?'), 'Ramp at side');
+    await user.tab();
+
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({
+        accessibility: { features: ['step_free_access', 'quiet_space'], notes: 'Ramp at side' },
+      }),
+    );
+    expect(screen.getByLabelText('Anything else people should know?')).toHaveAttribute(
+      'maxlength',
+      '500',
+    );
+  });
+
+  it('saves the cancellation choice', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const anyTime = screen.getByRole('radio', { name: 'Any time before it starts' });
+    expect(anyTime).toBeChecked();
+    expect(anyTime).toHaveAccessibleDescription(
+      'Recommended for free events. Released tickets go back on sale.',
+    );
+    await user.click(screen.getByRole('radio', { name: 'Up to 24 hours before' }));
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ cancellationPolicy: 'up_to_24h' }),
+    );
+  });
+
+  it('saves a contact email and explains a mistyped one', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const email = screen.getByLabelText('Contact email for attendees');
+    expect(email).toHaveAccessibleDescription('Only shown to people with a ticket.');
+    await user.type(email, 'jo@example');
+    await user.tab();
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(
+      `${CONTACT_EMAIL_ERROR} Only shown to people with a ticket.`,
+    );
+
+    await user.type(email, '.test');
+    expect(email).not.toHaveAttribute('aria-invalid');
+    await user.tab();
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ contactEmail: 'jo@example.test' }),
+    );
+  });
+
+  it('shows the api message under a refused contact email', async () => {
+    api({
+      'PATCH /api/organisations/org_1/events/evt_1': () =>
+        json(
+          {
+            statusCode: 422,
+            code: 'invalid_request',
+            message: 'Use an email address you can receive mail at',
+            field: 'contactEmail',
+          },
+          422,
+        ),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    const email = screen.getByLabelText('Contact email for attendees');
+    await user.type(email, 'jo@example.test');
+    await user.tab();
+    await waitFor(() =>
+      expect(email).toHaveAccessibleDescription(
+        'Use an email address you can receive mail at Only shown to people with a ticket.',
+      ),
+    );
+    expect(email).toHaveValue('jo@example.test');
   });
 });

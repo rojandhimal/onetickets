@@ -34,3 +34,16 @@ export function apiTemplate(
 export function newEventHref(templateId?: EventTemplate['id']): string {
   return templateId ? `/organiser/events/new?template=${templateId}` : '/organiser/events/new';
 }
+
+/**
+ * The About paragraph each template starts with (handoff S1-1, carried to S1-4). The organiser
+ * edits or clears it on step 3; a blank event starts empty.
+ */
+export const STARTER_ABOUT: Record<ReturnType<typeof apiTemplate>, string> = {
+  workshop:
+    "A hands-on session for beginners. We'll supply the materials; bring yourself and something to take notes.",
+  gig: 'Live music from start to finish. Doors open 30 minutes before the first act.',
+  school_night: 'A night out for our school community. All welcome, and every ticket helps.',
+  meetup: 'A friendly get-together. New faces are always welcome, so come and say hello.',
+  blank: '',
+};
