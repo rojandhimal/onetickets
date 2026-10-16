@@ -2,6 +2,13 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 16 Oct 2026
+
+- **Done:** Design review of [PR #23](https://github.com/rojandhimal/onetickets/pull/23) (S1-3 event page), rendered at 375 and 1280 px with a mock api: changes needed. One must-fix: prices show "$53.35", not "A$53.35". Everything else matches handoff-s1 and artboards 2 and 2b.
+- **Done (later):** Approved #23 at 04848fe (A$ fixed in shared formatAud). Nits deferred to S1-2 and booking.
+- **Next:** Review S1-2, S1-4 and S1-5 as they open.
+- **Blocked:** Nothing.
+
 ## 15 Oct 2026
 
 - **Done:** Design review of [PR #17](https://github.com/rojandhimal/onetickets/pull/17) (S1-1 wizard): changes needed. Must fix: banner upload missing from Basics; autosave can show "Draft saved" after dropping a rejected field and "Saved on this phone" on a server error; stepper tap targets are 24 px. Four smaller copy fixes. copy-s0-s2.md updated (overnight "Ends the next day", Finance/Door staff notice). S1-4 empty-access copy updated for the privacy ruling.

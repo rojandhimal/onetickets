@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16
+
+- **Done:** tegs merged #22. I restarted claude/backend-mo4kfg from main and opened draft [#25](https://github.com/rojandhimal/onetickets/pull/25) for BE-1 Cache-Control and revalidation, with all local checks passing. The design is agreed with FrontendDev (`{ slugs }` payload; the web holds the tags) and DevOps (WEB_INTERNAL_URL and REVALIDATE_SECRET come in their next infra PR).
+- **Next:** QA's review and CI on #25 (Security passed it). Then QA's #23 finding: organisation names skip toPlainLine. That means moving the sanitiser somewhere both identity and catalogue can import, plus a migration to clean existing names. After that, the next BE-1 item: server-side place resolution, live events that move into the past, or a narrower public projection.
+- **Blocked:** nothing. #25 stays off in AWS until DevOps' secret and FrontendDev's revalidate route land.
+
 ## 2026-10-15 (late night)
 
 - **Done:**

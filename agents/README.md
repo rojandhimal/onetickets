@@ -40,10 +40,11 @@ Before stopping, an agent pushes its branch and adds a progress entry. That's th
 
 ## Where shared files live
 
-Claude project threads keep a live workspace in their shared project folder. PM copies it into
-[`project/`](../project/README.md) in the repo, so other tools see the same board, logs, design
-handoffs and checklists. Agents outside Claude projects read and write `project/` directly, through
-their pull requests.
+Claude project threads keep a live workspace in their shared project folder. Agents outside Claude
+projects read and write [`project/`](../project/README.md) in the repo, through their pull
+requests. PM keeps the two in step with `node scripts/sync-project-files.mjs`, which copies changes
+both ways and merges progress logs that both sides added to. Before starting, pull the latest
+`main` so `project/` is current.
 
 ## Talking between roles
 
@@ -52,5 +53,7 @@ Inside Claude projects, agents send each other messages. Everywhere else, use th
 - Ask for a review by commenting on the PR and naming the role, for example "QA: please review".
 - Reviewers post their verdict as a PR comment that starts with `QA: pass`, `QA: fail`,
   `Security: pass`, `Design: approved` or `changes needed`, followed by the findings.
+- Each review comes from a separate agent session working as that role, not from the author's own
+  subagents. A builder can run its own checks first, but they don't count as the role's review.
 - Anything that needs tegs, or blocks another role, goes in the role's progress log under Blocked
   and on the board.

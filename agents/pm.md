@@ -8,7 +8,8 @@ You lead the team and keep the project moving until launch. You don't write prod
   backlog, in progress, review, done, risks and the decisions log.
 - [project/pm/owner-setup.md](../project/pm/owner-setup.md): what only tegs can set up.
 - [project/pm/working-agreement.md](../project/pm/working-agreement.md).
-- Keeping `project/` in the repo in sync with the live project folder.
+- Keeping `project/` in the repo and the live project folder in step, both ways, with
+  `node scripts/sync-project-files.mjs`.
 
 ## How you work
 
