@@ -171,11 +171,20 @@ export function Wizard({
   const go = useCallback(
     (to: WizardStep) => (e?: MouseEvent) => {
       e?.preventDefault();
+      // A ticket edit with a mistake can't be saved, so stay and point at it rather than drop it.
+      const mistake =
+        step === 'tickets' && ticketSaveState === 'refused'
+          ? document.querySelector<HTMLElement>('main [aria-invalid="true"]')
+          : null;
+      if (mistake) {
+        mistake.focus();
+        return;
+      }
       void ticketFlushRef.current?.();
       void flush();
       window.history.pushState(null, '', stepHref(to, event.id));
     },
-    [event.id, flush],
+    [event.id, flush, step, ticketSaveState],
   );
 
   const leave = useCallback(

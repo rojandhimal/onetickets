@@ -32,6 +32,7 @@ type SalesEndKind = SalesEnd['kind'];
 export const CAPACITY_MIN_ERROR = 'Set at least 1 ticket';
 export const SALES_END_BEFORE_START_ERROR = 'Sales need to end after they start';
 export const TICKET_NAME_EMPTY_ERROR = 'Give this ticket a name';
+export const WHOLE_NUMBER_ERROR = 'Use a whole number';
 export const REMOVE_OFFLINE_ERROR =
   "Couldn't remove this ticket. Check your connection and try again.";
 
@@ -122,6 +123,11 @@ type ServerFieldErrors = Partial<
   Record<'name' | 'capacity' | 'maxPerOrder' | 'salesStart' | 'salesEnd', string>
 >;
 
+/** "2.5" or "2,5": a number, but not a whole one. */
+function isFraction(text: string): boolean {
+  return /^\d*[.,]\d+$/.test(text.trim());
+}
+
 function parsePositiveInt(text: string): number | null {
   const trimmed = text.trim();
   if (!/^-?\d+$/.test(trimmed)) return null;
@@ -188,6 +194,8 @@ export function TicketsStep({
       let capacityError: string | null = null;
       if (current.capacityText.trim() === '') {
         if (showUntouched || touched.capacity) capacityError = CAPACITY_MIN_ERROR;
+      } else if (isFraction(current.capacityText)) {
+        capacityError = WHOLE_NUMBER_ERROR;
       } else if (cap === null || cap < 1) {
         capacityError = CAPACITY_MIN_ERROR;
       } else if (cap > EVENT_LIMITS.capacity) {
@@ -199,6 +207,8 @@ export function TicketsStep({
       let maxPerOrderError: string | null = null;
       if (current.maxPerOrderText.trim() === '') {
         if (showUntouched || touched.maxPerOrder) maxPerOrderError = CAPACITY_MIN_ERROR;
+      } else if (isFraction(current.maxPerOrderText)) {
+        maxPerOrderError = WHOLE_NUMBER_ERROR;
       } else if (maxOrd === null || maxOrd < 1) {
         maxPerOrderError = CAPACITY_MIN_ERROR;
       } else if (cap !== null && cap >= 1 && maxOrd > cap) {

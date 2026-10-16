@@ -808,3 +808,35 @@ describe('ticket edits made offline', () => {
     await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
   });
 });
+
+describe('ticket mistakes', () => {
+  beforeEach(() => {
+    pathname = '/organiser/events/new/tickets';
+  });
+
+  it('asks for a whole number of tickets', async () => {
+    api({});
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '2.5');
+    await user.tab();
+    expect(capacity).toHaveAccessibleDescription(/Use a whole number/);
+  });
+
+  it('stays on Tickets and points at a mistake instead of dropping the edit', async () => {
+    api({});
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '0');
+    await user.click(screen.getByRole('link', { name: 'Next: details' }));
+    expect(capacity).toHaveFocus();
+    expect(capacity).toHaveValue(0);
+    expect(pushState).not.toHaveBeenCalledWith(null, '', expect.stringContaining('/details'));
+    pushState.mockRestore();
+  });
+});
