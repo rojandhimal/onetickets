@@ -17,5 +17,6 @@ infra/envs/backend.hcl
 crash.log
 playwright-report/
 test-results/
+.logs/
 # Local uploads (event banners in development)
 apps/api/var/
