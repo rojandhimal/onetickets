@@ -2,6 +2,15 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-15 (13:30 UTC)
+
+- **Done:**
+  - #17: merged main in after #16 and #19 landed (7b6989f). The conflicts were only in the ADR index and .gitignore.
+  - #17: CI is all green, including e2e (20 tests). It's marked ready for tegs's review.
+  - Confirmed BackendDev's #22 (priceCents limit).
+- **Next:** open S1-3 (event page) on the branch as soon as #17 merges. Then S1-2.
+- **Blocked:** nothing.
+
 ## 2026-10-15 (evening)
 
 - **Done:**

@@ -56,9 +56,9 @@ push; CI runs the same ones.
    and update `README.md`, `docs/` or a new ADR in `docs/adr/` in the same PR. See
    [working agreement](project/pm/working-agreement.md).
 5. **Reviews before merge.** QA reviews every PR against the story's acceptance criteria. Security
-   reviews anything touching auth, sessions, RLS, personal data, uploads, payments or infra.
-   ProductDesign reviews anything a user sees. A PR is ready for tegs only when CI is green and the
-   reviewers it needs have passed it.
+   reviews anything touching auth, sessions, RLS, database migrations, personal data, uploads,
+   payments or infra. ProductDesign reviews anything a user sees. A PR is ready for tegs only when
+   CI is green and every reviewer it needs has passed it.
 6. **Log your progress.** Add a dated entry to `project/pm/progress/<role>.md`, newest first: Done,
    Next, Blocked. Only edit your own file.
 7. **Ask through the board, not by guessing.** Decisions that change scope, cost or what users see

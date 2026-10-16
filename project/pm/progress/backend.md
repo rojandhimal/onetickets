@@ -2,6 +2,30 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-15 (late night)
+
+- **Done:**
+  - #22 marked ready (CI green on 478a91b, QA passed). PM queued it for tegs; BE-2 and BE-3 are closed by it.
+  - BE-1 Cache-Control and revalidation built and committed locally (471bd7a, local branch be1-cache), not pushed while #22 is open.
+    - A found event and browse send `public, max-age=0, s-maxage=60, stale-while-revalidate=300`. Every other api response, 404s and errors included, sends no-store.
+    - Publishing or editing a live event POSTs `{ slugs }` to WEB_URL/internal/revalidate with REVALIDATE_SECRET. It's off when unset.
+    - Tests and mutation checks pass. Docs are updated.
+  - Sent the design to FrontendDev (payload, and whether the page is cached at the edge or with ISR) and to DevOps (the new REVALIDATE_SECRET for the api and web).
+- **Next:** When #22 merges, restart claude/backend-mo4kfg from main, apply the commit, open the PR, and ask QA and Security to review.
+- **Blocked:** nothing.
+
+## 2026-10-15 (night)
+
+- **Done:** #22 now follows PM's "from" rule (cheapest type on sale, else cheapest of all). QA asked that the browse free/paid filter use the same rule, so in 3be9651 I moved it into one SQL function, catalogue.from_price_cents (migration 0006). Cards, the filter and the event page all read it. I added QA's three cases and a SQL/TS on-sale parity test, and mutation-checked them. FrontendDev agreed the contract.
+- **Next:** QA passed #22 at 3be9651. QA then asked (not blocking) for a stronger SQL/TS on-sale parity test, which I pushed as 478a91b. It's test-only and kills all four surviving mutants. PM had carded that test as BE-3 for a follow-up PR, but our messages crossed, so it's already in #22. Mark #22 ready once CI is green on 478a91b. After that, the next BE-1 item.
+- **Blocked:** nothing. The S3 adapter is waiting on DevOps' bucket.
+
+## 2026-10-15 (late)
+
+- **Done:** tegs merged #16 (S1 api) at 13:20 UTC. I restarted my branch from main and opened draft [#22](https://github.com/rojandhimal/onetickets/pull/22) for BE-1. It adds one pricing function (pricing.ts) used by both the browse cards and the event page, and a priceCents max of A$10,000 (zod plus a DB CHECK, migration 0005). Local Postgres now matches CI: migrations run as onetickets_owner, a non-superuser.
+- **Next:** FrontendDev's OK on the contract, QA review of #22, and CI. Then the next BE-1 item. The S3 adapter is waiting on DevOps' bucket.
+- **Blocked:** nothing.
+
 ## 2026-10-15 (evening)
 
 - **Done:** I fixed QA's four #16 blockers in 4cc4e2b:
