@@ -1,0 +1,56 @@
+import { expect, test } from './fixtures';
+import { expectAccessible } from './a11y';
+import { signUpOrganiser } from './session';
+
+// S1-3 public event page: an event published through the wizard is readable by anyone, under an
+// enforced nonce CSP, with no shared caching (QA Sprint 1 rows 3.x). The CSP guard in fixtures.ts
+// fails the test on any violation.
+
+const nextYear = new Date().getFullYear() + 1;
+
+test('a published event has a public page anyone can open', async ({ page, browser }) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  await page.getByLabel('Event name').fill('Lino cut night');
+  await page.getByLabel('Date').fill(`${nextYear}-11-21`);
+  await page.getByLabel('Starts').fill('18:30');
+  await page.getByLabel('Ends').fill('21:00');
+  await page.getByRole('combobox', { name: 'Venue address' }).fill('Marrickville');
+  await page.getByRole('option', { name: /Marrickville Town Hall/ }).click();
+  await page.getByLabel('Event name').focus();
+  await expect(page.getByRole('banner').getByRole('status')).toHaveText('Draft saved');
+
+  const draft = new URL(page.url()).searchParams.get('draft')!;
+  await page.goto(`/organiser/events/new/review?draft=${draft}`);
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  const eventLink = page.getByRole('link', { name: 'See your event page' });
+  const path = await eventLink.getAttribute('href');
+  expect(path).toMatch(/^\/e\/lino-cut-night-/);
+
+  // A visitor with no session.
+  const visitor = await browser.newContext();
+  const guest = await visitor.newPage();
+  const response = await guest.goto(path!);
+  expect(response?.status()).toBe(200);
+  const headers = response!.headers();
+  expect(headers['content-security-policy']).toMatch(
+    /script-src 'self' 'nonce-[^']+' 'strict-dynamic'/,
+  );
+  expect(headers['cache-control']).toBe('private, no-store');
+
+  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
+  await expect(guest.getByText('Marrickville Town Hall').first()).toBeVisible();
+  await expect(guest.getByText('Tickets open soon').first()).toBeVisible();
+  await expect(guest.locator('meta[property="og:image"]')).toHaveAttribute(
+    'content',
+    /opengraph-image/,
+  );
+  await expectAccessible(guest);
+  await visitor.close();
+});
+
+test('an unknown slug is a 404', async ({ page }) => {
+  const response = await page.goto('/e/no-such-event-zz99');
+  expect(response?.status()).toBe(404);
+});

@@ -120,6 +120,10 @@ provider's tile, and links to Google Maps, which opens the phone's maps app. The
 fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
 or if that fetch fails, it falls back to the template colour.
 
+`e2e/tests/event-page.spec.ts` publishes an event through the wizard, then opens its page in a
+fresh browser with no session. It checks the enforced nonce CSP, `private, no-store`, the share
+image tag and axe, and that an unknown slug is a 404.
+
 ### Caching and revalidation
 
 The page HTML is never cached by anyone: it carries a per-request CSP nonce, so `src/proxy.ts`
