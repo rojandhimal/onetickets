@@ -8,6 +8,7 @@ import {
   type Role,
 } from '@onetickets/shared';
 import { UnitOfWork } from '../../database/database.module.js';
+import { toPlainLine } from '../../text/plain-text.js';
 import { ApiError, forbidden, mfaRequired } from './errors.js';
 import { MembershipsRepository } from './memberships.repository.js';
 
@@ -24,8 +25,15 @@ export class OrganisationsService {
     private readonly memberships: MembershipsRepository,
   ) {}
 
-  /** Creates an organisation with the caller as its owner. */
-  async create(userId: string, name: string): Promise<OrganisationDto> {
+  /**
+   * Creates an organisation with the caller as its owner. The name is shown publicly as the
+   * organiser (event pages, link previews), so it is stored as one line of plain text (SEC-3).
+   */
+  async create(userId: string, rawName: string): Promise<OrganisationDto> {
+    const name = toPlainLine(rawName);
+    if (!name) {
+      throw new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, 'invalid_request', 'Required.', 'name');
+    }
     const id = randomUUID();
     await this.uow.run({ organisationId: id, userId }, async (tx) => {
       await this.memberships.createOrganisation(tx, id, name, userId);
