@@ -16,4 +16,8 @@ describe('event page proxy', () => {
   it('only runs on event pages', () => {
     expect(config.matcher.map((m) => m.source)).toEqual(['/e/:slug']);
   });
+
+  it('skips only router prefetches, so browser document prefetches get the policy', () => {
+    expect(config.matcher[0]!.missing).toEqual([{ type: 'header', key: 'next-router-prefetch' }]);
+  });
 });

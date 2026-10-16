@@ -38,6 +38,12 @@ test('a published event has a public page anyone can open', async ({ page, conte
   );
   expect(headers['cache-control']).toBe('private, no-store');
 
+  // A browser's own document prefetch can become the page shown, so it gets the policy too.
+  const prefetched = await page.request.get(path!, {
+    headers: { 'sec-purpose': 'prefetch', purpose: 'prefetch' },
+  });
+  expect(prefetched.headers()['content-security-policy']).toMatch(/'nonce-[^']+'/);
+
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
   await expect(page.getByText('Marrickville Town Hall').first()).toBeVisible();
   await expect(page.getByText('Tickets open soon').first()).toBeVisible();
