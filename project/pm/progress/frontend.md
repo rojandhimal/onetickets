@@ -2,6 +2,19 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (11:15 UTC, S1-4 rework, #35)
+
+- **Done:**
+  - Reworked [#35](https://github.com/rojandhimal/onetickets/pull/35) after the reviews:
+    - About now uses template placeholder prompts (no saved starter text);
+    - Design's three #31 fixes and the single-type delete nit;
+    - offline ticket edits kept in IndexedDB and synced on reconnect, from any step and before publish (QA's #31 finding, row 1.6, its own commit);
+    - QA's nits: "Use a whole number", and a mistake on Tickets is focused instead of dropped.
+  - CI now prints the page snapshot and api errors when an e2e test fails (QA-2). I couldn't reproduce the publish e2e failure locally, and CI passed it at 67e2c86.
+  - Security passed #35. Local checks pass: web 132 unit tests, e2e 32/32.
+- **Next:** QA and Design re-reviews, CI green on bda956e, then S1-5 browse once #35 merges.
+- **Blocked:** nothing.
+
 ## 2026-10-16 (06:20 UTC, S1-4, #35)
 
 - **Done:**

@@ -26,7 +26,7 @@ Artboards: **0b** (template picker), **7 Basics**, **8 Tickets**, **8b Details**
   - `Saved on this phone` (wifi-off icon, #5C3300) when offline; the draft goes to IndexedDB and syncs when back online, then returns to "Draft saved".
     Never block typing while saving. On reopening, the draft resumes on the last step visited.
 - Venue: combobox with address lookup (already on 7). Picking a suggestion stores the place id and geo point. "Online" swaps in a URL field.
-- **Publish checklist lives on step 4 only** (removed from step 2). "Needed to publish": event name, date and time, venue (or online link), at least one ticket type. "Nice to have": banner, about, accessibility.
+- **Publish checklist lives on step 4 only** (removed from step 2). "Needed to publish": event name, date and time, venue (or online link), at least one ticket type, and a saved contact email for attendees (added 16 Oct: the api no longer falls back to the publisher's sign-in email; step 3 shows the viewer's own email in the field, saved on blur or Next). "Nice to have": banner, about, accessibility.
   - The Publish button is never disabled. If something needed is missing, pressing it shows an error notice "Add a venue to publish. Everything else is ready." (`role="alert"`), moves focus to the checklist, and the missing row shows a red alert icon, red "Not added yet" text and an "Add" link to the right step. Toggle `missingVenue` on 8c to see it.
   - Success: the ink "Your event is live" screen (heading receives focus), copy link button, native share button (Web Share API; hide it if unsupported), "See your event page", "Back to your events".
 
