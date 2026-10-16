@@ -20,6 +20,10 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 | --------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time.                                                          |
 | `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404. |
+| `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                                       |
+| `FEATURE_BOOKING`                                   | server, at request time | `true` turns "Tickets open soon" on event pages into a Get tickets link. Off until booking ships in Sprint 2.                                                          |
+| `WEB_URL`                                           | server, at request time | Public address of the site, used for absolute share-image links in event link previews.                                                                                |
+| `REVALIDATE_SECRET`                                 | server, at request time | Bearer secret the api sends to `POST /internal/revalidate`. Unset turns the route off (404).                                                                           |
 | `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                                                                         |
 | `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                                                                                     |
 | `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                                                                               |
@@ -103,6 +107,36 @@ of the templates, and the wizard pages return 404 for them.
 Request and response shapes are in `packages/shared/src/api/events.ts`. The rules behind the checklist
 and the stepper ticks are in `src/lib/wizard-model.ts`.
 
+## Event page (S1-3)
+
+`/e/{slug}` renders `GET /public/events/:slug` on the server (`src/lib/public-events.ts`, shared
+within a request so the page, its metadata and its share image make one api call). Above the fold at 375 px:
+banner, date, title, organiser, then the key facts (price and spots left, venue with a map link,
+cancellations, accessibility). The ticket bar sticks to the bottom on phones and becomes a card in a
+right-hand column from 768 px. Online events never show their link; buyers get it with their ticket.
+
+Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
+provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
+fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
+or if that fetch fails, it falls back to the template colour.
+
+`e2e/tests/event-page.spec.ts` publishes an event through the wizard, then opens its page in a
+fresh browser with no session. It checks the enforced nonce CSP, `private, no-store`, the share
+image tag and axe, and that an unknown slug is a 404.
+
+### Caching and revalidation
+
+The page HTML is never cached by anyone: it carries a per-request CSP nonce, so `src/proxy.ts`
+sends `Cache-Control: private, no-store`. What is cached is the api read inside Next: the data
+cache keeps it for 60 seconds under the tag `event:{slug}` (browse will use `browse`). After the api
+publishes an event or commits a change to a live one, it calls `POST /internal/revalidate` on the
+web's private address (`WEB_INTERNAL_URL`) with `Authorization: Bearer $REVALIDATE_SECRET` and
+`{ "slugs": ["…"] }`. The route compares the secret in constant time, then expires those tags and
+`browse` at once, so the next visitor sees the edit.
+
+Next's data cache is per web task. With more than one task, a revalidate call clears only the task
+it reaches, and the others catch up when their 60-second copy expires.
+
 ## How the browser reaches the api
 
 The browser only calls `/api/*` on the web origin. `next.config.ts` rewrites those to `API_URL`, so the
@@ -116,6 +150,8 @@ someone else opens the wizard or the organiser signs out, and they expire after 
 `apps/web/src/lib/security-headers.ts` sets these on every page:
 
 - `Content-Security-Policy-Report-Only` (report-only until Next's inline scripts get nonces)
+- On `/e/{slug}` only, an enforced `Content-Security-Policy` with a per-request script nonce
+  ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
 - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, HSTS, `Permissions-Policy`
 - `Referrer-Policy: strict-origin-when-cross-origin`, and `no-referrer` on `/auth/verify`
 

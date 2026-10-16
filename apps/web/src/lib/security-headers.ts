@@ -55,3 +55,25 @@ export const securityHeaders: Header[] = [
 
 /** The magic-link landing page must never leak its URL to anything it loads or links to. */
 export const verifyPageHeaders: Header[] = [{ key: 'Referrer-Policy', value: 'no-referrer' }];
+
+/**
+ * Enforced CSP for public event pages, where organiser-written text is shown to buyers (threat
+ * model T8, SEC-3). Scripts need this request's nonce; Next adds it to its own scripts when it
+ * sees the nonce in the request's CSP header. Styles stay 'unsafe-inline' for React style
+ * attributes such as the banner focal point: style injection can't run code.
+ */
+export function strictEventPageCsp(nonce: string, opts: { dev?: boolean } = {}): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${opts.dev ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    `connect-src 'self'${sentryOrigin()}`,
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+    ...(cspReportUri() ? [`report-uri ${CSP_REPORT_PATH}`] : []),
+  ].join('; ');
+}

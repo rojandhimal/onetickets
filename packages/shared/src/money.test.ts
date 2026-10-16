@@ -3,8 +3,10 @@ import { formatAud } from './money.js';
 
 describe('formatAud', () => {
   it('formats whole cents as Australian dollars', () => {
-    expect(formatAud(5335)).toBe('$53.35');
-    expect(formatAud(0)).toBe('$0.00');
+    expect(formatAud(5335)).toBe('A$53.35');
+    expect(formatAud(0)).toBe('A$0.00');
+    expect(formatAud(123456)).toBe('A$1,234.56');
+    expect(formatAud(-500)).toBe('-A$5.00');
   });
 
   it('rejects fractional cents', () => {

@@ -100,6 +100,11 @@ export function eventWhen(startsAt: string, endsAt: string | null, timeZone: str
   return endsAt ? `${day}, ${from} to ${timeOfDay(new Date(endsAt), timeZone)}` : `${day}, ${from}`;
 }
 
+/** "Sat 14 Nov · 10:00 am to 1:00 pm", the event page eyebrow. */
+export function eventEyebrowRange(startsAt: string, endsAt: string, timeZone: string): string {
+  return eventWhen(startsAt, endsAt, timeZone).replace(', ', ' · ');
+}
+
 function timeOfDay(d: Date, timeZone: string): string {
   return new Intl.DateTimeFormat('en-AU', {
     timeZone,

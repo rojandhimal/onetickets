@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import nextConfig from '../../next.config';
-import { cspReportUri } from './security-headers';
+import { cspReportUri, strictEventPageCsp } from './security-headers';
 
 async function headersFor(path: string) {
   const rules = (await nextConfig.headers?.()) ?? [];
@@ -46,5 +46,18 @@ describe('cspReportUri', () => {
   });
   it('is off without a DSN', () => {
     expect(cspReportUri(null)).toBeNull();
+  });
+});
+
+describe('strictEventPageCsp', () => {
+  it('only runs scripts carrying the nonce, and stays strict outside development', () => {
+    const csp = strictEventPageCsp('abc123');
+    expect(csp).toContain("script-src 'self' 'nonce-abc123' 'strict-dynamic'");
+    expect(csp).not.toContain('unsafe-eval');
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    expect(csp).toContain("object-src 'none'");
+    expect(csp).toContain("base-uri 'none'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(strictEventPageCsp('abc123', { dev: true })).toContain("'unsafe-eval'");
   });
 });
