@@ -203,8 +203,7 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
   await page.getByLabel('Date').fill(`${nextYear}-11-28`);
   await page.getByLabel('Starts').fill('09:30');
   await page.getByLabel('Ends').fill('12:00');
-  await page.getByRole('combobox', { name: 'Venue address' }).fill('Marrickville');
-  await page.getByRole('option', { name: /Marrickville Town Hall/ }).click();
+  await pickMarrickville(page);
   await page.getByLabel('Event name').focus();
   await expect(status(page)).toHaveText('Draft saved');
 
@@ -258,6 +257,15 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
   await expect(page.getByLabel('About this event')).toHaveValue(/risograph/);
   await expect(page.getByRole('checkbox', { name: 'Hearing loop' })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Up to 24 hours before' })).toBeChecked();
+  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+
+  // A mistyped edit never replaces the saved address (QA's #35 review).
+  const saved = page.getByLabel('Contact email for attendees');
+  await saved.fill('zines@example');
+  await page.getByLabel('Anything else people should know?').focus();
+  await expect(saved).toHaveAttribute('aria-invalid', 'true');
+  await expect(status(page)).toHaveText("Couldn't save one field. Check the message under it.");
+  await page.reload();
   await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
 
   // Published, the page shows the summary row and the full list (row 4.2) but never the email.
