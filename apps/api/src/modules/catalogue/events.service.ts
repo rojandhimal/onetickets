@@ -28,6 +28,7 @@ import {
 import { toPlainLine, toPlainText } from './plain-text.js';
 import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
+import { PublicPageRevalidator } from './revalidation.js';
 import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
 
@@ -48,6 +49,7 @@ export class EventsService {
     private readonly uow: UnitOfWork,
     private readonly events: EventsRepository,
     private readonly storage: BannerStorage,
+    private readonly revalidator: PublicPageRevalidator,
     @Inject(CATALOGUE_CONFIG) private readonly config: CatalogueConfig,
   ) {}
 
@@ -131,13 +133,13 @@ export class EventsService {
         },
       );
     }
-    return result.saved;
+    return this.announce(result.saved);
   }
 
   async addTicketType(actor: Actor, eventId: string, raw: TicketTypeInput): Promise<EventDraftDto> {
     const input = cleanTicketType(raw);
     this.refusePaid(input);
-    return this.inScope(actor, async (tx) => {
+    const dto = await this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       this.checkWindow(event, input);
       await this.events.addTicketType(
@@ -148,6 +150,7 @@ export class EventsService {
       await this.events.bumpVersion(tx, eventId);
       return this.draftDto(tx, actor, eventId);
     });
+    return this.announce(dto);
   }
 
   async updateTicketType(
@@ -158,7 +161,7 @@ export class EventsService {
   ): Promise<EventDraftDto> {
     const input = cleanTicketType(raw);
     this.refusePaid(input);
-    return this.inScope(actor, async (tx) => {
+    const dto = await this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       this.checkWindow(event, input);
       const updated = await this.events
@@ -168,6 +171,7 @@ export class EventsService {
       await this.events.bumpVersion(tx, eventId);
       return this.draftDto(tx, actor, eventId);
     });
+    return this.announce(dto);
   }
 
   /** Bookings arrive in Sprint 2; until then the only refusal is a published event's last type. */
@@ -176,7 +180,7 @@ export class EventsService {
     eventId: string,
     ticketTypeId: string,
   ): Promise<EventDraftDto> {
-    return this.inScope(actor, async (tx) => {
+    const dto = await this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       const types = await this.events.ticketTypes(tx, [eventId]);
       if (!types.some((t) => t.id === ticketTypeId)) throw ticketTypeNotFound();
@@ -191,6 +195,7 @@ export class EventsService {
       await this.events.bumpVersion(tx, eventId);
       return this.draftDto(tx, actor, eventId);
     });
+    return this.announce(dto);
   }
 
   /** Re-encodes the upload, stores it under a fresh key and drops the previous banner. */
@@ -224,7 +229,7 @@ export class EventsService {
         return this.draftDto(tx, actor, eventId);
       });
       if (previous) await this.removeStored(previous);
-      return dto;
+      return this.announce(dto);
     } catch (error) {
       await this.removeStored(key);
       throw error;
@@ -240,11 +245,11 @@ export class EventsService {
       return this.draftDto(tx, actor, eventId);
     });
     if (previous) await this.removeStored(previous);
-    return dto;
+    return this.announce(dto);
   }
 
   async publish(actor: Actor, eventId: string): Promise<EventDraftDto> {
-    return this.inScope(actor, async (tx) => {
+    const dto = await this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       if (event.status === 'published') return this.draftDto(tx, actor, eventId);
       const types = await this.events.ticketTypes(tx, [eventId]);
@@ -278,6 +283,13 @@ export class EventsService {
       });
       return this.draftDto(tx, actor, eventId);
     });
+    return this.announce(dto);
+  }
+
+  /** After a committed change to a live event, tell the web app its public page changed. */
+  private announce(dto: EventDraftDto): EventDraftDto {
+    if (dto.status === 'published' && dto.slug) this.revalidator.changed(dto.slug);
+    return dto;
   }
 
   // ---------- public ----------

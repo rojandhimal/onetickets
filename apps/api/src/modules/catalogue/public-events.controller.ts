@@ -6,6 +6,7 @@ import {
   type PublicEventDto,
 } from '@onetickets/shared';
 import type { Response } from 'express';
+import { PUBLIC_CACHE } from '../../http.js';
 import { ApiError, Public, ZodBody } from '../identity/index.js';
 import { BANNER_KEY } from './banner-storage.js';
 import { EventsService } from './events.service.js';
@@ -21,16 +22,29 @@ export class PublicEventsController {
 
   @Get('events')
   @Public()
-  async browse(@Query(new ZodBody(browseQuery)) query: BrowseQuery): Promise<BrowseResponse> {
-    return this.events.browse(query);
+  async browse(
+    @Query(new ZodBody(browseQuery)) query: BrowseQuery,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BrowseResponse> {
+    const page = await this.events.browse(query);
+    response.setHeader('cache-control', PUBLIC_CACHE);
+    return page;
   }
 
+  /**
+   * Cached only once found: a 404 keeps the default no-store, so a slug that has just gone live is
+   * never hidden behind a cached miss. (Nest's @Header would also stamp errors, so it isn't used.)
+   */
   @Get('events/:slug')
   @Public()
-  async event(@Param('slug') slug: string): Promise<PublicEventDto> {
+  async event(
+    @Param('slug') slug: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<PublicEventDto> {
     if (slug.length > 80 || !SLUG.test(slug)) throw notFound();
     const event = await this.events.publicEvent(slug);
     if (!event) throw notFound();
+    response.setHeader('cache-control', PUBLIC_CACHE);
     return event;
   }
 

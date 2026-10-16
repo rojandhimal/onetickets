@@ -7,6 +7,7 @@ import { EventsService } from './events.service.js';
 import { PlacesController } from './places.controller.js';
 import { PlacesProvider, placesProviderFromEnv } from './places.js';
 import { PublicEventsController } from './public-events.controller.js';
+import { PublicPageRevalidator, revalidatorFromEnv } from './revalidation.js';
 
 /** Events and ticket types: drafting, venue lookup, publishing, the public event page and browse. */
 @Module({
@@ -15,6 +16,7 @@ import { PublicEventsController } from './public-events.controller.js';
     { provide: CATALOGUE_CONFIG, useFactory: () => loadCatalogueConfig() },
     { provide: BannerStorage, useFactory: () => bannerStorageFromEnv() },
     { provide: PlacesProvider, useFactory: () => placesProviderFromEnv() },
+    { provide: PublicPageRevalidator, useFactory: () => revalidatorFromEnv() },
     EventsRepository,
     EventsService,
   ],
