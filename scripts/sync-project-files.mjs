@@ -28,7 +28,6 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import * as prettier from 'prettier';
 
 const args = process.argv.slice(2);
 const preferRepo = args.includes('--prefer-repo');
@@ -49,8 +48,12 @@ const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
 };
-const format = async (path, text) =>
-  prettier.format(text, { ...(await prettier.resolveConfig(path)), filepath: path });
+// Loaded after the shared-folder check, so tools without node_modules can still run the script.
+let prettier;
+const format = async (path, text) => {
+  prettier ??= await import('prettier');
+  return prettier.format(text, { ...(await prettier.resolveConfig(path)), filepath: path });
+};
 
 function markdownFiles(root) {
   const found = [];

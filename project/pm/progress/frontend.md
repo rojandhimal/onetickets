@@ -2,6 +2,21 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (06:20 UTC, S1-4, #35)
+
+- **Done:**
+  - #31 (S1-2) merged. The branch restarted from main.
+  - Opened draft [#35](https://github.com/rojandhimal/onetickets/pull/35) (S1-4 Details step, artboard 8b):
+    - About with the template starter paragraph (saved by one PATCH after create);
+    - the Accessibility fieldset and notes;
+    - Cancellations;
+    - the contact email for attendees, which never appears on the public page;
+    - live character counts, announced politely.
+  - Locally: web 129 unit tests and 28 e2e tests pass. The e2e tests cover rows 4.1 to 4.4.
+  - Asked QA, ProductDesign (three copy questions) and Security to review.
+- **Next:** drive #35 to green and swap in ProductDesign's copy, then S1-5 browse.
+- **Blocked:** nothing.
+
 ## 2026-10-16 (S1-2, #31)
 
 - **Done:**
@@ -13,7 +28,10 @@ Newest first. Format: date, Done, Next, Blocked.
     - Inline validation for capacity (`Set at least 1 ticket`), max per order (`Can't be more than {capacity}, the number of tickets`), and sales window (`Sales need to end after they start`), plus API 422/409 error handling and `version` sync with wizard autosave.
     - Added unit tests (`Wizard.test.tsx`), Playwright E2E coverage (`e2e/tests/wizard.spec.ts`), and updated `docs/web/README.md`.
 - **Next:** get QA, ProductDesign and Security reviews on S1-2, then once S1-2 merges open S1-4 (accessibility and event details) followed by S1-5 (browse upcoming events).
-- **Blocked:*## 2026-10-16 (00:30 UTC)
+- **Blocked:** nothing.
+
+## 2026-10-16 (00:30 UTC)
+
 - **Done:**
   - #17 (S1-1 wizard) merged. The branch restarted from main.
   - Opened draft #23 (S1-3 event page):
@@ -24,8 +42,6 @@ Newest first. Format: date, Done, Next, Blocked.
   - Asked QA, Security and ProductDesign to review.
 - **Next:** drive #23 to green, then S1-2 (ticket types).
 - **Blocked:** nothing.
-
-* nothing.
 
 ## 2026-10-15 (13:30 UTC)
 

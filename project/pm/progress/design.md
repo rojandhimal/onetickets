@@ -6,7 +6,9 @@ Newest first. Format: date, Done, Next, Blocked.
 
 - **Done:** Design review of [PR #23](https://github.com/rojandhimal/onetickets/pull/23) (S1-3 event page), rendered at 375 and 1280 px with a mock api: changes needed. One must-fix: prices show "$53.35", not "A$53.35". Everything else matches handoff-s1 and artboards 2 and 2b.
 - **Done (later):** Approved #23 at 04848fe (A$ fixed in shared formatAud). Nits deferred to S1-2 and booking.
-- **Next:** Review S1-2, S1-4 and S1-5 as they open.
+- **Done (later):** Post-merge review of [#31](https://github.com/rojandhimal/onetickets/pull/31) (S1-2 ticket types), run end to end at 375 and 1280 px: approved, with 3 small fixes riding S1-4 (drop the lede, Edit aria-label, header status wrap). For S1-4: About uses template placeholder prompts, not prefilled text, and the cancellation radio labels are final. Updated copy-s0-s2.md, handoff-s1.md and the canvas (v32, 8b).
+- **Done (later):** Reviewed [#35](https://github.com/rojandhimal/onetickets/pull/35) (S1-4 details): changes needed. Must fix: About as placeholder prompts, not saved starter text. The #31 follow-ups are still to land. Approved the email error and the No cancellations hint.
+- **Next:** Re-review #35 after the push (render at 375 and 1280). Review S1-5 when it opens.
 - **Blocked:** Nothing.
 
 ## 15 Oct 2026

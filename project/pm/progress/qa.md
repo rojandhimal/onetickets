@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 16 Oct 2026 (S1-2 #31 post-merge)
+
+- **Done:** Reviewed [#31](https://github.com/rojandhimal/onetickets/pull/31#issuecomment-6209383998) on main at ff36249. Rows 2.1 to 2.7 pass (unit 122/122, e2e 26/26, integration 106/106, plus the QA script qa/scripts/qa31.spec.ts at 375 and 1280 px). One finding must be fixed before Sprint 1 acceptance (it rides S1-4): ticket edits made offline show "Saved on this phone" but are kept only in memory, are not retried when back online, and are lost when the draft is reopened (row 1.6). Three nits are on the PR. Also re-checked #25 at 26d788e (BE-4): pass.
+- **Next:** Re-check the offline ticket fix in S1-4, then review S1-4 and S1-5. Run Sprint 1 acceptance on main once both merge.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 16 Oct 2026 (QA-1, #29)
 
 - **Done:** Opened [draft PR #29](https://github.com/rojandhimal/onetickets/pull/29). Reconciled QA-1 from [PM's handoff #28](https://github.com/rojandhimal/onetickets/pull/28): [Sprint 1 checklist](/project/qa/sprint-1-checklist.md) rows 1.3, 3.2 and 4.3 now put starter About in S1-4, distinguish private/no-store event HTML from the 60 s Next data cache and public API caching, require revalidation of every web task, and use the final empty-access copy with no public contact link or email. Row 4.4 now explicitly checks the relocated template starter About text with S1-4. Recorded existing #17/#23 reviews and #25/#26 combined-branch evidence separately; #25 and #26 are still open drafts. Added the source-of-truth guidance to [testing docs](/docs/testing.md). Markdown formatting, local links and whitespace checks pass. Checklist statuses and staging deferrals are unchanged; this is a documentation reconciliation, with no new product acceptance run.
@@ -17,7 +23,8 @@ Newest first. Format: date, Done, Next, Blocked.
   - [#26](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6205360510) needs a change or a PM call. Revalidation reaches only one web task, and production runs two; I reproduced the stale second instance.
   - Main plus #23, #25 and #26 passes e2e 24/24, and a live edit shows on the next load.
   - Reworded 3.2 in qa/sprint-1-checklist.md to match PM's caching decision.
-- **Next:** Run the full Sprint 1 demo once S1-2, S1-4, S1-5 and #23 are on main; the slice that exists already works. #26 now passes at b35323c (Cloud Map is multivalue), PM accepted the multi-task gap for now as BE-4, due before production. #25's pass stands. Re-run the two-instance check when BE-4 lands.
+- **Done (BE-4):** [#25](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6205540604) passes at 26d788e. With two web instances behind one hostname, an edit shows on both. A single-target control left the second instance stale. With one instance down, the other still updates. Four mutations, all caught.
+- **Next:** Run the full Sprint 1 demo once S1-2, S1-4, S1-5 and #23 are on main; the slice that exists already works. #26 now passes at b35323c (Cloud Map is multivalue), PM accepted the multi-task gap for now as BE-4, due before production. #25's pass stands. BE-4 is checked; it closes when #25 merges. PM wants only the full demo, no partial one.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 
 ## 15 Oct 2026 (afternoon)
