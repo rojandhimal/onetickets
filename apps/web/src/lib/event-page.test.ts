@@ -11,7 +11,7 @@ import {
 describe('event page wording', () => {
   it('prices and spots', () => {
     expect(priceLabel(0)).toBe('Free');
-    expect(priceLabel(5335)).toBe('$53.35');
+    expect(priceLabel(5335)).toBe('A$53.35');
     expect(spotsLine(18)).toBe('18 spots left');
     expect(spotsLine(1)).toBe('1 spot left');
     expect(spotsLine(0)).toBe('All taken');
