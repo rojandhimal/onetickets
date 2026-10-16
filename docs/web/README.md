@@ -134,8 +134,11 @@ web's private address (`WEB_INTERNAL_URL`) with `Authorization: Bearer $REVALIDA
 `{ "slugs": ["…"] }`. The route compares the secret in constant time, then expires those tags and
 `browse` at once, so the next visitor sees the edit.
 
-Next's data cache is per web task. With more than one task, a revalidate call clears only the task
-it reaches, and the others catch up when their 60-second copy expires.
+Next's data cache is per web task. For a plain-HTTP private hostname, the api resolves every
+address and POSTs to each in parallel, so the Cloud Map endpoint invalidates every healthy web
+task it returns. HTTPS and IP endpoints receive one request; a failed DNS lookup also falls back
+to the original endpoint. Missed signals never fail the organiser's save, and affected tasks
+catch up when their 60-second cache entry expires.
 
 ## How the browser reaches the api
 

@@ -30,9 +30,10 @@ and observability checks carry forward to the first staging deploy.
 
 Sprint 1 started early on 10 October. The events API (#16), create-event wizard (S1-1, #17) and
 public event page (S1-3, #23) have merged. FrontendDev's next stories are free ticket types (S1-2),
-accessibility and other event details (S1-4), then browse (S1-5). The public cache/revalidation
-changes (#25 and #26) are in review; the [live board](../project/pm/board.md) records their current
-heads, review evidence and merge queue.
+accessibility and other event details (S1-4), then browse (S1-5). Public cache headers and revalidation
+of every web task (#25), its infra wiring (#26), the PM handoff (#28) and checklist reconciliation
+(#29) have also merged. AWS remains unapplied. The [live board](../project/pm/board.md) records the
+reviewed heads and the remaining handoff; S1-2 is next.
 
 Sprint 1 closes only after S1-1 through S1-5 merge and QA accepts the integrated publish-and-browse
 journey. SEC-14 (site-wide enforced CSP) remains required before Sprint 2 free checkout ships.
