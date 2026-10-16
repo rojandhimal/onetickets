@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (1:20 pm AEDT merge follow-up)
+
+- **Done:** [QA-1 #29](https://github.com/rojandhimal/onetickets/pull/29) merged at 1:19 pm AEDT as `8494333`, with QA, Security and all five CI/security checks green at `21c018c`. Moved QA-1 to Done on the board and brought main into the PM branch. [#28](https://github.com/rojandhimal/onetickets/pull/28) also passed [final QA](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206555424) and all five checks at `99bb486`; it temporarily returns to draft while the follow-up records #29's merge. Checklist reconciliation is complete; Sprint 1 acceptance remains pending.
+- **Next:** PM rechecks the updated #28 head and marks it ready after QA and CI pass; tegs merges. FrontendDev starts S1-2, then S1-4 and S1-5. BackendDev and DevOps still mark #25/#26 ready; QA runs acceptance after all required stories and revalidation changes merge.
+- **Blocked:** Owner merges remain with tegs; RES-1 recruitment and staging owner setup still block real organiser/staging evidence. Live-project copy-back waits for that folder to be available.
+
 ## 2026-10-16 (1:15 pm AEDT follow-up)
 
 - **Done:** Verified all five CI/security checks on [#28](https://github.com/rojandhimal/onetickets/pull/28) at `deaaaa8` and recorded its [independent QA pass](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206461648). Corrected the #26 README-only summary to include ALB defence in depth. Coordinated QA-1 in isolated branch `codex/qa-s1-checklist-handoff`; [PR #29](https://github.com/rojandhimal/onetickets/pull/29) at `21c018c` has [independent QA](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206529981) and [Security](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206530909) passes. Its checklist changes preserve every status and staging deferral, with no Sprint 1 acceptance claim. Local lint/typecheck, 181 unit tests and 101 integration tests pass again; QA-1's formatting, links and whitespace checks pass.
