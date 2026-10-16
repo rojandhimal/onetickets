@@ -33,7 +33,7 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] Runs as the migration owner, never as `ot_app`; new tables are `ENABLE` and `FORCE ROW LEVEL SECURITY` with policies in the same migration
 - [ ] Grants are the minimum: no `DELETE` or whole-table `UPDATE` where column grants will do; nothing granted to `PUBLIC`
 - [ ] A backfill under FORCE RLS adds a temporary `to current_user` policy and drops it in the same migration, and a test proves the rows changed (otherwise it silently matches 0 rows)
-- [ ] SQL functions are `SECURITY INVOKER` with a pinned `search_path`; any `SECURITY DEFINER` function has a written reason
+- [ ] SQL functions are `SECURITY INVOKER`; any `SECURITY DEFINER` function has a written reason and `set search_path = <its schema>, pg_temp`. An invoker function that reads or writes app tables also pins `search_path`. Exempt: invoker functions whose bodies use only built-ins (for example `identity.current_organisation_id()`, which calls `current_setting`), because `pg_catalog` is always searched first and the function runs with the caller's rights anyway (SEC-19, 2026-10-16)
 - [ ] Invariants the money or stock rules depend on are `CHECK` constraints or triggers, not only app code
 
 ## Roles and tenancy (S0-4, S6-3, S6-6)
