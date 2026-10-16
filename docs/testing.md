@@ -56,6 +56,11 @@ pnpm e2e               # the api connects as onetickets_app unless DATABASE_URL 
 
 ## Rules
 
+- For Sprint 1 checklist conflicts, use the final [copy sheet](../project/design/copy-s0-s2.md),
+  [design handoff](../project/design/handoff-s1.md) and
+  [ADR 0018](adr/0018-enforced-nonce-csp-on-event-pages.md) for the settled wording, privacy and
+  caching rules. Reconcile the [checklist](../project/qa/sprint-1-checklist.md) with those sources
+  and the recorded PM decision; keep prior PR evidence separate from a fresh acceptance pass.
 - Never mock Postgres in integration tests. Each test file starts from a clean state.
 - Use fixed clocks for anything time based (holds, sales windows, link expiry). No `sleep` waits;
   Playwright uses web-first assertions.

@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 16 Oct 2026
+
+- **Done:** Reconciled QA-1 from [PM's handoff #28](https://github.com/rojandhimal/onetickets/pull/28): [Sprint 1 checklist](/project/qa/sprint-1-checklist.md) rows 1.3, 3.2 and 4.3 now put starter About in S1-4, distinguish private/no-store event HTML from the 60 s Next data cache and public API caching, require revalidation of every web task, and use the final empty-access copy with no public contact link or email. Row 4.4 now explicitly checks the relocated template starter About text with S1-4. Recorded existing #17/#23 reviews and #25/#26 combined-branch evidence separately; #25 and #26 are still open drafts. Added the source-of-truth guidance to [testing docs](/docs/testing.md). Markdown formatting, local links and whitespace checks pass. Checklist statuses and staging deferrals are unchanged; this is a documentation reconciliation, with no new product acceptance run.
+- **Next:** Review S1-2, then S1-4 (including starter About and private attendee contact email), then S1-5. After the remaining stories and revalidation PRs merge, run Sprint 1 acceptance on `main`, carrying forward the linked review evidence and recording deferred staging checks.
+- **Blocked:** Cloudflare/deployed revalidation, 4G performance and real chat-app preview checks still wait on tegs's AWS account; Google OAuth staging checks wait on the OAuth client. RES-1 recruitment remains with tegs for organiser usability evidence.
+
 ## 15 Oct 2026 (afternoon)
 
 - **Done:** SEC-10 cap and alarm [#21](https://github.com/rojandhimal/onetickets/pull/21#issuecomment-6193287440) fails QA at 688b756 on one point. The cap, log line, metric filter and wiring work against a live api. But the warning is logged only once, when the cap is crossed, so the alarm emails "OK" within 5 to 10 minutes while links are still being refused. I suggested dropping `ok_actions` on that alarm. BE-1 [#22](https://github.com/rojandhimal/onetickets/pull/22#issuecomment-6193404491) passes at 2208a16, with one test to add: a mutation going back to on-sale-only pricing on the page survives. I asked PM which ticket types the "from" price should count before Sprint 4. #17 still passes after main was merged in (7b6989f).
