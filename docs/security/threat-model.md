@@ -142,7 +142,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 - Sentry Session Replay off, or with all text and inputs masked.
 - Organisation, request and order ids are fine to log; they are not personal data on their own.
 - A unit test feeds a known PII sample through the redactor for each sink.
-- Log retention set (for example 30 days app logs, 1 year audit log) and documented for the privacy policy.
+- Log retention (decided 2026-10-16): application logs 30 days in staging and 90 days in production, VPC flow logs 30 days, audit log 1 year in Postgres (SEC-9). Documented for the privacy policy in [observability](../backend/observability.md).
 
 ## Cross-cutting engineering controls (S0-1, S0-2)
 
