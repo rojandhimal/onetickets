@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures';
 import { expectAccessible } from './a11y';
 import { signUpOrganiser } from './session';
+import { pickMarrickville } from './venue';
 
 // S1-3 public event page: an event published through the wizard is readable by anyone, under an
 // enforced nonce CSP, with no shared caching (QA Sprint 1 rows 3.x). The CSP guard in fixtures.ts
@@ -16,8 +17,7 @@ test('a published event has a public page anyone can open', async ({ page, conte
   await page.getByLabel('Date').fill(`${nextYear}-11-21`);
   await page.getByLabel('Starts').fill('18:30');
   await page.getByLabel('Ends').fill('21:00');
-  await page.getByRole('combobox', { name: 'Venue address' }).fill('Marrickville');
-  await page.getByRole('option', { name: /Marrickville Town Hall/ }).click();
+  await pickMarrickville(page);
   await page.getByLabel('Event name').focus();
   await expect(page.getByRole('banner').getByRole('status')).toHaveText('Draft saved');
 
