@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (10:55 UTC, daily check)
+
+- **Done:** tegs merged #32 and #33, both after QA passed them. No merge since then skipped a review. Routed S1-4 (#35): ProductDesign's About placeholder prompts and its three #31 fixes landed at `468cf23`, and QA's #31 offline ticket-edit finding rides #35 next. Carded QA-2 (flaky mobile publish e2e on main) and SEC-19 (search_path wording). Synced project files and opened [#36](https://github.com/rojandhimal/onetickets/pull/36), which also covers QA's four #32 notes. Most role threads stopped around 06:20 to 06:30 UTC, so I restarted FrontendDev, QA, Security, ProductDesign and DevOps on their next items.
+- **Next:** QA on #34, QA-2 and #36. The offline fix on #35, then its re-reviews. DevOps starts SEC-5. S1-5 starts once #35 merges. Sprint 1 acceptance follows.
+- **Blocked:** nothing. tegs: merge #36 once QA passes it.
+
 ## 2026-10-16 (06:00 UTC, back in the Claude PM thread)
 
 - **Done:** Reviewed what landed while another tool ran PM, QA and FrontendDev: #23, #25, #26, #27 to #30 and S1-2 ([#31](https://github.com/rojandhimal/onetickets/pull/31)). Merged the repo's board, checklist and logs with the Claude threads' newer log entries in the shared folder, so neither side lost work. Replaced the one-way sync with `scripts/sync-project-files.mjs`, which syncs both ways and merges progress logs. Board and roadmap now show S1-2 merged and S1-4 next. Asked QA and ProductDesign to review #31 after merge, since its reviews came from the authoring tool's own subagents; AGENTS.md now says reviews come from a separate session per role.
