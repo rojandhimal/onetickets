@@ -126,3 +126,27 @@ jobs:
           if-no-files-found: ignore
           # The api log is under e2e/.logs, a hidden folder that upload-artifact skips by default.
           include-hidden-files: true
+
+  images:
+    # Builds each app's production image the way deploy.yml does, without pushing, so a broken
+    # Dockerfile or a build step that only fails inside the image (#18) is caught before merge.
+    name: Docker image (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Build the ${{ matrix.app }} image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          platforms: linux/amd64
+          push: false
+          # Same cache scope as deploy.yml. A pull request's cache entries stay on its own ref.
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
