@@ -12,17 +12,9 @@ import { type RefObject, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import type { PendingChanges } from '@/lib/draft-store';
 import { ACCESSIBILITY_LABELS } from '@/lib/event-page';
-import { STARTER_ABOUT } from '@/lib/templates';
+import { ABOUT_PROMPTS } from '@/lib/templates';
 import type { ServerErrors } from './BasicsStep';
 import styles from './wizard.module.css';
-
-const TEMPLATE_NAMES: Record<EventDraftDto['template'], string> = {
-  workshop: 'Workshop',
-  gig: 'Gig',
-  school_night: 'School night',
-  meetup: 'Meetup',
-  blank: '',
-};
 
 /** Artboard 8b, free events: what each choice means for someone holding a ticket. */
 export const CANCELLATION_CHOICES: Record<CancellationPolicy, { label: string; hint: string }> = {
@@ -61,12 +53,6 @@ export function DetailsStep({
   const [policy, setPolicy] = useState(event.cancellationPolicy);
   const [email, setEmail] = useState(event.contactEmail ?? '');
   const [emailError, setEmailError] = useState<string | null>(null);
-
-  const starter = STARTER_ABOUT[event.template];
-  const aboutHint =
-    starter && about === starter
-      ? `The ${TEMPLATE_NAMES[event.template]} template starts you off. Say what people will do and what to bring.`
-      : 'Say what people will do and what to bring.';
 
   function changeFeature(feature: AccessibilityFeature, on: boolean) {
     // Keep the order of the list, whatever order they were ticked in.
@@ -119,6 +105,7 @@ export function DetailsStep({
           id="ev-about"
           rows={5}
           maxLength={EVENT_LIMITS.about}
+          placeholder={ABOUT_PROMPTS[event.template]}
           value={about}
           aria-invalid={aboutError ? true : undefined}
           aria-describedby={
@@ -134,7 +121,7 @@ export function DetailsStep({
         />
         <FieldError id="ev-about-error" message={aboutError} />
         <div className={styles.hintRow}>
-          <span id="ev-about-hint">{aboutHint}</span>
+          <span id="ev-about-hint">Say what people will do and what to bring.</span>
           <CharacterCount id="ev-about-count" length={about.length} max={EVENT_LIMITS.about} />
         </div>
       </div>

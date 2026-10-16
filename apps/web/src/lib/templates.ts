@@ -36,14 +36,15 @@ export function newEventHref(templateId?: EventTemplate['id']): string {
 }
 
 /**
- * The About paragraph each template starts with (handoff S1-1, carried to S1-4). The organiser
- * edits or clears it on step 3; a blank event starts empty.
+ * The About field's placeholder for each template (copy sheet, S1-4). A prompt, never saved text,
+ * so nothing the organiser didn't write is published as theirs.
  */
-export const STARTER_ABOUT: Record<ReturnType<typeof apiTemplate>, string> = {
-  workshop:
-    "A hands-on session for beginners. We'll supply the materials; bring yourself and something to take notes.",
-  gig: 'Live music from start to finish. Doors open 30 minutes before the first act.',
-  school_night: 'A night out for our school community. All welcome, and every ticket helps.',
-  meetup: 'A friendly get-together. New faces are always welcome, so come and say hello.',
-  blank: '',
+export const ABOUT_PROMPTS: Record<ReturnType<typeof apiTemplate>, string> = {
+  workshop: 'What will people make or learn? Who is it for, and do they need to bring anything?',
+  gig: "Who's playing, and what's the music like? When do doors open, and is it all ages?",
+  school_night:
+    "What's on, and what's it raising money for? Is it for families, adults or everyone?",
+  meetup:
+    'What will you talk about or do? Who should come, and how will they find you on the night?',
+  blank: 'Say what people will do and what to bring.',
 };

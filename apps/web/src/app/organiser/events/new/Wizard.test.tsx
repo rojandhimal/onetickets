@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { STARTER_ABOUT } from '@/lib/templates';
+import { ABOUT_PROMPTS } from '@/lib/templates';
 import { draftEvent, readyEvent } from '@/test/event-fixture';
 import { CONTACT_EMAIL_ERROR } from './DetailsStep';
 import { Wizard } from './Wizard';
@@ -472,7 +472,7 @@ describe('create-event wizard', () => {
       );
 
       // Edit General admission: Members collapses to a summary row with its summary and remove button.
-      await user.click(screen.getByRole('button', { name: 'Edit' }));
+      await user.click(screen.getByRole('button', { name: 'Edit General admission ticket' }));
       expect(screen.getByLabelText('Ticket name')).toHaveValue('General admission');
       expect(screen.getByRole('list', { name: 'Ticket types' })).toHaveTextContent(
         'Free · 10 tickets · up to 2 per order',
@@ -486,6 +486,8 @@ describe('create-event wizard', () => {
         ),
       );
       expect(screen.queryByRole('list', { name: 'Ticket types' })).not.toBeInTheDocument();
+      // One type left, so it can't be removed.
+      expect(screen.queryByRole('button', { name: /^Remove .* ticket$/ })).not.toBeInTheDocument();
     });
 
     it('validates capacity, max per order, and sales end after sales start inline', async () => {
@@ -606,25 +608,28 @@ describe('details step', () => {
   const saved = () =>
     api({ 'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })) });
 
-  it('starts a template draft from its About text and counts characters', async () => {
-    saved();
+  it("prompts About with the template's questions and counts characters", async () => {
+    const fetch = saved();
     const user = userEvent.setup();
-    const about = STARTER_ABOUT.workshop;
-    render(<Wizard initialEvent={draftEvent({ about })} userId="u_1" />);
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tell people more');
     const field = screen.getByLabelText('About this event');
-    expect(field).toHaveValue(about);
+    expect(field).toHaveValue('');
+    expect(field).toHaveAttribute('placeholder', ABOUT_PROMPTS.workshop);
     expect(field).toHaveAccessibleDescription(
-      `The Workshop template starts you off. Say what people will do and what to bring. ${about.length} / 2,000`,
+      'Say what people will do and what to bring. 0 / 2,000',
     );
+    expect(field).toHaveAttribute('maxlength', '2000');
 
-    await user.clear(field);
     await user.type(field, 'Bring an old shirt.');
     expect(field).toHaveAccessibleDescription(
       'Say what people will do and what to bring. 19 / 2,000',
     );
-    expect(field).toHaveAttribute('maxlength', '2000');
+    await user.tab();
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ about: 'Bring an old shirt.' }),
+    );
   });
 
   it('saves accessibility features in list order with the notes', async () => {

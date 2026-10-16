@@ -57,6 +57,9 @@ test('a published event has a public page anyone can open', async ({ page, conte
   ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Accessibility' })).toHaveCount(0);
   await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  // About was left empty, so the template's prompt never reaches the public page.
+  await expect(page.getByRole('region', { name: 'About' })).toHaveCount(0);
+  await expect(page.getByText('What will people make or learn?')).toHaveCount(0);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
     /opengraph-image/,

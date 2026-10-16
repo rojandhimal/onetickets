@@ -183,12 +183,13 @@ test('free ticket types step steps capacity, adds and removes types, and validat
   await expectAccessible(page);
 
   // Switch active editor to General admission and remove Members from the draft.
-  await list.getByRole('button', { name: 'Edit' }).click();
+  await list.getByRole('button', { name: 'Edit General admission ticket' }).click();
   await expect(page.getByLabel('Ticket name')).toHaveValue('General admission');
   await expect(list).toContainText('Free · 8 tickets · up to 2 per order');
   await page.getByRole('button', { name: 'Remove Members ticket' }).click();
   await expect(status(page)).toHaveText('Draft saved');
   await expect(page.getByRole('list', { name: 'Ticket types' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Remove .* ticket$/ })).toHaveCount(0);
 });
 
 test('step 3 holds About, accessibility, cancellations and a private contact email', async ({
@@ -207,13 +208,13 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
   await page.getByLabel('Event name').focus();
   await expect(status(page)).toHaveText('Draft saved');
 
-  // The template's starter About is already there, with its count (row 4.4).
+  // About starts empty with the template's prompt as its placeholder (row 4.4).
   await page.getByRole('link', { name: 'Next: tickets' }).click();
   await page.getByRole('link', { name: 'Next: details' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tell people more');
   const about = page.getByLabel('About this event');
-  await expect(about).toHaveValue(/hands-on session/);
-  await expect(about).toHaveAccessibleDescription(/The Workshop template starts you off\./);
+  await expect(about).toHaveValue('');
+  await expect(about).toHaveAttribute('placeholder', /What will people make or learn\?/);
   await expect(about).toHaveAttribute('maxlength', '2000');
   await expectAccessible(page);
 
@@ -275,5 +276,36 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
   await expect(page.getByRole('region', { name: 'About' })).toContainText('risograph');
   await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
   expect(await page.content()).not.toContain('zines@example.test');
+  await expectAccessible(page);
+});
+
+test('a refused field says so in the header in at most two lines', async ({ page }) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Meetup/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  // Stand in for the api refusing the name, so the longest header message shows.
+  await page.route('**/api/organisations/*/events/*', (route) =>
+    route.request().method() === 'PATCH'
+      ? route.fulfill({
+          status: 422,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            statusCode: 422,
+            code: 'invalid_request',
+            message: 'Use letters as well as symbols',
+            field: 'name',
+          }),
+        })
+      : route.continue(),
+  );
+  await page.getByLabel('Event name').fill('***');
+  await page.getByLabel('Date').focus();
+  const header = status(page);
+  await expect(header).toHaveText("Couldn't save one field. Check the message under it.");
+  const lines = await header.evaluate((el) => {
+    const { height } = el.getBoundingClientRect();
+    return Math.round(height / parseFloat(getComputedStyle(el).lineHeight));
+  });
+  expect(lines).toBeLessThanOrEqual(2);
   await expectAccessible(page);
 });

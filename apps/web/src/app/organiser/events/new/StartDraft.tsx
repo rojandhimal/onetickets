@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
-import { createEvent, saveDraft } from '@/lib/events-client';
-import { STARTER_ABOUT } from '@/lib/templates';
+import { createEvent } from '@/lib/events-client';
 import { stepHref } from '@/lib/wizard-model';
 
 export function StartDraft({
@@ -23,16 +22,8 @@ export function StartDraft({
   const start = useCallback(async () => {
     setFailed(false);
     const result = await createEvent(organisationId, template);
-    if (!result.ok) {
-      setFailed(true);
-      return;
-    }
-    // The template's starter About (S1-4). If this save fails the draft simply starts without it.
-    const about = STARTER_ABOUT[template];
-    if (about && !result.event.about) {
-      await saveDraft(result.event, { version: result.event.version, about });
-    }
-    router.replace(stepHref('basics', result.event.id));
+    if (result.ok) router.replace(stepHref('basics', result.event.id));
+    else setFailed(true);
   }, [organisationId, router, template]);
 
   useEffect(() => {

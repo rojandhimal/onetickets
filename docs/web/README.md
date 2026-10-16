@@ -87,10 +87,9 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
    `PATCH …/ticket-types/:typeId` and `DELETE …/ticket-types/:typeId`, each returning the refreshed
    event with its new `version` so wizard autosave stays in sync.
 3. **Details** (`DetailsStep.tsx`, artboard 8b), all optional:
-   - **About this event**, up to 2,000 characters. A template draft starts with that template's
-     paragraph (`STARTER_ABOUT` in `src/lib/templates.ts`); the api's create call takes only the
-     template, so `StartDraft` saves the paragraph with one `PATCH` straight after creating the
-     draft. A blank event starts empty.
+   - **About this event**, up to 2,000 characters. It always starts empty. The template only sets
+     the placeholder, a few questions to answer (`ABOUT_PROMPTS` in `src/lib/templates.ts`), so
+     nothing the organiser didn't write is published as theirs.
    - **Accessibility**: a fieldset of six checkboxes (saved in list order, whatever order they were
      ticked in) and "Anything else people should know?", up to 500 characters.
    - **Cancellations**: any time (the default), up to 24 hours before, or none, with the same

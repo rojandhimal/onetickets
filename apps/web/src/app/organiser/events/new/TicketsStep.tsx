@@ -515,9 +515,7 @@ export function TicketsStep({
   );
 
   const canRemoveActive =
-    activeId === 'new'
-      ? event.ticketTypes.length > 0
-      : event.status === 'draft' || event.ticketTypes.length > 1;
+    activeId === 'new' ? event.ticketTypes.length > 0 : event.ticketTypes.length > 1;
 
   return (
     <main className={styles.body}>
@@ -525,7 +523,6 @@ export function TicketsStep({
         <h1 ref={headingRef} tabIndex={-1}>
           Tickets
         </h1>
-        <span className={styles.lede}>Your template added a free ticket type to start with.</span>
       </div>
 
       {bannerError && (
@@ -547,6 +544,7 @@ export function TicketsStep({
                 <button
                   type="button"
                   className={styles.ticketEditButton}
+                  aria-label={`Edit ${t.name} ticket`}
                   onClick={() => void selectTicket(t.id)}
                 >
                   Edit
