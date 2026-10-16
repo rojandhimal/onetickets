@@ -5,13 +5,17 @@ Everything the team can't do without your own accounts. I'll tick items off as y
 ## Now (GitHub)
 
 - [x] Merge [PR #1, monorepo and CI](https://github.com/rojandhimal/onetickets/pull/1). It has passed QA, Security and CI
-- [x] Make `main` the default branch (it's currently the S0-1 branch, which stops deploys from firing)
-- [ ] Require the two CI checks on `main` (branch protection)
-- [ ] Answer BackendDev's card about using one branch per story
+- [x] Make `main` the default branch
+- [ ] Confirm branch protection requires the current CI and security checks on `main`
+
+Branch policy is settled in [AGENTS.md](../../AGENTS.md): one branch per role at a time, with each
+new PR starting from the latest `main`. No branch-policy answer is needed for the next S1 story.
 
 ## Now (local machine)
 
-- [ ] Install Docker Desktop. DevOps is adding a one-command setup (`docker compose up`) with a short guide
+- [ ] Confirm the local Docker stack runs on your machine. The one-command setup shipped in #11;
+      follow [the local guide](../../docs/local-development.md#run-the-whole-app) with
+      `docker compose up --build`
 
 ## Before the Sprint 0 demo (13 Nov)
 

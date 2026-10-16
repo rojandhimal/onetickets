@@ -1,0 +1,21 @@
+# Progress: PM
+
+Newest first. Format: date, Done, Next, Blocked.
+
+## 2026-10-16 (1:20 pm AEDT merge follow-up)
+
+- **Done:** [QA-1 #29](https://github.com/rojandhimal/onetickets/pull/29) merged at 1:19 pm AEDT as `8494333`, with QA, Security and all five CI/security checks green at `21c018c`. Moved QA-1 to Done on the board and brought main into the PM branch. [#28](https://github.com/rojandhimal/onetickets/pull/28) also passed [final QA](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206555424) and all five checks at `99bb486`; it temporarily returns to draft while the follow-up records #29's merge. Checklist reconciliation is complete; Sprint 1 acceptance remains pending.
+- **Next:** PM rechecks the updated #28 head and marks it ready after QA and CI pass; tegs merges. FrontendDev starts S1-2, then S1-4 and S1-5. BackendDev and DevOps still mark #25/#26 ready; QA runs acceptance after all required stories and revalidation changes merge.
+- **Blocked:** Owner merges remain with tegs; RES-1 recruitment and staging owner setup still block real organiser/staging evidence. Live-project copy-back waits for that folder to be available.
+
+## 2026-10-16 (1:15 pm AEDT follow-up)
+
+- **Done:** Verified all five CI/security checks on [#28](https://github.com/rojandhimal/onetickets/pull/28) at `deaaaa8` and recorded its [independent QA pass](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206461648). Corrected the #26 README-only summary to include ALB defence in depth. Coordinated QA-1 in isolated branch `codex/qa-s1-checklist-handoff`; [PR #29](https://github.com/rojandhimal/onetickets/pull/29) at `21c018c` has [independent QA](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206529981) and [Security](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206530909) passes. Its checklist changes preserve every status and staging deferral, with no Sprint 1 acceptance claim. Local lint/typecheck, 181 unit tests and 101 integration tests pass again; QA-1's formatting, links and whitespace checks pass.
+- **Next:** tegs reviews/merges #28 and #29 after their final-head review and CI gates pass; PM marks them ready when those conditions hold. BackendDev and DevOps still mark #25/#26 ready. FrontendDev starts S1-2, then S1-4 and S1-5; QA runs integrated acceptance only after the required stories and revalidation changes merge.
+- **Blocked:** Owner merges remain with tegs. Real organiser demos need RES-1 recruitment; staging checks need the owner setup. The live Claude project folder remains unavailable here, so its copy-back waits for access; repo updates are in the PRs.
+
+## 2026-10-16 (PM handoff)
+
+- **Done:** Opened draft [PR #28](https://github.com/rojandhimal/onetickets/pull/28) after auditing all role logs and PRs #23–#27. Refreshed the board, roadmap and owner setup; ordered the remaining S1 handoff and carded the QA checklist/review follow-ups. Verified #25 at `26d788e` and #26 at `b35323c` have green CI and required review evidence. Posted handoffs on [#23](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6206352332), [#25](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6206351020) and [#26](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6206351603), and [requested QA on #28](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206350310). Local format/lint/typecheck, 181 unit tests, 101 Postgres integration tests, build and 24 browser/axe/CSP tests pass.
+- **Next:** Follow up QA and CI on #28; recheck heads and reviews before changing the merge queue. BackendDev and DevOps refresh their own logs and mark #25/#26 ready for tegs; FrontendDev picks up S1-2, then S1-4 and S1-5. QA reconciles the checklist with settled privacy/caching decisions before Sprint 1 acceptance; PM rolls the sprint only after QA accepts.
+- **Blocked:** #28 awaits QA review; tegs merges #25/#26 once ready. Real organiser demos need RES-1 recruitment, and staging checks need the owner setup. The live Claude project folder is unavailable here, so the repo is updated directly; PM must copy this handoff back when that folder is available.

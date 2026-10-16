@@ -4,9 +4,10 @@ Event ticketing for Australian organisers: publish an event, sell or give away t
 people in at the door with a phone. Think Eventbrite, built for small and mid-sized Australian
 events, with prices shown including GST and payouts through Stripe Connect.
 
-**Status:** Sprint 0 (foundations). Organiser sign-up and sign-in (magic link, Google, MFA),
-organisations and roles are in `main`. Public launch is planned for May 2027 in Sydney
-and Melbourne. See the [roadmap](docs/roadmap.md).
+**Status:** Sprint 1 (publish and browse). QA accepted Sprint 0 on 15 October. The events API,
+create-event wizard and public event page are in `main`; free ticket editing, event details and
+browse are next. Public launch is planned for May 2027 in Sydney and Melbourne. See the
+[live board](project/pm/board.md) and [roadmap](docs/roadmap.md).
 
 ## What's in the repo
 
