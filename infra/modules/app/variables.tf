@@ -184,3 +184,9 @@ variable "psql_image" {
   type        = string
   default     = "public.ecr.aws/docker/library/postgres:16-alpine"
 }
+
+variable "revalidate_secret_version" {
+  description = "Bump to generate a new REVALIDATE_SECRET (then redeploy api and web)."
+  type        = number
+  default     = 1
+}
