@@ -178,7 +178,7 @@ test('free ticket types step steps capacity, adds and removes types, and validat
   await page.getByLabel('Ticket name').fill('Members');
   await page.getByLabel('How many tickets?').fill('8');
   await page.getByLabel('Max per order').fill('2');
-  await page.getByLabel('Ticket name').blur();
+  await page.getByLabel('Ticket name').focus();
   await expect(status(page)).toHaveText('Draft saved');
   await expectAccessible(page);
 

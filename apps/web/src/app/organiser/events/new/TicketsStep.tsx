@@ -279,7 +279,7 @@ export function TicketsStep({
     for (let round = 0; round < 4 && dirtyRef.current; round++) {
       const check = evaluate(fieldsRef.current, eventRef.current, false);
       if (!check.validInput) {
-        if (check.hasClientError) reportState('refused');
+        reportState(check.hasClientError ? 'refused' : 'saved');
         return;
       }
       dirtyRef.current = false;
@@ -375,6 +375,10 @@ export function TicketsStep({
     }
     if (saveImmediately && check.validInput) {
       void flush();
+      return;
+    }
+    if (!inFlightRef.current) {
+      reportState('saved');
     }
   }
 
