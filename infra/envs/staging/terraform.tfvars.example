@@ -4,3 +4,6 @@ alert_email = "alerts@example.com"
 production_account_id = "333333333333"
 # Sentry DSN for the API, once the Sentry project is set up (see infra/README.md).
 # sentry_api_dsn = "https://<key>@<org>.ingest.sentry.io/<project>"
+# Sign-in emails per rolling hour across the service. Default 300; an alarm emails alert_email
+# when it is reached.
+# magic_link_hourly_cap = 300

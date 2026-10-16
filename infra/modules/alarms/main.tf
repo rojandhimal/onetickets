@@ -149,3 +149,35 @@ resource "aws_cloudwatch_metric_alarm" "db_free_storage" {
     DBInstanceIdentifier = var.db_instance_id
   }
 }
+
+# The API logs one warning when the hourly sign-in email cap (MAGIC_LINK_HOURLY_CAP) is
+# reached and starts refusing links. That means real people can't sign in, or someone is
+# flooding the sign-in form from many addresses (threat model, SEC-10).
+resource "aws_cloudwatch_log_metric_filter" "magic_link_cap" {
+  name           = "${var.name}-magic-link-cap-reached"
+  log_group_name = var.api_log_group_name
+  pattern        = "{ $.msg = \"Sign-in email cap of *\" }"
+
+  metric_transformation {
+    name          = "MagicLinkCapReached"
+    namespace     = "OneTickets/${var.name}"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "magic_link_cap" {
+  alarm_name          = "${var.name}-magic-link-cap-reached"
+  alarm_description   = "Sign-in email cap reached: new sign-in links are refused for up to an hour (rolling window), even after this alarm returns to OK. Check for a flood, or raise magic_link_hourly_cap."
+  namespace           = aws_cloudwatch_log_metric_filter.magic_link_cap.metric_transformation[0].namespace
+  metric_name         = aws_cloudwatch_log_metric_filter.magic_link_cap.metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  # No ok_actions: the warning is logged once, when the cap is crossed, so the alarm goes back
+  # to OK after 5 minutes while links are still being refused. An "OK" email would mislead.
+  alarm_actions = [aws_sns_topic.alerts.arn]
+}

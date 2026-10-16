@@ -14,6 +14,12 @@ variable "sentry_api_dsn" {
   default     = ""
 }
 
+variable "magic_link_hourly_cap" {
+  description = "Sign-in emails the service may send in a rolling hour (MAGIC_LINK_HOURLY_CAP). Testers only, so the API default."
+  type        = number
+  default     = 300
+}
+
 variable "alert_email" {
   type    = string
   default = ""

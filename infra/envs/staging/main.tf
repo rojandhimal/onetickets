@@ -7,7 +7,9 @@ module "environment" {
   api_hostname   = "api.staging.${var.domain}"
   alert_email    = var.alert_email
   api_sentry_dsn = var.sentry_api_dsn
-  email_domain   = "staging.${var.domain}"
+
+  magic_link_hourly_cap = var.magic_link_hourly_cap
+  email_domain          = "staging.${var.domain}"
 
   # Kept as small as a real URL, real email and real webhooks allow: no NAT
   # gateway (tasks get public IPs, inbound still only from the load

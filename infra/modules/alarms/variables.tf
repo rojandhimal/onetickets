@@ -18,3 +18,7 @@ variable "target_group_arn_suffixes" {
 variable "db_instance_id" {
   type = string
 }
+
+variable "api_log_group_name" {
+  type = string
+}

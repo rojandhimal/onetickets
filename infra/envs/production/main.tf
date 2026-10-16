@@ -7,7 +7,9 @@ module "environment" {
   api_hostname   = "api.${var.domain}"
   alert_email    = var.alert_email
   api_sentry_dsn = var.sentry_api_dsn
-  email_domain   = var.domain
+
+  magic_link_hourly_cap = var.magic_link_hourly_cap
+  email_domain          = var.domain
 
   nat_gateways = 2
 

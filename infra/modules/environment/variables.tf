@@ -126,6 +126,11 @@ variable "api_sentry_dsn" {
   default = ""
 }
 
+variable "magic_link_hourly_cap" {
+  type    = number
+  default = 300
+}
+
 variable "log_retention_days" {
   type    = number
   default = 30

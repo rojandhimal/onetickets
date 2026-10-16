@@ -98,37 +98,38 @@ module "database" {
 module "app" {
   source = "../app"
 
-  name                   = local.name
-  environment            = var.environment
-  vpc_id                 = module.network.vpc_id
-  public_subnet_ids      = module.network.public_subnet_ids
-  task_subnet_ids        = local.tasks_public ? module.network.public_subnet_ids : module.network.private_subnet_ids
-  assign_public_ip       = local.tasks_public
-  use_spot               = var.use_spot
-  container_insights     = var.container_insights
-  enable_autoscaling     = var.power_schedule == null
-  api_cpu                = var.api_cpu
-  api_memory             = var.api_memory
-  web_cpu                = var.web_cpu
-  web_memory             = var.web_memory
-  kms_key_arn            = aws_kms_key.main.arn
-  web_hostname           = var.web_hostname
-  api_hostname           = var.api_hostname
-  ingress_cidrs          = var.ingress_cidrs
-  db_address             = module.database.address
-  db_owner_secret_arn    = module.database.owner_secret_arn
-  db_app_secret_arn      = module.database.app_secret_arn
-  migrate_command        = var.migrate_command
-  api_desired_count      = var.api_desired_count
-  api_max_count          = var.api_max_count
-  web_desired_count      = var.web_desired_count
-  log_retention_days     = var.log_retention_days
-  api_sentry_dsn         = var.api_sentry_dsn
-  deletion_protection    = var.deletion_protection
-  enable_execute_command = var.enable_execute_command
-  ecr_pull_account_ids   = var.ecr_pull_account_ids
-  ses_identity_arn       = module.email.identity_arn
-  email_domain           = var.email_domain
+  name                      = local.name
+  environment               = var.environment
+  vpc_id                    = module.network.vpc_id
+  public_subnet_ids         = module.network.public_subnet_ids
+  task_subnet_ids           = local.tasks_public ? module.network.public_subnet_ids : module.network.private_subnet_ids
+  assign_public_ip          = local.tasks_public
+  use_spot                  = var.use_spot
+  container_insights        = var.container_insights
+  enable_autoscaling        = var.power_schedule == null
+  api_cpu                   = var.api_cpu
+  api_memory                = var.api_memory
+  web_cpu                   = var.web_cpu
+  web_memory                = var.web_memory
+  kms_key_arn               = aws_kms_key.main.arn
+  web_hostname              = var.web_hostname
+  api_hostname              = var.api_hostname
+  ingress_cidrs             = var.ingress_cidrs
+  db_address                = module.database.address
+  db_owner_secret_arn       = module.database.owner_secret_arn
+  db_app_secret_arn         = module.database.app_secret_arn
+  migrate_command           = var.migrate_command
+  api_desired_count         = var.api_desired_count
+  api_max_count             = var.api_max_count
+  web_desired_count         = var.web_desired_count
+  log_retention_days        = var.log_retention_days
+  api_sentry_dsn            = var.api_sentry_dsn
+  api_magic_link_hourly_cap = var.magic_link_hourly_cap
+  deletion_protection       = var.deletion_protection
+  enable_execute_command    = var.enable_execute_command
+  ecr_pull_account_ids      = var.ecr_pull_account_ids
+  ses_identity_arn          = module.email.identity_arn
+  email_domain              = var.email_domain
 }
 
 module "power_schedule" {
@@ -174,4 +175,5 @@ module "alarms" {
   load_balancer_arn_suffix  = module.app.load_balancer_arn_suffix
   target_group_arn_suffixes = module.app.target_group_arn_suffixes
   db_instance_id            = module.database.instance_id
+  api_log_group_name        = module.app.log_group_names["api"]
 }

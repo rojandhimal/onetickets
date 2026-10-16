@@ -14,6 +14,12 @@ variable "sentry_api_dsn" {
   default     = ""
 }
 
+variable "magic_link_hourly_cap" {
+  description = "Sign-in emails the service may send in a rolling hour (MAGIC_LINK_HOURLY_CAP). Well above expected launch peak; revisit from the Sprint 9 load test and SES sending limits."
+  type        = number
+  default     = 1000
+}
+
 variable "alert_email" {
   type    = string
   default = ""

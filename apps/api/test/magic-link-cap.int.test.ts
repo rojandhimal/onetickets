@@ -44,8 +44,9 @@ describe('hourly cap on sign-in emails', () => {
     expect((await send().expect(429)).body.code).toBe('rate_limited');
     await send().expect(429);
 
+    // The magic-link-cap alarm (infra/modules/alarms) matches this prefix in the api's logs.
     const capWarnings = warn.mock.calls.filter(([message]) =>
-      String(message).includes('Sign-in email cap'),
+      String(message).startsWith('Sign-in email cap of '),
     );
     expect(capWarnings).toHaveLength(1);
     warn.mockRestore();
