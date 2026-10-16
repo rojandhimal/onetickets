@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (1:15 pm AEDT follow-up)
+
+- **Done:** Verified all five CI/security checks on [#28](https://github.com/rojandhimal/onetickets/pull/28) at `deaaaa8` and recorded its [independent QA pass](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206461648). Corrected the #26 README-only summary to include ALB defence in depth. Coordinated QA-1 in isolated branch `codex/qa-s1-checklist-handoff`; [PR #29](https://github.com/rojandhimal/onetickets/pull/29) at `21c018c` has [independent QA](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206529981) and [Security](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206530909) passes. Its checklist changes preserve every status and staging deferral, with no Sprint 1 acceptance claim. Local lint/typecheck, 181 unit tests and 101 integration tests pass again; QA-1's formatting, links and whitespace checks pass.
+- **Next:** tegs reviews/merges #28 and #29 after their final-head review and CI gates pass; PM marks them ready when those conditions hold. BackendDev and DevOps still mark #25/#26 ready. FrontendDev starts S1-2, then S1-4 and S1-5; QA runs integrated acceptance only after the required stories and revalidation changes merge.
+- **Blocked:** Owner merges remain with tegs. Real organiser demos need RES-1 recruitment; staging checks need the owner setup. The live Claude project folder remains unavailable here, so its copy-back waits for access; repo updates are in the PRs.
+
 ## 2026-10-16 (PM handoff)
 
 - **Done:** Opened draft [PR #28](https://github.com/rojandhimal/onetickets/pull/28) after auditing all role logs and PRs #23–#27. Refreshed the board, roadmap and owner setup; ordered the remaining S1 handoff and carded the QA checklist/review follow-ups. Verified #25 at `26d788e` and #26 at `b35323c` have green CI and required review evidence. Posted handoffs on [#23](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6206352332), [#25](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6206351020) and [#26](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6206351603), and [requested QA on #28](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206350310). Local format/lint/typecheck, 181 unit tests, 101 Postgres integration tests, build and 24 browser/axe/CSP tests pass.

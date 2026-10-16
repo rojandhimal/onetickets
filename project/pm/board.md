@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 16 Oct 2026, 1:00 pm AEDT (02:00 UTC) by PM. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 16 Oct 2026, 1:15 pm AEDT (02:15 UTC) by PM. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -11,12 +11,17 @@ Last updated: 16 Oct 2026, 1:00 pm AEDT (02:00 UTC) by PM. Other threads: send c
 
 **Merge queue for tegs:** [PR #25](https://github.com/rojandhimal/onetickets/pull/25) (BE-1 public Cache-Control and multi-task revalidation, BackendDev, head `26d788e`) and [PR #26](https://github.com/rojandhimal/onetickets/pull/26) (BE-1 / QA 3.2 revalidation infra, DevOps, head `b35323c`), in either order after their authors mark them ready. Both have green CI and the required review passes; the evidence below distinguishes the reviewed commits. Both remain drafts on GitHub. Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green. Recheck if a head changes.
 
+The documentation handoff PRs [#28](https://github.com/rojandhimal/onetickets/pull/28) (PM) and
+[#29](https://github.com/rojandhimal/onetickets/pull/29) (QA-1) join once their final-head reviews and
+CI pass, as recorded on each PR. PM marks them ready then asks tegs to merge. Neither blocks
+FrontendDev starting S1-2.
+
 ### Review evidence and handoff
 
-| PR                                                       | Current head | Review evidence                                                                                                                                                                                                                                                                                        | Next action                                                     |
-| -------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| [#25](https://github.com/rojandhimal/onetickets/pull/25) | `26d788e`    | [QA re-check](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6205540604) passes at this head, including two web instances, a failed instance and mutation checks. Security's re-check also passes at `26d788e`. All five CI/security checks pass.                                      | BackendDev: update the backend log and mark ready; tegs: merge. |
-| [#26](https://github.com/rojandhimal/onetickets/pull/26) | `b35323c`    | [QA pass](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6205444555) at this head. Security passed `c54f287`; the only later change is an `infra/README.md` sentence requiring fan-out. All nine CI/security/infra checks pass. The combined two-instance re-check is recorded on #25. | DevOps: update the devops log and mark ready; tegs: merge.      |
+| PR                                                       | Current head | Review evidence                                                                                                                                                                                                                                                                                                   | Next action                                                     |
+| -------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [#25](https://github.com/rojandhimal/onetickets/pull/25) | `26d788e`    | [QA re-check](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6205540604) passes at this head, including two web instances, a failed instance and mutation checks. Security's re-check also passes at `26d788e`. All five CI/security checks pass.                                                 | BackendDev: update the backend log and mark ready; tegs: merge. |
+| [#26](https://github.com/rojandhimal/onetickets/pull/26) | `b35323c`    | [QA pass](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6205444555) at this head. Security passed `c54f287`; the only later diff clarifies fan-out and ALB defence in depth in `infra/README.md`. All nine CI/security/infra checks pass. The combined two-instance re-check is recorded on #25. | DevOps: update the devops log and mark ready; tegs: merge.      |
 
 The role logs lag GitHub: BackendDev still plans to open #25, DevOps still plans the already-merged
 SEC-10 cap, and FrontendDev still plans the already-merged S1-3. Each owner updates their own log;
@@ -64,7 +69,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Backlog
 
-- QA-1 Before Sprint 1 acceptance (QA): align [checklist rows 1.3, 3.2 and 4.3](/project/qa/sprint-1-checklist.md) with the settled handoff above, then record evidence for the merged stories. This corrects stale criteria; it does not reopen the privacy or caching decisions. Sources: [QA's S1-1 note](/project/pm/progress/qa.md), [S1 handoff](/project/design/handoff-s1.md), ADR 0018 and the 16 Oct decision below
 - DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 - DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
 - DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
@@ -112,9 +116,10 @@ checks at both required widths. Move a card to In progress when its owner starts
 
 ### Review
 
-- PM Sprint 1 handoff and review-evidence audit ([PR #28](https://github.com/rojandhimal/onetickets/pull/28)): draft, QA requested; local format/lint/typecheck, 181 unit tests, 101 integration tests, build and 24 browser/axe/CSP tests pass. Outside the merge queue until QA passes and CI is green
+- PM Sprint 1 handoff and review-evidence audit ([PR #28](https://github.com/rojandhimal/onetickets/pull/28)): [independent QA pass](https://github.com/rojandhimal/onetickets/pull/28#issuecomment-6206461648) and all five CI/security checks pass at `deaaaa8`; the follow-up corrects the README-only #26 summary and records QA-1's PR. QA rechecks that follow-up before it is marked ready; current-head CI must also pass
+- QA-1 Checklist reconciliation ([PR #29](https://github.com/rojandhimal/onetickets/pull/29), QA, head `21c018c`): [QA pass](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206529981) and [Security pass](https://github.com/rojandhimal/onetickets/pull/29#issuecomment-6206530909). Rows 1.3, 3.2 and 4.3 follow the settled decisions; row 4.4 explicitly checks starter About. Historical evidence is separate, all 43 statuses and staging deferrals remain unchanged, and Sprint 1 is not accepted. Current-head CI must pass before PM marks ready for tegs
 - BE-1 Cache-Control and revalidation on public pages, including fan-out to every web task ([PR #25](https://github.com/rojandhimal/onetickets/pull/25), BackendDev): QA pass (`26d788e`), Security pass (`26d788e`), CI green. Queued for tegs once marked ready
-- BE-1 / QA 3.2 infra for page revalidation: `REVALIDATE_SECRET`, Cloud Map web service discovery, `/internal` blocked at ALB ([PR #26](https://github.com/rojandhimal/onetickets/pull/26), DevOps): QA pass (`b35323c`), Security pass (`c54f287`, followed only by the README fan-out note), CI green. Queued for tegs once marked ready
+- BE-1 / QA 3.2 infra for page revalidation: `REVALIDATE_SECRET`, Cloud Map web service discovery, `/internal` blocked at ALB ([PR #26](https://github.com/rojandhimal/onetickets/pull/26), DevOps): QA pass (`b35323c`), Security pass (`c54f287`, followed only by README fan-out and ALB defence-in-depth clarifications), CI green. Queued for tegs once marked ready
 
 ### Done
 
