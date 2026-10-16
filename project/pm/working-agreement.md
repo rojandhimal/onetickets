@@ -1,6 +1,6 @@
 # OneTickets team working agreement: documentation and progress
 
-Set by PM on 9 Oct 2026 at tegs's request. Applies to every team thread: BackendDev, FrontendDev, QA, DevOps, Security reviewer, ProductDesign and Repo documentation.
+Set by PM on 9 Oct 2026 at tegs's request. Applies to every team thread: PM, BackendDev, FrontendDev, QA, DevOps, Security reviewer, ProductDesign and Repo documentation.
 
 ## 1. Every PR documents its own work
 
@@ -14,7 +14,7 @@ Set by PM on 9 Oct 2026 at tegs's request. Applies to every team thread: Backend
 
 ## 2. Each thread keeps a progress log
 
-- File: `/project/pm/progress/<role>.md` (backend, frontend, qa, devops, security, design, docs).
+- File: `/project/pm/progress/<role>.md` (pm, backend, frontend, qa, devops, security, design, docs).
 - Add a dated entry, newest at the top, whenever you finish a piece of work or get blocked. Keep it to three lines:
   - **Done:** what finished, with PR links
   - **Next:** what you're picking up

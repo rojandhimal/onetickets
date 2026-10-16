@@ -1,15 +1,40 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 2026-10-16 01:15 UTC by PM. Other threads: send changes to PM rather than editing this file directly.
+Last updated: 16 Oct 2026, 1:00 pm AEDT (02:00 UTC) by PM. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
 **Phase:** Sprint 0 closed 15 Oct (QA accepted once #18 merged). Sprint 1 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
 **Health:** 🟢 Ahead of plan, about a month early. The team lost 10 to 15 Oct to the plan's weekly usage limit. The S1 api (#16), the S1-1 wizard (#17) and the S1-3 event page (#23) have merged; S1-2, S1-4 and S1-5 are next.
-**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev's S1-2, S1-4 and S1-5 PRs are next (one branch per thread). Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
+**Next milestone:** Sprint 1 closes when S1-1 to S1-5 merge and QA accepts. FrontendDev picks up S1-2, then S1-4, then S1-5 (one branch per role; at most two active cards). No PR for those three stories is open at this audit. Demos to real organisers still depend on recruitment (RES-1); until then they run locally, or through a Cloudflare quick tunnel.
 
-**Merge queue for tegs:** [PR #25](https://github.com/rojandhimal/onetickets/pull/25) (BE-1 public Cache-Control and multi-task revalidation, BackendDev, head `26d788e`: QA pass, Security pass, CI green) and [PR #26](https://github.com/rojandhimal/onetickets/pull/26) (BE-1 / QA 3.2 revalidation infra, DevOps, head `b35323c`: QA pass, Security pass, CI green), in either order (both still marked draft on GitHub). Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green.
+**Merge queue for tegs:** [PR #25](https://github.com/rojandhimal/onetickets/pull/25) (BE-1 public Cache-Control and multi-task revalidation, BackendDev, head `26d788e`) and [PR #26](https://github.com/rojandhimal/onetickets/pull/26) (BE-1 / QA 3.2 revalidation infra, DevOps, head `b35323c`), in either order after their authors mark them ready. Both have green CI and the required review passes; the evidence below distinguishes the reviewed commits. Both remain drafts on GitHub. Nothing joins the queue until every reviewer it needs (QA; Security for auth, sessions, RLS, migrations, personal data, uploads, payments or infra; ProductDesign for anything users see) has passed it and CI is green. Recheck if a head changes.
+
+### Review evidence and handoff
+
+| PR                                                       | Current head | Review evidence                                                                                                                                                                                                                                                                                        | Next action                                                     |
+| -------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| [#25](https://github.com/rojandhimal/onetickets/pull/25) | `26d788e`    | [QA re-check](https://github.com/rojandhimal/onetickets/pull/25#issuecomment-6205540604) passes at this head, including two web instances, a failed instance and mutation checks. Security's re-check also passes at `26d788e`. All five CI/security checks pass.                                      | BackendDev: update the backend log and mark ready; tegs: merge. |
+| [#26](https://github.com/rojandhimal/onetickets/pull/26) | `b35323c`    | [QA pass](https://github.com/rojandhimal/onetickets/pull/26#issuecomment-6205444555) at this head. Security passed `c54f287`; the only later change is an `infra/README.md` sentence requiring fan-out. All nine CI/security/infra checks pass. The combined two-instance re-check is recorded on #25. | DevOps: update the devops log and mark ready; tegs: merge.      |
+
+The role logs lag GitHub: BackendDev still plans to open #25, DevOps still plans the already-merged
+SEC-10 cap, and FrontendDev still plans the already-merged S1-3. Each owner updates their own log;
+PM does not overwrite it. QA, Security and ProductDesign should also carry their #23–#26 verdicts
+into their next entries. Docs' old ADR-link task is already complete in the ADR index.
+
+### Sprint 1 acceptance handoff
+
+- QA reconciles checklist rows 1.3, 3.2 and 4.3 before the final pass (QA-1 below). The accepted
+  rules are: starter About text ships in S1-4; event HTML is `private, no-store` with a 60-second
+  Next data cache and API revalidation; public pages never expose the attendee contact email.
+- Once S1-2, S1-4 and S1-5 merge, QA runs the integrated template → ticket types → accessibility
+  → publish → guest event page → city/date browse journey at 375 px and 1280 px, with axe and the
+  CSP guard. Consolidate the merged-story review evidence in the Sprint 1 acceptance note.
+- Keep staging-only checks explicit: 4G p75 performance, real chat previews, AWS deploys, SES,
+  Google OAuth and edge/header checks. Sprint 0's accepted staging deferrals still apply.
+- Start Sprint 2 as soon as QA accepts Sprint 1. SEC-14 stays a prerequisite for shipping free
+  checkout, and links into `/e/:slug` stay plain `<a>` until that work lands (ADR 0018).
 
 ## Sprint calendar
 
@@ -31,7 +56,7 @@ Last updated: 2026-10-16 01:15 UTC by PM. Other threads: send changes to PM rath
 | 10 Launch readiness        | 12 to 23 Apr                                     | Pen test, legal, restore drill, onboarding, go/no-go    | ⚪                                                                   |
 | Launch                     | May 2027                                         | Public launch, Sydney and Melbourne                     | ⚪                                                                   |
 
-## Board: Pre-sprint and Sprint 0
+## Board: Sprint 1 and follow-ups
 
 WIP limit: 2 cards in progress per builder.
 
@@ -39,7 +64,14 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Backlog
 
-- Sprint 1 stories S1-2, S1-4, S1-5 (FrontendDev, now that S1-3 #23 has merged). Banner shown by default (showBanner flag) until tegs answers. Links into `/e/:slug` stay plain `<a>` until SEC-14 enforces the CSP site-wide (ADR 0018). Three non-blocking design nits from #23 (aligning wide-screen hero circles to the 1040 px column, bundling Bricolage Grotesque in the share image if cheap, and the S2 sold-out sticky bar copy) can fold into S1-2 / S2. Designs: canvas v23, [handoff-s1.md](/project/design/handoff-s1.md)
+- QA-1 Before Sprint 1 acceptance (QA): align [checklist rows 1.3, 3.2 and 4.3](/project/qa/sprint-1-checklist.md) with the settled handoff above, then record evidence for the merged stories. This corrects stale criteria; it does not reopen the privacy or caching decisions. Sources: [QA's S1-1 note](/project/pm/progress/qa.md), [S1 handoff](/project/design/handoff-s1.md), ADR 0018 and the 16 Oct decision below
+- DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
+- DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
+- DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
+- DEV-4 Follow-up from [Sprint 0 acceptance](/project/qa/sprint-0-acceptance.md) (BackendDev owns CI, DevOps supports): add Docker image build coverage to PR checks so a web image failure like #18 is caught before merge. Track separately from Sprint 1 feature acceptance
+- DEV-5 Before first AWS staging (BackendDev and DevOps, Security review): finish the S3 banner adapter and the S3/CloudFront/public-base-URL wiring in [infra's staging prerequisites](/infra/README.md). Local banner storage remains the current setup; AWS stays unapplied
+- SEC-17 Optional hardening from #16 / #19 (BackendDev, Security review): use column-scoped update grants so `ot_app` cannot change `ticket_types.event_id`, and document how owner backfills work under FORCE RLS. [Security notes](/project/pm/progress/security.md); not a Sprint 1 blocker
+- SEC-18 Documentation follow-up (Security): sync the sign-out/on-device-data checklist line, agreed log retention and ADR 0018 conditions into the security docs. Already requested in the [Security progress log](/project/pm/progress/security.md)
 - ARCH-1 Blocking fix: Stripe charges use on_behalf_of so the organiser is the seller. Fold into S4-3 acceptance criteria before Sprint 4 planning ([architecture review](https://claude.ai/code/artifact/01a2857b-b93c-4784-bffa-af9f6962663f))
 - ARCH-2 Blocking fix: waiting room must not show "sold out" while tickets are only held. Fold into S9-1 acceptance criteria
 - SEC-1 Card-testing defences (Turnstile, rate limits per IP/email/card, Radar rules, decline-spike alert) move from S9-2 into S4-3
@@ -66,16 +98,22 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
+- **Next: S1-2 free ticket types** (FrontendDev): artboard 8 and [S1 handoff](/project/design/handoff-s1.md), using the existing shared/API contract. Name, capacity ±5 and typed values, max per order, sales start/end presets and custom dates, collapsed summaries and draft removal. Free-only in S1; field validation and save failures must be accessible. Reviews: QA and ProductDesign; Security if on-device storage or another security trigger changes
+- **Then: S1-4 accessibility and event details** (FrontendDev): artboard 8b, including the starter About text deferred from S1-1, character counts, accessibility fieldset, cancellations and private attendee contact email. Empty public accessibility copy follows the final copy sheet, with no mailto. Reviews: QA, ProductDesign and Security (personal data)
+- **Then: S1-5 browse upcoming events** (FrontendDev): artboard 1, Sydney/Melbourne, deselectable When/Price filters, city-zone time windows, API-supplied from-price, accessible cards/count and empty state. No search/category expansion. Links to `/e/` stay plain anchors. Reviews: QA and ProductDesign; Security for any CSP/sanitisation change
+
+All three use the [final copy sheet](/project/design/copy-s0-s2.md), runtime flags, and e2e/axe/CSP
+checks at both required widths. Move a card to In progress when its owner starts it.
+
 ### In progress
 
-- S1-2 free ticket types, S1-4 accessibility details and S1-5 browse upcoming events (FrontendDev): next on the web branch now that #23 has merged. Reviews: QA, ProductDesign (plus Security if CSP or sanitisation changes)
 - RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-- BE-1 Cache-Control and revalidation on public pages, including fan-out to every web task ([PR #25](https://github.com/rojandhimal/onetickets/pull/25), BackendDev): QA pass (`26d788e`), Security pass (`26d788e`), CI green. Queued for tegs
-- BE-1 / QA 3.2 infra for page revalidation: `REVALIDATE_SECRET`, Cloud Map web service discovery, `/internal` blocked at ALB ([PR #26](https://github.com/rojandhimal/onetickets/pull/26), DevOps): QA pass (`b35323c`), Security pass (`c54f287`), CI green. Queued for tegs
+- BE-1 Cache-Control and revalidation on public pages, including fan-out to every web task ([PR #25](https://github.com/rojandhimal/onetickets/pull/25), BackendDev): QA pass (`26d788e`), Security pass (`26d788e`), CI green. Queued for tegs once marked ready
+- BE-1 / QA 3.2 infra for page revalidation: `REVALIDATE_SECRET`, Cloud Map web service discovery, `/internal` blocked at ALB ([PR #26](https://github.com/rojandhimal/onetickets/pull/26), DevOps): QA pass (`b35323c`), Security pass (`c54f287`, followed only by the README fan-out note), CI green. Queued for tegs once marked ready
 
 ### Done
 
@@ -96,7 +134,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - DEV-1 One-command local stack ([PR #11](https://github.com/rojandhimal/onetickets/pull/11)), merged 9 Oct. `docker compose up --build`, site on :3000, test inbox on :8025
 - S0-1 CI security gates ([PR #3](https://github.com/rojandhimal/onetickets/pull/3)), merged 9 Oct
 - QA browser and accessibility tests ([PR #5](https://github.com/rojandhimal/onetickets/pull/5)), merged 9 Oct
-- S0-3 Sign-up and organiser home, web side ([PR #2](https://github.com/rojandhimal/onetickets/pull/2)), merged 9 Oct. Story stays open until the auth API lands
+- S0-3 Sign-up and organiser home, web side ([PR #2](https://github.com/rojandhimal/onetickets/pull/2)), merged 9 Oct. The auth API landed in #10; Sprint 0 acceptance closed the story
 - S0-4 Organisations, roles and row-level security ([PR #6](https://github.com/rojandhimal/onetickets/pull/6)), merged 9 Oct
 - S0-2 Environments in Terraform and deploy pipeline ([PR #4](https://github.com/rojandhimal/onetickets/pull/4)), merged 9 Oct. Not applied; staging deferred
 - Product and business plan
@@ -111,7 +149,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - DES-1 Sprint 1 designs for S1-1 to S1-5 (canvas v17)
 - DES-2 Sprint 2 designs S2-1, S2-2, S2-4 (canvas v18, [handoff-s2.md](/project/design/handoff-s2.md))
 - DES-3 Sprint 3 scanner and Sprint 4 paid checkout designs (canvas v20, handoff-s3.md, handoff-s4.md), including SEC-1 and ARCH-1
-- DES-5 UX copy for Sprints 0 to 2 ([copy-s0-s2.md](/project/design/copy-s0-s2.md)), canvas v23. ProductDesign paused until 13 Nov demo feedback
+- DES-5 UX copy for Sprints 0 to 2 ([copy-s0-s2.md](/project/design/copy-s0-s2.md)), canvas v23. ProductDesign resumed at tegs's request; next are the remaining S1 PR reviews and later demo feedback
 - DES-4 Sprint 5 and 6 designs (canvas v22, handoff-s5-s6.md)
 - S0-1 Monorepo and CI ([PR #1](https://github.com/rojandhimal/onetickets/pull/1)), merged by tegs 9 Oct
 - [Usability test plan](/project/research/usability-test-plan-s1-s2.md) for Sprint 1 and 2 flows, sessions 9 to 12 Nov

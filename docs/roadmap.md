@@ -1,8 +1,9 @@
 # Roadmap
 
-Two-week sprints, with a demo to real organisers at the end of each. Free tickets and check-in ship
-before paid checkout, so real events can use OneTickets early. Launch is planned for May 2027 in
-Sydney and Melbourne.
+Two-week sprints, with a demo to real organisers at the end of each. The dates below are the
+planned calendar: once every story is merged and QA accepts a sprint, the next sprint starts
+straight away (tegs, 10 October). Free tickets and check-in ship before paid checkout, so real
+events can use OneTickets early. Launch is planned for May 2027 in Sydney and Melbourne.
 
 | Sprint | Dates                | Goal                                                                   |
 | ------ | -------------------- | ---------------------------------------------------------------------- |
@@ -21,16 +22,21 @@ Sydney and Melbourne.
 | 10     | 12 to 23 Apr         | Launch readiness: pen test, legal, restore drill, go/no-go             |
 | Launch | May 2027             | Public launch                                                          |
 
-## Where Sprint 0 is
+## Current progress: Sprint 1
 
-Done and merged: monorepo and CI (S0-1), CI security checks, Terraform and deploy pipeline (S0-2,
-not applied), sign-up screens and organiser home (S0-3 web), the auth API (S0-3), organisations,
-roles and row-level security (S0-4), e2e and accessibility tests, the security checklist, and a
-one-command local Docker stack.
+QA [accepted Sprint 0 on 15 October](../project/qa/sprint-0-acceptance.md), including observability
+(S0-5) and the web Docker build fix (#18). AWS remains unapplied; its deploy, email, Google sign-in
+and observability checks carry forward to the first staging deploy.
 
-In progress: observability (S0-5).
+Sprint 1 started early on 10 October. The events API (#16), create-event wizard (S1-1, #17) and
+public event page (S1-3, #23) have merged. FrontendDev's next stories are free ticket types (S1-2),
+accessibility and other event details (S1-4), then browse (S1-5). The public cache/revalidation
+changes (#25 and #26) are in review; the [live board](../project/pm/board.md) records their current
+heads, review evidence and merge queue.
 
-Sprint 0 demo, Friday 13 November: an organiser signs up and lands on an empty organiser home,
-running locally.
+Sprint 1 closes only after S1-1 through S1-5 merge and QA accepts the integrated publish-and-browse
+journey. SEC-14 (site-wide enforced CSP) remains required before Sprint 2 free checkout ships.
 
-The live board, with owners and blockers, is kept by the PM in the OneTickets project.
+The planned 13 November organiser demo still depends on recruitment (RES-1). Until staging is
+available, demos run locally or through the documented quick tunnel. Performance on 4G, real chat
+previews and AWS checks remain explicit staging deferrals; local checks do not close them.
