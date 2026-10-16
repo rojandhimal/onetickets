@@ -8,7 +8,7 @@ import { signUpOrganiser } from './session';
 
 const nextYear = new Date().getFullYear() + 1;
 
-test('a published event has a public page anyone can open', async ({ page, browser }) => {
+test('a published event has a public page anyone can open', async ({ page, context }) => {
   await signUpOrganiser(page);
   await page.getByRole('link', { name: /Workshop/ }).click();
   await page.waitForURL(/\/basics\?draft=/);
@@ -28,10 +28,9 @@ test('a published event has a public page anyone can open', async ({ page, brows
   const path = await eventLink.getAttribute('href');
   expect(path).toMatch(/^\/e\/lino-cut-night-/);
 
-  // A visitor with no session.
-  const visitor = await browser.newContext();
-  const guest = await visitor.newPage();
-  const response = await guest.goto(path!);
+  // A visitor with no session, in the same context so the CSP guard watches the enforced policy.
+  await context.clearCookies();
+  const response = await page.goto(path!);
   expect(response?.status()).toBe(200);
   const headers = response!.headers();
   expect(headers['content-security-policy']).toMatch(
@@ -39,15 +38,14 @@ test('a published event has a public page anyone can open', async ({ page, brows
   );
   expect(headers['cache-control']).toBe('private, no-store');
 
-  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
-  await expect(guest.getByText('Marrickville Town Hall').first()).toBeVisible();
-  await expect(guest.getByText('Tickets open soon').first()).toBeVisible();
-  await expect(guest.locator('meta[property="og:image"]')).toHaveAttribute(
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
+  await expect(page.getByText('Marrickville Town Hall').first()).toBeVisible();
+  await expect(page.getByText('Tickets open soon').first()).toBeVisible();
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
     /opengraph-image/,
   );
-  await expectAccessible(guest);
-  await visitor.close();
+  await expectAccessible(page);
 });
 
 test('an unknown slug is a 404', async ({ page }) => {

@@ -22,10 +22,9 @@ export const config = {
   matcher: [
     {
       source: '/e/:slug',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
+      // Router prefetches fetch the RSC payload, not a document. A browser's own prefetch
+      // (`Purpose: prefetch`) can become the page the visitor sees, so it still gets the policy.
+      missing: [{ type: 'header', key: 'next-router-prefetch' }],
     },
   ],
 };
