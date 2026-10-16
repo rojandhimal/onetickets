@@ -218,6 +218,39 @@ describe('create-event wizard', () => {
       expect(screen.queryByRole('button', { name: /Share/ })).not.toBeInTheDocument();
     });
 
+    it('waits for a venue still being looked up instead of saying it is missing', async () => {
+      pathname = '/organiser/events/new/basics';
+      let release: () => void = () => undefined;
+      const fetch = api({
+        'GET /api/places/search': () =>
+          json({ items: [{ placeId: 'pl_1', name: 'The Print Shed', address: 'Marrickville' }] }),
+        'GET /api/places/pl_1': () =>
+          new Promise<Response>((resolve) => {
+            release = () => resolve(json(readyEvent().venue));
+          }),
+        'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+        'POST /api/organisations/org_1/events/evt_1/publish': () =>
+          json(readyEvent({ status: 'published', slug: 'screen-printing' })),
+      });
+      const user = userEvent.setup();
+      const view = render(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
+      await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Print');
+      await user.click(await screen.findByRole('option', { name: /The Print Shed/ }));
+      pathname = '/organiser/events/new/review';
+      view.rerender(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
+      await user.click(screen.getByRole('button', { name: 'Publish event' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      release();
+      expect(
+        await screen.findByRole('heading', { name: 'Your event is live' }),
+      ).toBeInTheDocument();
+      const venueSaved = patches(fetch).findIndex((p) => p.venue);
+      expect(venueSaved).toBeGreaterThanOrEqual(0);
+      const order = fetch.mock.calls.map((c) => `${c[1]?.method ?? 'GET'} ${c[0]}`);
+      const lastPatch = order.findLastIndex((c) => c.startsWith('PATCH'));
+      expect(order.findIndex((c) => c.endsWith('/publish'))).toBeGreaterThan(lastPatch);
+    });
+
     it('shows what the api says is missing', async () => {
       api({
         'POST /api/organisations/org_1/events/evt_1/publish': () =>
@@ -806,6 +839,43 @@ describe('ticket edits made offline', () => {
       ),
     );
     await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
+  });
+  it('sends an edit kept on the phone before publishing, even if the last try failed', async () => {
+    pathname = '/organiser/events/new/review';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    await store.put('evt_1:ticket', {
+      tt_1: {
+        fields: { capacityText: '14' },
+        input: {
+          name: 'General admission',
+          capacity: 14,
+          maxPerOrder: 10,
+          priceCents: 0,
+          salesStart: { kind: 'on_publish' },
+          salesEnd: { kind: 'event_start' },
+        },
+      },
+    });
+    let online = false;
+    const fetch = api({
+      [ticketPath]: () => {
+        if (!online) throw new TypeError('Failed to fetch');
+        return json(readyEvent({ version: 3 }));
+      },
+      'POST /api/organisations/org_1/events/evt_1/publish': () =>
+        json(readyEvent({ status: 'published', slug: 'screen-printing' })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={readyEvent()} userId="u_1" ticketStore={store} />);
+    expect(await screen.findByText('Saved on this phone')).toBeInTheDocument();
+    online = true;
+    await user.click(screen.getByRole('button', { name: 'Publish event' }));
+    expect(await screen.findByRole('heading', { name: 'Your event is live' })).toBeInTheDocument();
+    const order = fetch.mock.calls.map((c) => `${c[1]?.method ?? 'GET'} ${c[0]}`);
+    const sent = order.lastIndexOf('PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1');
+    expect(sent).toBeGreaterThanOrEqual(0);
+    expect(order.findIndex((c) => c.endsWith('/publish'))).toBeGreaterThan(sent);
+    expect(await store.get('evt_1:ticket')).toBeNull();
   });
 });
 

@@ -292,6 +292,7 @@ export function Wizard({
           event={event}
           headingRef={headingRef}
           flush={flushAll}
+          pending={lookingUp > 0 || ticketsPending}
           goTo={go}
           onPublished={setPublished}
         />

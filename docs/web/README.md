@@ -104,7 +104,9 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
 
 4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
    Publish button is never disabled; pressing it with something missing shows "Add … to publish.
-   Everything else is ready." and moves focus to the checklist. After `POST /organisations/:orgId/events/:id/publish` the
+   Everything else is ready." and moves focus to the checklist. While a venue lookup or ticket
+   edits kept on the phone are still on their way, it sends them first and lets the api say what's
+   missing. After `POST /organisations/:orgId/events/:id/publish` the
    "Your event is live" screen shows the link to `/e/{slug}` with copy and share buttons.
 
 Every change autosaves ([ADR 0016](../adr/0016-wizard-autosave-with-versions-and-on-device-drafts.md)):

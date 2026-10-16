@@ -47,7 +47,8 @@ again online, so two saves can race.
   fields and the input to send. They are retried when the connection returns and every 10 seconds,
   from whichever wizard step is open, and before publishing. Ticket saves for one event run one at
   a time (`withTicketLock` in `src/lib/ticket-edit.ts`), so a kept "new" type is never created
-  twice. An edit the api refuses is dropped, since retrying can't help. Removing a type isn't kept
+  twice by one tab. The lock is per tab: two tabs of the same draft, both online with the same
+  kept "new" type, could each create it. We accept that edge case for now. An edit the api refuses is dropped, since retrying can't help. Removing a type isn't kept
   offline: the step says it couldn't remove it instead.
 
 ## Consequences
