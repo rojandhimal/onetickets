@@ -41,6 +41,9 @@ bootstrap scripts to carry a per-request nonce, which forces dynamic rendering o
 - **Before any checkout or payment page ships, the CSP must be enforced on every page** (Security's
   condition, 2026-10-10; PM to card it). Report-only elsewhere is acceptable only while event
   pages are the one place showing organiser content to the public.
+- Every link into `/e/` stays a plain `<a>`, not Next's `<Link>`, until SEC-14 enforces the CSP on
+  every page. A `<Link>` from a report-only page (browse, the organiser home) would navigate on the
+  client and never load the event page's enforced policy.
 - Event page HTML is sent with `Cache-Control: private, no-store`, so no CDN or shared cache can
   serve one response's nonce to someone else. It can't be statically cached. They were per request already because seat counts
   change.

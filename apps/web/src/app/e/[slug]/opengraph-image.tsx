@@ -22,10 +22,14 @@ const TINTS: Record<string, { ground: string; ink: string }> = {
  * network) and can't decode WebP, so we fetch the api's 1200 × 630 JPEG rendition (`ogUrl`) ourselves
  * and only use PNG or JPEG.
  */
+/** The only shape the api gives a share-image rendition: a UUID key ending `-og.jpg`. */
+const OG_BANNER_PATH =
+  /^\/api\/public\/banners\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-og\.jpg$/;
+
 async function bannerDataUrl(url: string): Promise<string | null> {
   const api = process.env.API_URL ?? 'http://localhost:3001';
   const path = url.replace(/^https?:\/\/[^/]+/, '');
-  if (!path.startsWith('/api/public/banners/')) return null;
+  if (!OG_BANNER_PATH.test(path)) return null;
   try {
     const res = await fetch(`${api}${path.slice(4)}`, { signal: AbortSignal.timeout(3000) });
     const type = res.headers.get('content-type') ?? '';
