@@ -27,6 +27,8 @@ const samples = [
   'Line one\n\n\n\nLine two',
   'Ünïcödé — café',
   '<b></b>',
+  '\u00A0Club\u3000Night\u2028 \u00A0',
+  '\u2002Em\u2003space\u202Fnarrow\u205F',
 ];
 
 /** The same seeded mix of markup characters the unit test fuzzes with. */

@@ -13,6 +13,8 @@ create function pg_temp.plain_line(input text) returns text
   declare
     t text := input;
     previous text;
+    ws constant text :=
+      E'[\\t\\n\\v\\f\\r \\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]';
   begin
     t := regexp_replace(t, E'\r\n?', E'\n', 'g');
     -- Control characters except tab and newline, then zero-width, bidi and BOM characters.
@@ -29,8 +31,9 @@ create function pg_temp.plain_line(input text) returns text
     end loop;
     t := regexp_replace(t, E'[ \t]+\n', E'\n', 'g');
     t := regexp_replace(t, E'\n{3,}', E'\n\n', 'g');
-    t := btrim(t, E' \t\n\r\f\v');
-    return regexp_replace(t, '\s+', ' ', 'g');
+    -- JavaScript's \s and trim(), spelled out so the result doesn't depend on the locale.
+    t := regexp_replace(t, '^' || ws || '+|' || ws || '+$', '', 'g');
+    return regexp_replace(t, ws || '+', ' ', 'g');
   end
   $$;
 
