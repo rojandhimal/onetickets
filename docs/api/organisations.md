@@ -12,8 +12,14 @@ on the message.
 | `GET /organisations/:id/members`  | member with `manageMembers` | none                        | 200 `MemberDto[]`       |
 | `POST /organisations/:id/members` | member with `manageMembers` | `{ email, role }`           | 201 `MemberDto`         |
 
-The caller becomes the owner of an organisation they create. Adding a member by email creates the
-user if they have never signed in; they get access the first time they do.
+The caller becomes the owner of an organisation they create. The name is shown publicly as the
+organiser (event pages and link previews), so it is stored as one line of plain text, like event
+names (SEC-3): tags, comments, control and invisible characters are removed and line breaks become
+spaces. A name that is only markup is refused with 422 on `name`. Migration 0007 cleaned the names
+stored before this; one that was only markup became "Unnamed organisation".
+
+Adding a member by email creates the user if they have never signed in; they get access the first
+time they do.
 
 ## Errors
 

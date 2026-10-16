@@ -104,6 +104,18 @@ describe('organisations and roles API', () => {
     expect(response.body).toMatchObject({ code: 'invalid_request', field: 'name' });
   });
 
+  it('stores the name as one line of plain text, since it is shown publicly (SEC-3)', async () => {
+    const created = await as(owner)
+      .post('/organisations', { name: 'QA <b>Print</b>\n Club\u200B<script>x</script>' })
+      .expect(201);
+    expect(created.body.name).toBe('QA Print Clubx');
+    const mine = await as(owner).get('/me/organisations').expect(200);
+    expect(mine.body).toContainEqual(created.body);
+
+    const onlyMarkup = await as(owner).post('/organisations', { name: '<b></b>' }).expect(422);
+    expect(onlyMarkup.body).toMatchObject({ code: 'invalid_request', field: 'name' });
+  });
+
   it('hides an organisation from non-members', async () => {
     const { body: org } = await as(owner).post('/organisations', { name: 'Private' }).expect(201);
     const response = await as(stranger).get(`/organisations/${org.id}/members`).expect(404);

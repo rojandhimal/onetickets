@@ -25,7 +25,7 @@ import {
   EventsRepository,
   type TicketTypeRow,
 } from './events.repository.js';
-import { toPlainLine, toPlainText } from './plain-text.js';
+import { toPlainLine, toPlainText } from '../../text/plain-text.js';
 import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { PublicPageRevalidator } from './revalidation.js';
