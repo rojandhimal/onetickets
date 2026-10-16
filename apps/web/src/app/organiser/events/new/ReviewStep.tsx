@@ -23,12 +23,15 @@ export function ReviewStep({
   event,
   headingRef,
   flush,
+  pending = false,
   goTo,
   onPublished,
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
   flush: () => Promise<void>;
+  /** A venue lookup or ticket edits haven't reached `event` yet, so it may lack what they add. */
+  pending?: boolean;
   goTo: (step: WizardStep) => (e?: MouseEvent) => void;
   onPublished: (event: EventDraftDto) => void;
 }) {
@@ -62,7 +65,9 @@ export function ReviewStep({
     setFailed(false);
     setBlocked(null);
     setAttempt((n) => n + 1);
-    if (missingNow.length) {
+    // What looks missing may be on its way (a venue lookup finishing, a kept ticket type), so then
+    // send everything and let the api's answer say what's missing.
+    if (missingNow.length && !pending) {
       block(missingNow, false);
       return;
     }

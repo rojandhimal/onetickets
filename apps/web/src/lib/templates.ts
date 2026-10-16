@@ -34,3 +34,17 @@ export function apiTemplate(
 export function newEventHref(templateId?: EventTemplate['id']): string {
   return templateId ? `/organiser/events/new?template=${templateId}` : '/organiser/events/new';
 }
+
+/**
+ * The About field's placeholder for each template (copy sheet, S1-4). A prompt, never saved text,
+ * so nothing the organiser didn't write is published as theirs.
+ */
+export const ABOUT_PROMPTS: Record<ReturnType<typeof apiTemplate>, string> = {
+  workshop: 'What will people make or learn? Who is it for, and do they need to bring anything?',
+  gig: "Who's playing, and what's the music like? When do doors open, and is it all ages?",
+  school_night:
+    "What's on, and what's it raising money for? Is it for families, adults or everyone?",
+  meetup:
+    'What will you talk about or do? Who should come, and how will they find you on the night?',
+  blank: 'Say what people will do and what to bring.',
+};

@@ -47,6 +47,19 @@ test('a published event has a public page anyone can open', async ({ page, conte
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
   await expect(page.getByText('Marrickville Town Hall').first()).toBeVisible();
   await expect(page.getByText('Tickets open soon').first()).toBeVisible();
+  // Nothing ticked: the row says so and points ticket holders at their email (row 4.3).
+  const facts = page.locator('dl');
+  await expect(facts.getByText('No accessibility details yet', { exact: true })).toBeVisible();
+  await expect(
+    facts.getByText('Booked? Reply to your confirmation email to ask the organiser.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Accessibility' })).toHaveCount(0);
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  // About was left empty, so the template's prompt never reaches the public page.
+  await expect(page.getByRole('region', { name: 'About' })).toHaveCount(0);
+  await expect(page.getByText('What will people make or learn?')).toHaveCount(0);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
     /opengraph-image/,

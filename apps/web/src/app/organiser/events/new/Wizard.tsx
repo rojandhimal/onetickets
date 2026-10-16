@@ -5,7 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
-import type { PendingChanges } from '@/lib/draft-store';
+import { type PendingChanges, defaultDraftStore } from '@/lib/draft-store';
+import { type TicketEdits, type TicketEditStore, syncTicketEdits } from '@/lib/ticket-edit';
 import { type SaveState, useAutosave } from '@/lib/use-autosave';
 import {
   STEP_LABELS,
@@ -17,6 +18,7 @@ import {
   stepHref,
 } from '@/lib/wizard-model';
 import { BasicsStep, END_SAME_AS_START, type ServerErrors } from './BasicsStep';
+import { DetailsStep } from './DetailsStep';
 import { LiveScreen } from './LiveScreen';
 import { ReviewStep } from './ReviewStep';
 import { type TicketSaveState, TicketsStep } from './TicketsStep';
@@ -36,6 +38,17 @@ export function refusedMessage(message: string, code?: string): string {
   return /^[a-z_]+$/.test(message) ? 'Check this and try again.' : message;
 }
 
+// Fields that show the api's message under them; anything else is the api's to explain.
+const SHOWN_ERRORS = new Set<string>([
+  'name',
+  'startsAt',
+  'endsAt',
+  'venue',
+  'about',
+  'accessibility',
+  'contactEmail',
+]);
+
 const REFUSED_TEXT = "Couldn't save one field. Check the message under it.";
 
 function applyChanges(event: EventDraftDto, changes: PendingChanges): EventDraftDto {
@@ -51,7 +64,15 @@ function serverFields(server: EventDraftDto) {
   return { version, updatedAt, ticketTypes, banner, slug, status };
 }
 
-export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; userId: string }) {
+export function Wizard({
+  initialEvent,
+  userId,
+  ticketStore: ticketStoreOption,
+}: {
+  initialEvent: EventDraftDto;
+  userId: string;
+  ticketStore?: TicketEditStore;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const segment = pathname.split('/').pop() ?? '';
@@ -62,6 +83,34 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const [serverErrors, setServerErrors] = useState<ServerErrors>({});
   const [ticketSaveState, setTicketSaveState] = useState<TicketSaveState>('saved');
   const ticketFlushRef = useRef<(() => Promise<void>) | null>(null);
+  const ticketStore = useRef(ticketStoreOption ?? defaultDraftStore<TicketEdits>(userId)).current;
+  // Work that has to finish before a save means anything, like looking up a picked venue.
+  const lookups = useRef(new Set<Promise<void>>());
+  const [lookingUp, setLookingUp] = useState(0);
+  const trackLookup = useCallback((done: Promise<void>) => {
+    lookups.current.add(done);
+    setLookingUp((n) => n + 1);
+    void done.finally(() => {
+      lookups.current.delete(done);
+      setLookingUp((n) => n - 1);
+    });
+  }, []);
+  const settle = useCallback(async () => {
+    while (lookups.current.size) await Promise.allSettled([...lookups.current]);
+  }, []);
+  // Mistakes caught here, never sent: the last saved value stays, so the header mustn't say saved.
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const localError = useCallback((field: string, message: string | null) => {
+    setLocalErrors((prev) => {
+      if ((prev[field] ?? null) === message) return prev;
+      const next = { ...prev };
+      if (message) next[field] = message;
+      else delete next[field];
+      return next;
+    });
+  }, []);
+  // Ticket edits still on this phone, for steps other than Tickets (which reports its own).
+  const [ticketsPending, setTicketsPending] = useState(false);
   const { saveState, change, flush, accept } = useAutosave({
     event: initialEvent,
     userId,
@@ -73,7 +122,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
     },
     // The value stays on screen with the api's message under it; the rest of the draft saves.
     onInvalid: (field, message, code) => {
-      if (field === 'name' || field === 'startsAt' || field === 'endsAt' || field === 'venue')
+      if (field && SHOWN_ERRORS.has(field))
         setServerErrors((prev) => ({ ...prev, [field]: refusedMessage(message, code) }));
     },
   });
@@ -114,35 +163,84 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
     window.scrollTo(0, 0);
   }, [step]);
 
+  const eventRef = useRef(event);
+  eventRef.current = event;
+
+  /** Sends ticket edits kept on this phone; the Tickets step sends its own while it's open. */
+  const syncTickets = useCallback(async () => {
+    const result = await syncTicketEdits(eventRef.current, ticketStore);
+    if (result.event) accept(result.event);
+    setTicketsPending(result.pending);
+  }, [accept, ticketStore]);
+
+  useEffect(() => {
+    if (step === 'tickets') return;
+    void syncTickets();
+    const retry = () => void syncTickets();
+    const tick = window.setInterval(retry, 10_000);
+    window.addEventListener('online', retry);
+    return () => {
+      window.clearInterval(tick);
+      window.removeEventListener('online', retry);
+    };
+  }, [step, syncTickets]);
+
+  /** Everything this phone holds goes to the api first, so publishing sees the latest. */
+  const flushAll = useCallback(async () => {
+    await settle();
+    await ticketFlushRef.current?.();
+    await syncTickets();
+    await flush();
+  }, [flush, settle, syncTickets]);
+
   /** Step changes stay on this page so typing in flight is never lost. */
   const go = useCallback(
     (to: WizardStep) => (e?: MouseEvent) => {
       e?.preventDefault();
+      // A ticket edit with a mistake can't be saved, so stay and point at it rather than drop it.
+      const mistake =
+        step === 'tickets' && ticketSaveState === 'refused'
+          ? document.querySelector<HTMLElement>('main [aria-invalid="true"]')
+          : null;
+      if (mistake) {
+        mistake.focus();
+        return;
+      }
       void ticketFlushRef.current?.();
-      void flush();
+      void settle().then(() => flush());
       window.history.pushState(null, '', stepHref(to, event.id));
     },
-    [event.id, flush],
+    [event.id, flush, settle, step, ticketSaveState],
   );
 
   const leave = useCallback(
     async (e: MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
+      await settle();
       await ticketFlushRef.current?.();
       await flush();
       router.push('/organiser');
     },
-    [flush, router],
+    [flush, router, settle],
   );
 
   const [published, setPublished] = useState<EventDraftDto | null>(null);
   if (published) return <LiveScreen event={published} />;
 
   // A field the api refused isn't saved, so the header mustn't say everything is.
-  const refused = Object.keys(serverErrors).length > 0;
-  const draftShownState: TicketSaveState = refused && saveState === 'saved' ? 'refused' : saveState;
+  const refused = Object.keys(serverErrors).length + Object.keys(localErrors).length > 0;
+  const draftShownState: TicketSaveState =
+    lookingUp > 0 && saveState === 'saved'
+      ? 'saving'
+      : refused && saveState === 'saved'
+        ? 'refused'
+        : saveState;
   const shownState: TicketSaveState =
-    step === 'tickets' && ticketSaveState !== 'saved' ? ticketSaveState : draftShownState;
+    step === 'tickets' && ticketSaveState !== 'saved'
+      ? ticketSaveState
+      : step !== 'tickets' && ticketsPending && draftShownState === 'saved'
+        ? 'offline'
+        : draftShownState;
 
   const back = previousStep(step);
   const next = nextStep(step);
@@ -159,6 +257,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
           onChange={update}
           onBlur={() => void flush()}
           onBannerChanged={accept}
+          onLookup={trackLookup}
         />
       );
       break;
@@ -167,6 +266,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
         <TicketsStep
           event={event}
           headingRef={headingRef}
+          store={ticketStore}
           flushRef={ticketFlushRef}
           onTicketChanged={accept}
           onSaveStateChange={setTicketSaveState}
@@ -174,14 +274,25 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
       );
       break;
     case 'details':
-      body = <DetailsComingSoon headingRef={headingRef} />;
+      body = (
+        <DetailsStep
+          key={restored}
+          event={event}
+          headingRef={headingRef}
+          serverErrors={serverErrors}
+          onLocalError={localError}
+          onChange={update}
+          onBlur={() => void flush()}
+        />
+      );
       break;
     case 'review':
       body = (
         <ReviewStep
           event={event}
           headingRef={headingRef}
-          flush={flush}
+          flush={flushAll}
+          pending={lookingUp > 0 || ticketsPending}
           goTo={go}
           onPublished={setPublished}
         />
@@ -260,25 +371,5 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
         </div>
       )}
     </div>
-  );
-}
-
-type HeadingRef = React.RefObject<HTMLHeadingElement | null>;
-
-// S1-4 replaces this with About, Accessibility, Cancellations and the contact email.
-function DetailsComingSoon({ headingRef }: { headingRef: HeadingRef }) {
-  return (
-    <main className={styles.body}>
-      <div className={styles.heading}>
-        <h1 ref={headingRef} tabIndex={-1}>
-          Tell people more
-        </h1>
-        <span className={styles.lede}>All optional, but events with these get more bookings.</span>
-      </div>
-      <div className={`${screen.notice} ${screen.noticeInfo}`}>
-        <Icon name="info" />
-        <p>About, accessibility and cancellations are coming next. You can skip this step.</p>
-      </div>
-    </main>
   );
 }

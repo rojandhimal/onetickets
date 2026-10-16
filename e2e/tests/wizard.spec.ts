@@ -183,10 +183,178 @@ test('free ticket types step steps capacity, adds and removes types, and validat
   await expectAccessible(page);
 
   // Switch active editor to General admission and remove Members from the draft.
-  await list.getByRole('button', { name: 'Edit' }).click();
+  await list.getByRole('button', { name: 'Edit General admission ticket' }).click();
   await expect(page.getByLabel('Ticket name')).toHaveValue('General admission');
   await expect(list).toContainText('Free · 8 tickets · up to 2 per order');
   await page.getByRole('button', { name: 'Remove Members ticket' }).click();
   await expect(status(page)).toHaveText('Draft saved');
   await expect(page.getByRole('list', { name: 'Ticket types' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Remove .* ticket$/ })).toHaveCount(0);
+});
+
+test('step 3 holds About, accessibility, cancellations and a private contact email', async ({
+  page,
+  context,
+}) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  await page.getByLabel('Event name').fill('Risograph zine morning');
+  await page.getByLabel('Date').fill(`${nextYear}-11-28`);
+  await page.getByLabel('Starts').fill('09:30');
+  await page.getByLabel('Ends').fill('12:00');
+  await pickMarrickville(page);
+  await page.getByLabel('Event name').focus();
+  await expect(status(page)).toHaveText('Draft saved');
+
+  // About starts empty with the template's prompt as its placeholder (row 4.4).
+  await page.getByRole('link', { name: 'Next: tickets' }).click();
+  await page.getByRole('link', { name: 'Next: details' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tell people more');
+  const about = page.getByLabel('About this event');
+  await expect(about).toHaveValue('');
+  await expect(about).toHaveAttribute('placeholder', /What will people make or learn\?/);
+  await expect(about).toHaveAttribute('maxlength', '2000');
+  await expectAccessible(page);
+
+  await about.fill('Print your own zine on a risograph. Bring a few drawings.');
+  await expect(about).toHaveAccessibleDescription(
+    'Say what people will do and what to bring. 57 / 2,000',
+  );
+
+  // Accessibility fieldset (row 4.1).
+  const access = page.getByRole('group', { name: 'Accessibility' });
+  for (const label of [
+    'Step-free access',
+    'Accessible toilet',
+    'Hearing loop',
+    'Seating available',
+    'Auslan interpreter',
+    'Quiet space',
+  ])
+    await expect(access.getByRole('checkbox', { name: label })).toBeVisible();
+  await access.getByRole('checkbox', { name: 'Hearing loop' }).check();
+  await access.getByRole('checkbox', { name: 'Step-free access' }).check();
+  const notes = page.getByLabel('Anything else people should know?');
+  await expect(notes).toHaveAttribute('maxlength', '500');
+  await notes.fill('Lift from the car park on Fisher St.');
+  await expect(notes).toHaveAccessibleDescription(/36 \/ 500$/);
+
+  // Cancellations and the contact email, which is checked before it saves (row 4.4).
+  await page.getByRole('radio', { name: 'Up to 24 hours before' }).check();
+  const contact = page.getByLabel('Contact email for attendees');
+  await contact.fill('zines@example');
+  await notes.focus();
+  await expect(contact).toHaveAttribute('aria-invalid', 'true');
+  await contact.fill('zines@example.test');
+  await notes.focus();
+  await expect(contact).not.toHaveAttribute('aria-invalid');
+  await expect(status(page)).toHaveText('Draft saved');
+  await expectAccessible(page);
+
+  // Everything saved survives a reload.
+  await page.reload();
+  await expect(page.getByLabel('About this event')).toHaveValue(/risograph/);
+  await expect(page.getByRole('checkbox', { name: 'Hearing loop' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Up to 24 hours before' })).toBeChecked();
+  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+
+  // A mistyped edit never replaces the saved address (QA's #35 review).
+  const saved = page.getByLabel('Contact email for attendees');
+  await saved.fill('zines@example');
+  await page.getByLabel('Anything else people should know?').focus();
+  await expect(saved).toHaveAttribute('aria-invalid', 'true');
+  await expect(status(page)).toHaveText("Couldn't save one field. Check the message under it.");
+  await page.reload();
+  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+
+  // Published, the page shows the summary row and the full list (row 4.2) but never the email.
+  await page.getByRole('link', { name: 'Next: review' }).click();
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  const path = await page.getByRole('link', { name: 'See your event page' }).getAttribute('href');
+  await context.clearCookies();
+  await page.goto(path!);
+  const facts = page.locator('dl');
+  await expect(facts.locator('strong', { hasText: 'Step-free access' })).toBeVisible();
+  await expect(facts).toContainText('Hearing loop ·');
+  await expect(facts).toContainText('Cancel up to 24 hours before');
+  const section = page.getByRole('region', { name: 'Accessibility' });
+  await expect(section.getByRole('listitem')).toHaveText(['Step-free access', 'Hearing loop']);
+  await expect(section).toContainText('Lift from the car park on Fisher St.');
+  await expect(page.getByRole('region', { name: 'About' })).toContainText('risograph');
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  expect(await page.content()).not.toContain('zines@example.test');
+  await expectAccessible(page);
+});
+
+test('a refused field says so in the header in at most two lines', async ({ page }) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Meetup/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  // Stand in for the api refusing the name, so the longest header message shows.
+  await page.route('**/api/organisations/*/events/*', (route) =>
+    route.request().method() === 'PATCH'
+      ? route.fulfill({
+          status: 422,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            statusCode: 422,
+            code: 'invalid_request',
+            message: 'Use letters as well as symbols',
+            field: 'name',
+          }),
+        })
+      : route.continue(),
+  );
+  await page.getByLabel('Event name').fill('***');
+  await page.getByLabel('Date').focus();
+  const header = status(page);
+  await expect(header).toHaveText("Couldn't save one field. Check the message under it.");
+  const lines = await header.evaluate((el) => {
+    const { height } = el.getBoundingClientRect();
+    return Math.round(height / parseFloat(getComputedStyle(el).lineHeight));
+  });
+  expect(lines).toBeLessThanOrEqual(2);
+  await expectAccessible(page);
+});
+
+test('a ticket edit made offline stays on the phone, survives a reload and syncs', async ({
+  page,
+  context,
+}) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  const draft = new URL(page.url()).searchParams.get('draft')!;
+  await page.getByRole('link', { name: 'Next: tickets' }).click();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('40');
+  const orgs = await (await page.request.get('/api/me/organisations')).json();
+  const org = (orgs.organisations ?? orgs.items ?? orgs)[0];
+  const serverCapacity = async () => {
+    const res = await page.request.get(`/api/organisations/${org.id}/events/${draft}`);
+    return ((await res.json()) as { ticketTypes: { capacity: number }[] }).ticketTypes[0]?.capacity;
+  };
+
+  // Offline: the edit is kept on this phone, and the header says so (row 1.6).
+  await context.setOffline(true);
+  await page.getByLabel('How many tickets?').fill('14');
+  await page.getByLabel('Ticket name').focus();
+  await expect(status(page)).toHaveText('Saved on this phone');
+
+  // Still not reaching the api, the draft reopens with the edit.
+  await page.route('**/ticket-types/**', (route) => route.abort());
+  await context.setOffline(false);
+  await page.reload();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('14');
+  expect(await serverCapacity()).toBe(40);
+
+  // Once the api can be reached, the edit goes through without touching anything.
+  await page.unroute('**/ticket-types/**');
+  await context.setOffline(true);
+  await context.setOffline(false);
+  await expect(status(page)).toHaveText('Draft saved');
+  await expect.poll(serverCapacity).toBe(14);
+  await page.reload();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('14');
+  await expectAccessible(page);
 });

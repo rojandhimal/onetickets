@@ -86,16 +86,33 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
    `POST /organisations/:orgId/events/:id/ticket-types`,
    `PATCH …/ticket-types/:typeId` and `DELETE …/ticket-types/:typeId`, each returning the refreshed
    event with its new `version` so wizard autosave stays in sync.
-3. **Details**: placeholder until S1-4 (About, accessibility, cancellations, contact email).
+3. **Details** (`DetailsStep.tsx`, artboard 8b), all optional:
+   - **About this event**, up to 2,000 characters. It always starts empty. The template only sets
+     the placeholder, a few questions to answer (`ABOUT_PROMPTS` in `src/lib/templates.ts`), so
+     nothing the organiser didn't write is published as theirs.
+   - **Accessibility**: a fieldset of six checkboxes (saved in list order, whatever order they were
+     ticked in) and "Anything else people should know?", up to 500 characters.
+   - **Cancellations**: any time (the default), up to 24 hours before, or none, with the same
+     wording the event page uses.
+   - **Contact email for attendees**. It is only for people with a ticket: the public event page
+     and its api response carry `hasContactEmail`, never the address, and the page has no `mailto`.
+     A mistyped address shows "Enter an email address, like name@example.com" on blur and isn't
+     saved until it's fixed; the api runs its own check too.
+
+   The two long fields show a count ("168 / 2,000") beside their hint. Screen readers hear "1,832
+   characters left" through a polite live region once typing pauses, not on every key.
+
 4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
    Publish button is never disabled; pressing it with something missing shows "Add … to publish.
-   Everything else is ready." and moves focus to the checklist. After `POST /organisations/:orgId/events/:id/publish` the
+   Everything else is ready." and moves focus to the checklist. While a venue lookup or ticket
+   edits kept on the phone are still on their way, it sends them first and lets the api say what's
+   missing. After `POST /organisations/:orgId/events/:id/publish` the
    "Your event is live" screen shows the link to `/e/{slug}` with copy and share buttons.
 
 Every change autosaves ([ADR 0016](../adr/0016-wizard-autosave-with-versions-and-on-device-drafts.md)):
 on blur, every 10 seconds while there are changes, and when the tab is hidden. Offline changes are
-kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…",
-"Saved on this phone" when offline, or "Couldn't save. We'll keep trying." when the api fails while
+kept in IndexedDB and synced when the connection returns, ticket type edits included. The header shows "Draft saved", "Saving…",
+"Saved on this phone" when offline (and "Saving…" while a picked venue is still being looked up; moving step, closing and publishing wait for it), or "Couldn't save. We'll keep trying." when the api fails while
 online. A field the api refuses (422) keeps its value on screen with the api's message under it, and
 the header says "Couldn't save one field. Check the message under it." until it's changed.
 

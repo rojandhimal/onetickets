@@ -1,7 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { memoryDraftStore } from '@/lib/draft-store';
+import { ABOUT_PROMPTS } from '@/lib/templates';
+import type { TicketEdits } from '@/lib/ticket-edit';
 import { draftEvent, readyEvent } from '@/test/event-fixture';
+import { CONTACT_EMAIL_ERROR } from './DetailsStep';
 import { Wizard } from './Wizard';
 
 let pathname = '/organiser/events/new/basics';
@@ -212,6 +216,39 @@ describe('create-event wizard', () => {
       );
       // jsdom has no Web Share API, so the share button stays hidden.
       expect(screen.queryByRole('button', { name: /Share/ })).not.toBeInTheDocument();
+    });
+
+    it('waits for a venue still being looked up instead of saying it is missing', async () => {
+      pathname = '/organiser/events/new/basics';
+      let release: () => void = () => undefined;
+      const fetch = api({
+        'GET /api/places/search': () =>
+          json({ items: [{ placeId: 'pl_1', name: 'The Print Shed', address: 'Marrickville' }] }),
+        'GET /api/places/pl_1': () =>
+          new Promise<Response>((resolve) => {
+            release = () => resolve(json(readyEvent().venue));
+          }),
+        'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+        'POST /api/organisations/org_1/events/evt_1/publish': () =>
+          json(readyEvent({ status: 'published', slug: 'screen-printing' })),
+      });
+      const user = userEvent.setup();
+      const view = render(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
+      await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Print');
+      await user.click(await screen.findByRole('option', { name: /The Print Shed/ }));
+      pathname = '/organiser/events/new/review';
+      view.rerender(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
+      await user.click(screen.getByRole('button', { name: 'Publish event' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      release();
+      expect(
+        await screen.findByRole('heading', { name: 'Your event is live' }),
+      ).toBeInTheDocument();
+      const venueSaved = patches(fetch).findIndex((p) => p.venue);
+      expect(venueSaved).toBeGreaterThanOrEqual(0);
+      const order = fetch.mock.calls.map((c) => `${c[1]?.method ?? 'GET'} ${c[0]}`);
+      const lastPatch = order.findLastIndex((c) => c.startsWith('PATCH'));
+      expect(order.findIndex((c) => c.endsWith('/publish'))).toBeGreaterThan(lastPatch);
     });
 
     it('shows what the api says is missing', async () => {
@@ -470,7 +507,7 @@ describe('create-event wizard', () => {
       );
 
       // Edit General admission: Members collapses to a summary row with its summary and remove button.
-      await user.click(screen.getByRole('button', { name: 'Edit' }));
+      await user.click(screen.getByRole('button', { name: 'Edit General admission ticket' }));
       expect(screen.getByLabelText('Ticket name')).toHaveValue('General admission');
       expect(screen.getByRole('list', { name: 'Ticket types' })).toHaveTextContent(
         'Free · 10 tickets · up to 2 per order',
@@ -484,6 +521,8 @@ describe('create-event wizard', () => {
         ),
       );
       expect(screen.queryByRole('list', { name: 'Ticket types' })).not.toBeInTheDocument();
+      // One type left, so it can't be removed.
+      expect(screen.queryByRole('button', { name: /^Remove .* ticket$/ })).not.toBeInTheDocument();
     });
 
     it('validates capacity, max per order, and sales end after sales start inline', async () => {
@@ -593,5 +632,325 @@ describe('create-event wizard', () => {
         ),
       );
     });
+  });
+});
+
+describe('details step', () => {
+  beforeEach(() => {
+    pathname = '/organiser/events/new/details';
+  });
+
+  const saved = () =>
+    api({ 'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })) });
+
+  it("prompts About with the template's questions and counts characters", async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tell people more');
+    const field = screen.getByLabelText('About this event');
+    expect(field).toHaveValue('');
+    expect(field).toHaveAttribute('placeholder', ABOUT_PROMPTS.workshop);
+    expect(field).toHaveAccessibleDescription(
+      'Say what people will do and what to bring. 0 / 2,000',
+    );
+    expect(field).toHaveAttribute('maxlength', '2000');
+
+    await user.type(field, 'Bring an old shirt.');
+    expect(field).toHaveAccessibleDescription(
+      'Say what people will do and what to bring. 19 / 2,000',
+    );
+    await user.tab();
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ about: 'Bring an old shirt.' }),
+    );
+  });
+
+  it('saves accessibility features in list order with the notes', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const group = screen.getByRole('group', { name: 'Accessibility' });
+    expect(group).toHaveAccessibleDescription(
+      "Shown near the top of your event page. Tick what's true for your venue.",
+    );
+    await user.click(screen.getByRole('checkbox', { name: 'Quiet space' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Step-free access' }));
+    await user.type(screen.getByLabelText('Anything else people should know?'), 'Ramp at side');
+    await user.tab();
+
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({
+        accessibility: { features: ['step_free_access', 'quiet_space'], notes: 'Ramp at side' },
+      }),
+    );
+    expect(screen.getByLabelText('Anything else people should know?')).toHaveAttribute(
+      'maxlength',
+      '500',
+    );
+  });
+
+  it('saves the cancellation choice', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const anyTime = screen.getByRole('radio', { name: 'Any time before it starts' });
+    expect(anyTime).toBeChecked();
+    expect(anyTime).toHaveAccessibleDescription(
+      'Recommended for free events. Released tickets go back on sale.',
+    );
+    await user.click(screen.getByRole('radio', { name: 'Up to 24 hours before' }));
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ cancellationPolicy: 'up_to_24h' }),
+    );
+  });
+
+  it('saves a contact email and explains a mistyped one', async () => {
+    const fetch = saved();
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+
+    const email = screen.getByLabelText('Contact email for attendees');
+    expect(email).toHaveAccessibleDescription('Only shown to people with a ticket.');
+    await user.type(email, 'jo@example');
+    await user.tab();
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(
+      `${CONTACT_EMAIL_ERROR} Only shown to people with a ticket.`,
+    );
+
+    await user.type(email, '.test');
+    expect(email).not.toHaveAttribute('aria-invalid');
+    await user.tab();
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ contactEmail: 'jo@example.test' }),
+    );
+  });
+
+  it('shows the api message under a refused contact email', async () => {
+    api({
+      'PATCH /api/organisations/org_1/events/evt_1': () =>
+        json(
+          {
+            statusCode: 422,
+            code: 'invalid_request',
+            message: 'Use an email address you can receive mail at',
+            field: 'contactEmail',
+          },
+          422,
+        ),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    const email = screen.getByLabelText('Contact email for attendees');
+    await user.type(email, 'jo@example.test');
+    await user.tab();
+    await waitFor(() =>
+      expect(email).toHaveAccessibleDescription(
+        'Use an email address you can receive mail at Only shown to people with a ticket.',
+      ),
+    );
+    expect(email).toHaveValue('jo@example.test');
+  });
+});
+
+describe('ticket edits made offline', () => {
+  const ticketPath = 'PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1';
+  const withCapacity = (capacity: number) => {
+    const base = draftEvent({ lastStep: 'tickets' });
+    return draftEvent({
+      lastStep: 'tickets',
+      version: 2,
+      ticketTypes: base.ticketTypes.map((t) => ({ ...t, capacity })),
+    });
+  };
+
+  it('keeps the edit on the phone, shows it on reopening and sends it when back online', async () => {
+    pathname = '/organiser/events/new/tickets';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    api({
+      [ticketPath]: () => {
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    const user = userEvent.setup();
+    const first = render(
+      <Wizard
+        initialEvent={draftEvent({ lastStep: 'tickets' })}
+        userId="u_1"
+        ticketStore={store}
+      />,
+    );
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '14');
+    await user.tab();
+    expect(await screen.findByText('Saved on this phone')).toHaveAttribute('role', 'status');
+    expect(await store.get('evt_1:ticket')).toMatchObject({
+      tt_1: { input: { capacity: 14 }, fields: { capacityText: '14' } },
+    });
+    first.unmount();
+
+    // Reopened with the connection back: the edit shows and goes to the api.
+    const fetch = api({ [ticketPath]: () => json(withCapacity(14)) });
+    render(
+      <Wizard
+        initialEvent={draftEvent({ lastStep: 'tickets' })}
+        userId="u_1"
+        ticketStore={store}
+      />,
+    );
+    await waitFor(() => expect(screen.getByLabelText('How many tickets?')).toHaveValue(14));
+    await waitFor(() =>
+      expect(patches(fetch)).toEqual([expect.objectContaining({ capacity: 14 })]),
+    );
+    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
+    await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
+  });
+
+  it('sends an edit kept on the phone from any step, before publishing', async () => {
+    pathname = '/organiser/events/new/details';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    await store.put('evt_1:ticket', {
+      tt_1: {
+        fields: { capacityText: '14' },
+        input: {
+          name: 'General admission',
+          capacity: 14,
+          maxPerOrder: 10,
+          priceCents: 0,
+          salesStart: { kind: 'on_publish' },
+          salesEnd: { kind: 'event_start' },
+        },
+      },
+    });
+    const fetch = api({
+      [ticketPath]: () => json(withCapacity(14)),
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 3 })),
+    });
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" ticketStore={store} />);
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/organisations/org_1/events/evt_1/ticket-types/tt_1',
+        expect.objectContaining({ method: 'PATCH' }),
+      ),
+    );
+    await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
+  });
+  it('sends an edit kept on the phone before publishing, even if the last try failed', async () => {
+    pathname = '/organiser/events/new/review';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    await store.put('evt_1:ticket', {
+      tt_1: {
+        fields: { capacityText: '14' },
+        input: {
+          name: 'General admission',
+          capacity: 14,
+          maxPerOrder: 10,
+          priceCents: 0,
+          salesStart: { kind: 'on_publish' },
+          salesEnd: { kind: 'event_start' },
+        },
+      },
+    });
+    let online = false;
+    const fetch = api({
+      [ticketPath]: () => {
+        if (!online) throw new TypeError('Failed to fetch');
+        return json(readyEvent({ version: 3 }));
+      },
+      'POST /api/organisations/org_1/events/evt_1/publish': () =>
+        json(readyEvent({ status: 'published', slug: 'screen-printing' })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={readyEvent()} userId="u_1" ticketStore={store} />);
+    expect(await screen.findByText('Saved on this phone')).toBeInTheDocument();
+    online = true;
+    await user.click(screen.getByRole('button', { name: 'Publish event' }));
+    expect(await screen.findByRole('heading', { name: 'Your event is live' })).toBeInTheDocument();
+    const order = fetch.mock.calls.map((c) => `${c[1]?.method ?? 'GET'} ${c[0]}`);
+    const sent = order.lastIndexOf('PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1');
+    expect(sent).toBeGreaterThanOrEqual(0);
+    expect(order.findIndex((c) => c.endsWith('/publish'))).toBeGreaterThan(sent);
+    expect(await store.get('evt_1:ticket')).toBeNull();
+  });
+});
+
+describe('ticket mistakes', () => {
+  beforeEach(() => {
+    pathname = '/organiser/events/new/tickets';
+  });
+
+  it('asks for a whole number of tickets', async () => {
+    api({});
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '2.5');
+    await user.tab();
+    expect(capacity).toHaveAccessibleDescription(/Use a whole number/);
+  });
+
+  it('stays on Tickets and points at a mistake instead of dropping the edit', async () => {
+    api({});
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ lastStep: 'tickets' })} userId="u_1" />);
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '0');
+    await user.click(screen.getByRole('link', { name: 'Next: details' }));
+    expect(capacity).toHaveFocus();
+    expect(capacity).toHaveValue(0);
+    expect(pushState).not.toHaveBeenCalledWith(null, '', expect.stringContaining('/details'));
+    pushState.mockRestore();
+  });
+});
+
+describe('details and basics save state', () => {
+  it('never saves a mistyped contact email over the saved one', async () => {
+    pathname = '/organiser/events/new/details';
+    const fetch = api({
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent({ contactEmail: 'jo@example.test' })} userId="u_1" />);
+    const email = screen.getByLabelText('Contact email for attendees');
+    await user.clear(email);
+    await user.type(email, 'jo@example');
+    await user.tab();
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      await screen.findByText("Couldn't save one field. Check the message under it."),
+    ).toHaveAttribute('role', 'status');
+    await waitFor(() => expect(patches(fetch).length).toBeGreaterThan(0));
+    expect(patches(fetch).some((p) => 'contactEmail' in p)).toBe(false);
+  });
+
+  it('says it is saving while a picked venue is looked up', async () => {
+    pathname = '/organiser/events/new/basics';
+    let release: () => void = () => undefined;
+    api({
+      'GET /api/places/search': () =>
+        json({ items: [{ placeId: 'pl_1', name: 'The Print Shed', address: 'Marrickville' }] }),
+      'GET /api/places/pl_1': () =>
+        new Promise<Response>((resolve) => {
+          release = () => resolve(json(readyEvent().venue));
+        }),
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+    });
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
+    await user.type(screen.getByRole('combobox', { name: 'Venue address' }), 'Print');
+    await user.click(await screen.findByRole('option', { name: /The Print Shed/ }));
+    expect(screen.getByRole('banner').querySelector('[role="status"]')).toHaveTextContent(
+      'Saving…',
+    );
+    release();
+    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
   });
 });
