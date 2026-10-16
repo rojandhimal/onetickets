@@ -155,23 +155,16 @@ export class EventsRepository {
   }
 
   /**
-   * Makes the event live. With no contact email yet, the publisher's own email is used, so it
-   * never blocks publishing (it is only shown to ticket holders).
+   * Makes the event live. The contact email stays exactly as the organiser left it: an empty one
+   * stays empty, never filled from a member's sign-in email (SEC-20).
    */
-  async publish(
-    tx: pg.PoolClient,
-    eventId: string,
-    slug: string,
-    publisherUserId: string,
-  ): Promise<void> {
+  async publish(tx: pg.PoolClient, eventId: string, slug: string): Promise<void> {
     await tx.query(
       `update catalogue.events
        set status = 'published', slug = $2, published_at = now(),
-           contact_email = coalesce(contact_email,
-             (select email from identity.users where id = $3)),
            version = version + 1, updated_at = now()
        where id = $1`,
-      [eventId, slug, publisherUserId],
+      [eventId, slug],
     );
   }
 

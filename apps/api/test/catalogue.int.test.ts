@@ -817,12 +817,32 @@ describe('events and ticket types API', () => {
     expect(refused.body).toMatchObject({ code: 'required_when_live', field: 'startsAt' });
   });
 
-  it("uses the publisher's email as the contact when none was given", async () => {
+  it("publishes with no contact email, never filling it from a member's email", async () => {
     const event = await publishable({ contactEmail: null });
-    const live = await publish(event);
-    expect(live.contactEmail).toMatch(/^owner-.*@example\.test$/);
+    const { body: live } = await as(admin).post(`${events()}/${event.id}/publish`).expect(200);
+    expect(live).toMatchObject({ status: 'published', contactEmail: null });
+
+    const stored = await withOwner(async (client) => {
+      const { rows } = await client.query<{ contact_email: string | null; members: string[] }>(
+        `select e.contact_email,
+                array(select u.email from identity.memberships m
+                      join identity.users u on u.id = m.user_id
+                      where m.organisation_id = e.organisation_id) as members
+         from catalogue.events e where e.id = $1`,
+        [event.id],
+      );
+      return rows[0]!;
+    });
+    expect(stored.members.length).toBeGreaterThan(1);
+    expect(stored.contact_email).toBeNull();
+
     const { body } = await anon().get(`/public/events/${live.slug}`).expect(200);
-    expect(body.hasContactEmail).toBe(true);
+    expect(body.hasContactEmail).toBe(false);
+  });
+
+  it('keeps the contact email the organiser gave when publishing', async () => {
+    const live = await publish(await publishable({ contactEmail: 'Bookings@Example.test' }));
+    expect(live.contactEmail).toBe('bookings@example.test');
   });
 
   it('never puts the online link or contact email in the public projection', async () => {

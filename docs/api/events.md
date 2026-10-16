@@ -51,8 +51,10 @@ event_not_found`, the same as one that does not exist.
   `missing` (`name`, `date_time`, `venue`, `ticket_type`), in checklist order. The event gets a
   slug (the name in kebab case plus a random suffix) and its public page is live at once.
   Publishing an event that is already live returns it unchanged.
-- **Contact email.** With none given, publishing uses the publisher's own email. It is shown only
-  to ticket holders, never on the public page.
+- **Contact email.** Publishing keeps it exactly as the organiser left it and never fills an empty
+  one from a member's sign-in email. It is shown only to ticket holders, never on the public page
+  (which has `hasContactEmail`). Publish will also require it (`contact_email` in `missing`) once the
+  wizard has the field (SEC-20).
 - **A live event** keeps its name, times, venue and at least one ticket type.
 
 ## Venue lookup
