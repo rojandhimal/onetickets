@@ -77,9 +77,16 @@ variable "email_domain" {
   type        = string
 }
 
+variable "behind_cloudflare" {
+  description = "Cloudflare proxies the hostnames (infra/edge). See modules/app."
+  type        = bool
+  default     = true
+}
+
 variable "ingress_cidrs" {
-  type    = list(string)
-  default = ["0.0.0.0/0"]
+  description = "Who may reach the load balancer when behind_cloudflare is false."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 variable "db_instance_class" {

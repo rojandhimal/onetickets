@@ -1,0 +1,4 @@
+zone_id      = "0123456789abcdef0123456789abcdef"
+state_bucket = "onetickets-tfstate-123456789012"
+environments = ["staging"] # add "production" once it is applied
+# cloudflare_plan = "pro"  # only after upgrading the zone; see infra/README.md

@@ -4,7 +4,7 @@ module "environment" {
   environment    = "staging"
   vpc_cidr       = "10.20.0.0/16"
   web_hostname   = "staging.${var.domain}"
-  api_hostname   = "api.staging.${var.domain}"
+  api_hostname   = "api-staging.${var.domain}" # one level deep, so Cloudflare's free certificate covers it
   alert_email    = var.alert_email
   api_sentry_dsn = var.sentry_api_dsn
 

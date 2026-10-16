@@ -69,3 +69,12 @@ output "uploads_bucket" {
 output "log_group_names" {
   value = { for k, g in aws_cloudwatch_log_group.app : k => g.name }
 }
+
+output "origin_verify_header" {
+  description = "Header Cloudflare must add to every proxied request (infra/edge reads it from state)."
+  value = {
+    name  = local.origin_verify_header
+    value = random_password.origin_verify.result
+  }
+  sensitive = true
+}

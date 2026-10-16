@@ -46,3 +46,16 @@ output "db_instance_arn" {
 output "email_dns_records" {
   value = module.email.dns_records
 }
+
+output "web_hostname" {
+  value = var.web_hostname
+}
+
+output "api_hostname" {
+  value = var.api_hostname
+}
+
+output "origin_verify_header" {
+  value     = module.app.origin_verify_header
+  sensitive = true
+}

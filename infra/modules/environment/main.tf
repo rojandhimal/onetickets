@@ -114,6 +114,7 @@ module "app" {
   kms_key_arn               = aws_kms_key.main.arn
   web_hostname              = var.web_hostname
   api_hostname              = var.api_hostname
+  behind_cloudflare         = var.behind_cloudflare
   ingress_cidrs             = var.ingress_cidrs
   db_address                = module.database.address
   db_owner_secret_arn       = module.database.owner_secret_arn

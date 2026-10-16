@@ -29,3 +29,17 @@ output "task_security_group_id" {
 output "email_dns_records" {
   value = module.environment.email_dns_records
 }
+
+# Read by infra/edge, which points Cloudflare at this environment.
+output "web_hostname" {
+  value = module.environment.web_hostname
+}
+
+output "api_hostname" {
+  value = module.environment.api_hostname
+}
+
+output "origin_verify_header" {
+  value     = module.environment.origin_verify_header
+  sensitive = true
+}
