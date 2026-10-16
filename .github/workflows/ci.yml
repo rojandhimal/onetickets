@@ -112,12 +112,3 @@ jobs:
         run: pnpm --filter @onetickets/e2e exec playwright install --with-deps chromium
       - name: E2E tests at 375 px and 1280 px
         run: pnpm e2e
-      # When a test fails, show what the page looked like and what the api complained about, so a
-      # failure that only happens on CI can be root-caused from the log (QA-2). Sign-in links stay out.
-      - name: Show failure context
-        if: failure()
-        run: |
-          for f in e2e/test-results/*/error-context.md; do [ -f "$f" ] && { echo "::group::$f"; cat "$f"; echo "::endgroup::"; }; done
-          echo "::group::api warnings and errors"
-          grep -iE 'error|warn|exception' e2e/.logs/api.log | grep -viE 'sign-?in|token|magic' | tail -n 100 || true
-          echo "::endgroup::"
