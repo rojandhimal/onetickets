@@ -276,7 +276,7 @@ export class EventsService {
         event.name!,
         randomBytes(4).readUInt32BE().toString(36).padStart(7, '0'),
       );
-      await this.events.publish(tx, eventId, slug, actor.userId);
+      await this.events.publish(tx, eventId, slug);
       await recordAudit(tx, actor.organisationId, actor.userId, 'event.published', null, {
         eventId,
         slug,
