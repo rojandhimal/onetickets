@@ -112,6 +112,7 @@ checks at both required widths. Move a card to In progress when its owner starts
 
 ### Review
 
+- PM Sprint 1 handoff and review-evidence audit ([PR #28](https://github.com/rojandhimal/onetickets/pull/28)): draft, QA requested; local format/lint/typecheck, 181 unit tests, 101 integration tests, build and 24 browser/axe/CSP tests pass. Outside the merge queue until QA passes and CI is green
 - BE-1 Cache-Control and revalidation on public pages, including fan-out to every web task ([PR #25](https://github.com/rojandhimal/onetickets/pull/25), BackendDev): QA pass (`26d788e`), Security pass (`26d788e`), CI green. Queued for tegs once marked ready
 - BE-1 / QA 3.2 infra for page revalidation: `REVALIDATE_SECRET`, Cloud Map web service discovery, `/internal` blocked at ALB ([PR #26](https://github.com/rojandhimal/onetickets/pull/26), DevOps): QA pass (`b35323c`), Security pass (`c54f287`, followed only by the README fan-out note), CI green. Queued for tegs once marked ready
 
