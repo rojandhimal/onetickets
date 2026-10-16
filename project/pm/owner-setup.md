@@ -5,7 +5,7 @@ Everything the team can't do without your own accounts. I'll tick items off as y
 ## Now (GitHub)
 
 - [x] Merge [PR #1, monorepo and CI](https://github.com/rojandhimal/onetickets/pull/1). It has passed QA, Security and CI
-- [ ] Make `main` the default branch (it's currently the S0-1 branch, which stops deploys from firing)
+- [x] Make `main` the default branch (it's currently the S0-1 branch, which stops deploys from firing)
 - [ ] Require the two CI checks on `main` (branch protection)
 - [ ] Answer BackendDev's card about using one branch per story
 
