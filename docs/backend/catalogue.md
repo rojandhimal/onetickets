@@ -33,7 +33,8 @@ Schema `catalogue`:
   conflict check). A published event must have a slug, name, times and venue (CHECK). `city` is
   copied from a place venue for browse; online events have none and show in every city.
 - `ticket_types`: belongs to an event, with `organisation_id` repeated so RLS needs no join.
-  Capacity 1 to 100,000, max per order at most the capacity, price in whole cents.
+  Capacity 1 to 100,000, max per order at most the capacity, price in whole cents up to
+  1,000,000 (A$10,000, `ticket_types_price_limit`).
 
 Schema `inventory`:
 
@@ -80,6 +81,9 @@ this module.
 ## Known limits and follow-ups
 
 - SEC-15: per-user rate limit on banner uploads and one image job at a time.
-- Browse prices use the cheapest type; the event page uses the cheapest on sale. They agree while
-  every ticket is free; one pricing function is needed before paid tickets (Sprint 4).
+- Prices: the "from" price rule (cheapest type on sale, else cheapest of all) is one SQL function,
+  `catalogue.from_price_cents` (migration 0006), used by browse, its free/paid filter and the event
+  page. Its on-sale test, `catalogue.ticket_on_sale`, repeats `sales-window.ts`, which still sets each
+  type's `onSale` flag; an integration test keeps the two in step. Fees go on top in `pricing.ts`
+  (Sprint 4), and only ever raise a price above 0, so free stays free.
 - Public responses don't send `Cache-Control` yet, and nothing revalidates a cache on publish.

@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { onSale } from '../src/modules/catalogue/sales-window.js';
 import type { AppRequest } from '../src/modules/identity/index.js';
 import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
 import pg from 'pg';
@@ -365,6 +366,25 @@ describe('events and ticket types API', () => {
     }
   });
 
+  it('refuses a ticket price over A$10,000 with 422, in the api and the database', async () => {
+    const event = await draft();
+    const type = event.ticketTypes[0]!;
+    const ticket = { ...type, id: undefined, sold: undefined };
+    for (const priceCents of [1_000_001, 2 ** 31]) {
+      const response = await as(owner)
+        .post(`${events()}/${event.id}/ticket-types`, { ...ticket, priceCents })
+        .expect(422);
+      expect(response.body).toMatchObject({ code: 'invalid_request', field: 'priceCents' });
+    }
+    await expect(
+      withOwner((client) =>
+        client.query('update catalogue.ticket_types set price_cents = 1000001 where id = $1', [
+          type.id,
+        ]),
+      ),
+    ).rejects.toThrow(/ticket_types_price_limit/);
+  });
+
   it('keeps ticket types free while paid tickets are off', async () => {
     const event = await draft();
     const response = await as(owner)
@@ -569,6 +589,199 @@ describe('events and ticket types API', () => {
         'venueName',
       ].sort(),
     );
+  });
+
+  describe('the "from" price', () => {
+    /** A live event with a General admission and a VIP type, priced and timed directly. */
+    async function liveWithTwoTypes(general: { cents: number; onSale: boolean }, vip: number) {
+      const live = await publish(await publishable());
+      const ticket = { ...live.ticketTypes[0]!, id: undefined, sold: undefined, name: 'VIP' };
+      await as(owner).post(`${events()}/${live.id}/ticket-types`, ticket).expect(201);
+      // Paid tickets are off in the api, so set prices the way Sprint 4's flag will allow.
+      await withOwner((client) =>
+        client.query(
+          `update catalogue.ticket_types
+              set price_cents = case name when 'VIP' then $2::int else $3::int end,
+                  sales_start = case when name = 'VIP' or $4 then sales_start
+                    else jsonb_build_object('kind', 'at', 'at', now() + interval '2 days') end
+            where event_id = $1`,
+          [live.id, vip, general.cents, general.onSale],
+        ),
+      );
+      return live;
+    }
+
+    async function card(slug: string, price?: string) {
+      const items: { slug: string; priceFromAllInCents: number }[] = [];
+      let cursor: string | null = null;
+      do {
+        const response: request.Response = await anon()
+          .get('/public/events')
+          .query({ limit: '50', ...(price ? { price } : {}), ...(cursor ? { cursor } : {}) })
+          .expect(200);
+        items.push(...response.body.items);
+        cursor = response.body.nextCursor;
+      } while (cursor);
+      return items.find((item) => item.slug === slug);
+    }
+
+    async function expectEverywhere(slug: string, cents: number) {
+      const page = await anon().get(`/public/events/${slug}`).expect(200);
+      expect(page.body.priceFromAllInCents).toBe(cents);
+      expect((await card(slug))?.priceFromAllInCents).toBe(cents);
+      expect(await card(slug, cents === 0 ? 'free' : 'paid')).toBeDefined();
+      expect(await card(slug, cents === 0 ? 'paid' : 'free')).toBeUndefined();
+      return page.body;
+    }
+
+    it('counts only the types on sale, on the page, the card and the filter alike', async () => {
+      // A free type that isn't on sale yet doesn't make the event free.
+      const live = await liveWithTwoTypes({ cents: 0, onSale: false }, 4500);
+      const page = await expectEverywhere(live.slug!, 4500);
+      expect(page.ticketTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ allInPriceCents: 0, onSale: false }),
+          expect.objectContaining({ allInPriceCents: 4500, onSale: true }),
+        ]),
+      );
+    });
+
+    it('takes the cheapest on sale when several are', async () => {
+      const live = await liveWithTwoTypes({ cents: 1200, onSale: true }, 4500);
+      await expectEverywhere(live.slug!, 1200);
+    });
+
+    it('falls back to every type when none is on sale', async () => {
+      const live = await liveWithTwoTypes({ cents: 1200, onSale: false }, 4500);
+      await withOwner((client) =>
+        client.query(
+          `update catalogue.ticket_types
+              set sales_start = jsonb_build_object('kind', 'at', 'at', now() + interval '2 days')
+            where event_id = $1`,
+          [live.id],
+        ),
+      );
+      await expectEverywhere(live.slug!, 1200);
+    });
+
+    it("decides what is on sale exactly as the event page's ticket types do", async () => {
+      // Starts in 12 hours: a day before has passed, an hour before hasn't.
+      const startsAt = new Date(Date.now() + 12 * HOUR);
+      const live = await publish(
+        await publishable({
+          startsAt: startsAt.toISOString(),
+          endsAt: new Date(startsAt.getTime() + 2 * HOUR).toISOString(),
+        }),
+      );
+      const ends = [
+        { kind: 'event_start' },
+        { kind: 'hour_before' },
+        { kind: 'day_before' },
+        { kind: 'event_end' },
+        { kind: 'at', at: new Date(Date.now() - HOUR).toISOString() },
+        { kind: 'at', at: new Date(Date.now() + HOUR).toISOString() },
+      ];
+      await withOwner(async (client) => {
+        await client.query('delete from catalogue.ticket_types where event_id = $1', [live.id]);
+        for (const [i, salesEnd] of ends.entries()) {
+          await client.query(
+            `insert into catalogue.ticket_types (event_id, organisation_id, name, capacity,
+               max_per_order, sales_start, sales_end, position)
+             values ($1, $2, $3, 10, 2, '{"kind":"on_publish"}', $4, $5)`,
+            [live.id, org, `Type ${i}`, JSON.stringify(salesEnd), i],
+          );
+        }
+      });
+      const page = await anon().get(`/public/events/${live.slug}`).expect(200);
+      const inSql = await withOwner(async (client) => {
+        const { rows } = await client.query<{ on_sale: boolean }>(
+          `select catalogue.ticket_on_sale(t, e, now()) as on_sale
+             from catalogue.ticket_types t join catalogue.events e on e.id = t.event_id
+            where t.event_id = $1 order by t.position`,
+          [live.id],
+        );
+        return rows.map((row) => row.on_sale);
+      });
+      const onPage = page.body.ticketTypes.map((t: { onSale: boolean }) => t.onSale);
+      expect(onPage).toEqual([true, true, false, true, false, true]);
+      expect(inSql).toEqual(onPage);
+    });
+
+    it('agrees with sales-window.ts at every edge of every kind of window', async () => {
+      // Fixed times, so each sales start and end can be checked exactly on its edge and either
+      // side of it, including before publishing and while the event is under way.
+      const event = {
+        publishedAt: new Date('2027-03-01T00:00:00Z'),
+        startsAt: new Date('2027-03-10T09:00:00Z'),
+        endsAt: new Date('2027-03-10T12:00:00Z'),
+      };
+      const live = await publish(await publishable());
+      const starts = [
+        { kind: 'on_publish' as const },
+        { kind: 'at' as const, at: '2027-02-20T00:00:00.000Z' },
+        { kind: 'at' as const, at: '2027-03-05T00:00:00.000Z' },
+      ];
+      const ends = [
+        { kind: 'event_start' as const },
+        { kind: 'hour_before' as const },
+        { kind: 'day_before' as const },
+        { kind: 'event_end' as const },
+        { kind: 'at' as const, at: '2027-03-08T00:00:00.000Z' },
+      ];
+      const types = starts.flatMap((salesStart) =>
+        ends.map((salesEnd) => ({ salesStart, salesEnd })),
+      );
+      const edges = [
+        event.publishedAt,
+        event.startsAt,
+        event.endsAt,
+        new Date(event.startsAt.getTime() - HOUR),
+        new Date(event.startsAt.getTime() - 24 * HOUR),
+        ...starts.flatMap((s) => (s.kind === 'at' ? [new Date(s.at)] : [])),
+        ...ends.flatMap((e) => (e.kind === 'at' ? [new Date(e.at)] : [])),
+      ];
+      const moments = edges.flatMap((edge) =>
+        [-1, 0, 1].map((ms) => new Date(edge.getTime() + ms)),
+      );
+
+      const inSql = await withOwner(async (client) => {
+        await client.query(
+          `update catalogue.events set published_at = $2, starts_at = $3, ends_at = $4
+            where id = $1`,
+          [live.id, event.publishedAt, event.startsAt, event.endsAt],
+        );
+        await client.query('delete from catalogue.ticket_types where event_id = $1', [live.id]);
+        for (const [i, type] of types.entries()) {
+          await client.query(
+            `insert into catalogue.ticket_types (event_id, organisation_id, name, capacity,
+               max_per_order, sales_start, sales_end, position)
+             values ($1, $2, $3, 10, 2, $4, $5, $6)`,
+            [
+              live.id,
+              org,
+              `Type ${i}`,
+              JSON.stringify(type.salesStart),
+              JSON.stringify(type.salesEnd),
+              i,
+            ],
+          );
+        }
+        const { rows } = await client.query<{ on_sale: boolean }>(
+          `select catalogue.ticket_on_sale(t, e, m.at) as on_sale
+             from unnest($2::timestamptz[]) with ordinality as m (at, n)
+             cross join catalogue.ticket_types t join catalogue.events e on e.id = t.event_id
+            where t.event_id = $1 order by m.n, t.position`,
+          [live.id, moments],
+        );
+        return rows.map((row) => row.on_sale);
+      });
+      const inTs = moments.flatMap((now) =>
+        types.map((type) => onSale(type.salesStart, type.salesEnd, event, now)),
+      );
+      expect(inTs).toContain(true);
+      expect(inTs).toContain(false);
+      expect(inSql).toEqual(inTs);
+    });
   });
 
   it('pages browse results with a cursor', async () => {

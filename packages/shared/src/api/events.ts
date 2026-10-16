@@ -50,6 +50,8 @@ export const EVENT_LIMITS = {
   ticketTypeName: 80,
   capacity: 100_000,
   maxPerOrder: 100,
+  /** Ticket price in cents (A$10,000). */
+  priceCents: 1_000_000,
   /** Banner upload size in bytes. */
   bannerBytes: 10 * 1024 * 1024,
 } as const;
@@ -175,7 +177,7 @@ export const ticketTypeInput = z
     name: z.string().trim().min(1).max(EVENT_LIMITS.ticketTypeName),
     capacity: z.int().min(1).max(EVENT_LIMITS.capacity),
     maxPerOrder: z.int().min(1).max(EVENT_LIMITS.maxPerOrder),
-    priceCents: z.int().min(0),
+    priceCents: z.int().min(0).max(EVENT_LIMITS.priceCents),
     salesStart,
     salesEnd,
   })
@@ -286,7 +288,10 @@ export interface PublicEventDto {
   /** Whether the organiser left a contact email for attendees (the address itself is private). */
   hasContactEmail: boolean;
   banner: BannerDto | null;
-  /** Lowest all-in price across the types on sale, or across all types if none is on sale. */
+  /**
+   * Lowest all-in price across the types on sale, or across all types if none is on sale (the
+   * api's one pricing function; browse cards use the same).
+   */
   priceFromAllInCents: number;
   spotsLeft: number;
   ticketTypes: PublicTicketTypeDto[];

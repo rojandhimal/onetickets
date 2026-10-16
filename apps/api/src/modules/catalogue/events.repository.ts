@@ -72,6 +72,7 @@ export interface EventChanges {
 }
 
 export interface BrowseRow extends EventRow {
+  /** catalogue.from_price_cents(): the "from" rule, before fees. */
   price_from_cents: number;
 }
 
@@ -266,6 +267,15 @@ export class EventsRepository {
     return rows[0] ?? null;
   }
 
+  /** The "from" base price by catalogue.from_price_cents(), the rule browse uses too. */
+  async fromPriceCents(tx: pg.PoolClient, eventId: string, now: Date): Promise<number> {
+    const { rows } = await tx.query<{ cents: number }>(
+      'select catalogue.from_price_cents($1, $2) as cents',
+      [eventId, now],
+    );
+    return rows[0]!.cents;
+  }
+
   async organiserName(tx: pg.PoolClient, organisationId: string): Promise<string | null> {
     const { rows } = await tx.query<{ name: string | null }>(
       'select catalogue.organiser_name($1) as name',
@@ -321,8 +331,7 @@ export class EventsRepository {
          select ${EVENT_COLUMNS.split(',')
            .map((c) => `e.${c.trim()}`)
            .join(', ')},
-                coalesce((select min(t.price_cents) from catalogue.ticket_types t
-                          where t.event_id = e.id), 0) as price_from_cents
+                catalogue.from_price_cents(e.id, $8::timestamptz) as price_from_cents
          from catalogue.events e
          where e.status = 'published' and (e.city = $1 or e.city is null)
        )

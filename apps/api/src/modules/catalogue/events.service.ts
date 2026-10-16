@@ -26,6 +26,7 @@ import {
   type TicketTypeRow,
 } from './events.repository.js';
 import { toPlainLine, toPlainText } from './plain-text.js';
+import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
@@ -285,27 +286,29 @@ export class EventsService {
     return this.uow.run({}, async (tx) => {
       const event = await this.events.findPublished(tx, slug);
       if (!event) return null;
-      const [types, organiser] = await Promise.all([
-        this.events.ticketTypes(tx, [event.id]),
-        this.events.organiserName(tx, event.organisation_id),
-      ]);
-      return this.toPublicDto(event, types, organiser ?? '', new Date());
+      const now = new Date();
+      const types = await this.events.ticketTypes(tx, [event.id]);
+      const organiser = await this.events.organiserName(tx, event.organisation_id);
+      const fromCents = await this.events.fromPriceCents(tx, event.id, now);
+      return this.toPublicDto(event, types, organiser ?? '', fromCents, now);
     });
   }
 
   async browse(query: BrowseQuery): Promise<BrowseResponse> {
     const after = query.cursor ? decodeCursor(query.cursor) : undefined;
-    const rows = await this.uow.run({}, (tx) =>
-      this.events.browse(tx, {
+    const now = new Date();
+    const { rows } = await this.uow.run({}, async (tx) => {
+      const rows = await this.events.browse(tx, {
         city: query.city,
         timeZone: CITY_TIME_ZONES[query.city],
         when: query.when,
         price: query.price,
         after,
         limit: query.limit + 1,
-        now: new Date(),
-      }),
-    );
+        now,
+      });
+      return { rows };
+    });
     const page = rows.slice(0, query.limit);
     const last = page.at(-1);
     return {
@@ -319,8 +322,7 @@ export class EventsService {
         venueName: row.venue?.kind === 'place' ? row.venue.name : null,
         online: row.venue?.kind === 'online',
         banner: this.bannerDto(row),
-        // Free tickets only until Sprint 4; fees are added to paid prices then.
-        priceFromAllInCents: row.price_from_cents,
+        priceFromAllInCents: allInPriceCents(row.price_from_cents),
       })),
       nextCursor:
         rows.length > query.limit && last
@@ -481,19 +483,17 @@ export class EventsService {
     row: EventRow,
     types: TicketTypeRow[],
     organiser: string,
+    fromCents: number,
     now: Date,
   ): PublicEventDto {
     const ticketTypes = types.map((t) => ({
       id: t.id,
       name: t.name,
-      allInPriceCents: t.price_cents,
+      allInPriceCents: allInPriceCents(t.price_cents),
       spotsLeft: t.capacity - t.sold - t.held,
       onSale: onSale(t.sales_start, t.sales_end, times(row), now),
       maxPerOrder: t.max_per_order,
     }));
-    const priced = ticketTypes.some((t) => t.onSale)
-      ? ticketTypes.filter((t) => t.onSale)
-      : ticketTypes;
     const venue = row.venue!;
     return {
       slug: row.slug!,
@@ -510,7 +510,7 @@ export class EventsService {
       cancellationPolicy: row.cancellation_policy,
       hasContactEmail: row.contact_email !== null,
       banner: this.bannerDto(row),
-      priceFromAllInCents: Math.min(...priced.map((t) => t.allInPriceCents), Infinity) || 0,
+      priceFromAllInCents: allInPriceCents(fromCents),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
       ticketTypes,
     };
