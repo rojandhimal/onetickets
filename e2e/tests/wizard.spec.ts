@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures';
 import { expectAccessible } from './a11y';
 import { signUpOrganiser } from './session';
+import { pickMarrickville } from './venue';
 
 // S1-1 create-event wizard against the real api and Postgres, at 375 and 1280 px (QA Sprint 1
 // rows 1.1 to 1.14). The CSP guard in fixtures.ts fails any test that trips the policy.
@@ -27,8 +28,7 @@ test('a template becomes a draft that autosaves, resumes and publishes', async (
   await page.getByLabel('Date').fill(eventDate);
   await page.getByLabel('Starts').fill('10:00');
   await page.getByLabel('Ends').fill('13:00');
-  await page.getByRole('combobox', { name: 'Venue address' }).fill('Marrickville');
-  await page.getByRole('option', { name: /Marrickville Town Hall/ }).click();
+  await pickMarrickville(page);
   await page.getByLabel('Event name').focus();
   await page.getByLabel('Date').focus();
   await expect(status(page)).toHaveText('Draft saved');

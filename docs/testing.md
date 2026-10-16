@@ -54,6 +54,14 @@ pnpm build
 pnpm e2e               # the api connects as onetickets_app unless DATABASE_URL is set
 ```
 
+When e2e fails in CI, the job uploads an `e2e-results` artifact with each failed test's
+Playwright trace and the api log (`e2e/.logs/api.log`). Open a trace with
+`pnpm --filter @onetickets/e2e exec playwright show-trace <trace.zip>`.
+
+In the wizard, pick a venue with `pickMarrickville(page)` from `e2e/tests/venue.ts`. Choosing a
+suggestion looks the place up before it is autosaved, so "Draft saved" in the header doesn't yet
+mean the venue is saved. The helper waits for that save.
+
 ## Rules
 
 - For Sprint 1 checklist conflicts, use the final [copy sheet](../project/design/copy-s0-s2.md),
@@ -64,7 +72,8 @@ pnpm e2e               # the api connects as onetickets_app unless DATABASE_URL 
 - Never mock Postgres in integration tests. Each test file starts from a clean state.
 - Use fixed clocks for anything time based (holds, sales windows, link expiry). No `sleep` waits;
   Playwright uses web-first assertions.
-- A flaky test is a bug. Fix it or find its cause; never skip it or retry it silently.
+- A flaky test is a bug. Fix it or find its cause; never skip it or retry it silently. Wait for
+  the request or state a step depends on, not for text that can still show an earlier result.
 - Any change to money or inventory needs a test that tries to break its database invariant,
   including with concurrent clients (for example, 50 buyers racing for the last 10 tickets must
   produce exactly 10 holds).

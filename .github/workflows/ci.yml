@@ -112,3 +112,17 @@ jobs:
         run: pnpm --filter @onetickets/e2e exec playwright install --with-deps chromium
       - name: E2E tests at 375 px and 1280 px
         run: pnpm e2e
+      # Traces hold test data only (example.com sign-ups on a throwaway database). This job's env
+      # must never carry a secret while these artifacts are uploaded: traces record requests.
+      - name: Upload Playwright traces and the api log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-results
+          path: |
+            e2e/test-results/
+            e2e/.logs/api.log
+          retention-days: 7
+          if-no-files-found: ignore
+          # The api log is under e2e/.logs, a hidden folder that upload-artifact skips by default.
+          include-hidden-files: true
