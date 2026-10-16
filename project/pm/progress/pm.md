@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-16 (06:20 UTC, back in the Claude PM thread)
+
+- **Done:** Reviewed what landed while another tool ran PM, QA and FrontendDev: #23, #25, #26, #27 to #30 and S1-2 ([#31](https://github.com/rojandhimal/onetickets/pull/31)). Merged the repo's board, checklist and logs with the Claude threads' newer log entries in the shared folder, so neither side lost work. Replaced the one-way sync with `scripts/sync-project-files.mjs`, which syncs both ways and merges progress logs. Board and roadmap now show S1-2 merged and S1-4 next. Asked QA and ProductDesign to review #31 after merge, since its reviews came from the authoring tool's own subagents; AGENTS.md now says reviews come from a separate session per role.
+- **Next:** FrontendDev starts S1-4, then S1-5. BackendDev takes the organisation-name cleanup from BE-1, DevOps SEC-5, Security the docs/security PR (SEC-18). QA runs Sprint 1 acceptance once S1-4 and S1-5 merge.
+- **Blocked:** nothing for tegs right now beyond the open owner-setup items (branch protection, RES-1 recruitment).
+
 ## 2026-10-16 (1:55 pm AEDT merge handoff)
 
 - **Done:** Confirmed [#25](https://github.com/rojandhimal/onetickets/pull/25) merged as `70747fc` and [#26](https://github.com/rojandhimal/onetickets/pull/26) as `3191149` at 1:52 pm AEDT, after PM completed their ready transitions. [#28](https://github.com/rojandhimal/onetickets/pull/28) also merged as `4946cc0`. Cleared the old queue, moved all three to Done, retained their reviewed-head evidence, and refreshed the roadmap. Corrected the web cache documentation to match the merged per-task fan-out and fallback behaviour. Local format/lint/typecheck, 187 unit tests, 106 Postgres integration tests, build and 24 browser/axe/CSP tests pass on the merged implementation. Historical role logs and QA evidence remain intact; AWS is still unapplied.
