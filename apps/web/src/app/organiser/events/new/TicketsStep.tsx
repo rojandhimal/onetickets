@@ -13,6 +13,14 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
 import { addTicketType, removeTicketType, updateTicketType } from '@/lib/events-client';
+import {
+  type TicketEditStore,
+  forgetTicketEdit,
+  keepTicketEdit,
+  readTicketEdits,
+  sendKeptTicketEdits,
+  withTicketLock,
+} from '@/lib/ticket-edit';
 import { isSkippedTime, isoToWallClock, wallClockToIso } from '@/lib/zoned-time';
 import styles from './wizard.module.css';
 
@@ -24,6 +32,8 @@ type SalesEndKind = SalesEnd['kind'];
 export const CAPACITY_MIN_ERROR = 'Set at least 1 ticket';
 export const SALES_END_BEFORE_START_ERROR = 'Sales need to end after they start';
 export const TICKET_NAME_EMPTY_ERROR = 'Give this ticket a name';
+export const REMOVE_OFFLINE_ERROR =
+  "Couldn't remove this ticket. Check your connection and try again.";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -122,12 +132,15 @@ function parsePositiveInt(text: string): number | null {
 export function TicketsStep({
   event,
   headingRef,
+  store,
   flushRef,
   onTicketChanged,
   onSaveStateChange,
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /** Where edits wait while offline, shared with the wizard so they sync from any step. */
+  store: TicketEditStore;
   flushRef?: RefObject<(() => Promise<void>) | null>;
   onTicketChanged: (event: EventDraftDto) => void;
   onSaveStateChange?: (state: TicketSaveState) => void;
@@ -275,7 +288,18 @@ export function TicketsStep({
     [serverErrors, touched],
   );
 
+  // Runs inside withTicketLock. Edits kept on the device for other types go first.
   const sendSave = useCallback(async () => {
+    const eventId = eventRef.current.id;
+    const kept = await sendKeptTicketEdits(eventRef.current, store, activeIdRef.current);
+    if (kept.event) {
+      eventRef.current = kept.event;
+      onTicketChanged(kept.event);
+    }
+    if (!dirtyRef.current) {
+      reportState(kept.pending ? (navigator.onLine ? 'failed' : 'offline') : 'saved');
+      return;
+    }
     for (let round = 0; round < 4 && dirtyRef.current; round++) {
       const check = evaluate(fieldsRef.current, eventRef.current, false);
       if (!check.validInput) {
@@ -296,6 +320,7 @@ export function TicketsStep({
         setBannerError(null);
         eventRef.current = result.event;
         onTicketChanged(result.event);
+        await forgetTicketEdit(store, eventId, targetId);
         if (targetId === 'new') {
           const created =
             result.event.ticketTypes.find((t) => !prevIds.has(t.id)) ??
@@ -327,18 +352,23 @@ export function TicketsStep({
         return;
       }
 
+      // Keep it on this phone until the connection is back (row 1.6: no lost edits).
       dirtyRef.current = true;
+      await keepTicketEdit(store, eventId, targetId, {
+        fields: fieldsRef.current,
+        input: check.validInput,
+      });
       const offline = result.kind === 'offline' || !navigator.onLine;
       reportState(offline ? 'offline' : 'failed');
       return;
     }
-    reportState('saved');
-  }, [evaluate, onTicketChanged, reportState]);
+    reportState(kept.pending ? (navigator.onLine ? 'failed' : 'offline') : 'saved');
+  }, [evaluate, onTicketChanged, reportState, store]);
 
   const flush = useCallback(async () => {
     if (inFlightRef.current) await inFlightRef.current;
     if (!dirtyRef.current) return;
-    const p = sendSave();
+    const p = withTicketLock(eventRef.current.id, sendSave);
     inFlightRef.current = p;
     try {
       await p;
@@ -353,6 +383,47 @@ export function TicketsStep({
       if (flushRef) flushRef.current = null;
     };
   }, [flush, flushRef]);
+
+  // Reopening the draft shows an edit kept on this phone, and sends it when it can.
+  useEffect(() => {
+    let cancelled = false;
+    void withTicketLock(eventRef.current.id, () =>
+      readTicketEdits(store, eventRef.current.id),
+    ).then((edits) => {
+      if (cancelled) return;
+      const types = eventRef.current.ticketTypes;
+      const targetId = Object.keys(edits).find(
+        (id) => id === 'new' || types.some((t) => t.id === id),
+      );
+      const edit = targetId ? edits[targetId] : undefined;
+      if (!targetId || !edit) return;
+      activeIdRef.current = targetId;
+      setActiveId(targetId);
+      const restored = { ...fieldsRef.current, ...edit.fields } as DraftFields;
+      fieldsRef.current = restored;
+      setFields(restored);
+      dirtyRef.current = true;
+      reportState('offline');
+      void flush();
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Once, on opening the step: later edits are this component's own.
+  }, []);
+
+  // Retry when the connection returns, and every 10 seconds while something is waiting.
+  useEffect(() => {
+    const retry = () => {
+      if (dirtyRef.current) void flush();
+    };
+    const tick = window.setInterval(retry, 10_000);
+    window.addEventListener('online', retry);
+    return () => {
+      window.clearInterval(tick);
+      window.removeEventListener('online', retry);
+    };
+  }, [flush]);
 
   function clearServerError(field: keyof ServerFieldErrors) {
     setServerErrors((prev) => {
@@ -437,6 +508,7 @@ export function TicketsStep({
     setBannerError(null);
     if (id === 'new') {
       dirtyRef.current = false;
+      void forgetTicketEdit(store, eventRef.current.id, 'new');
       setServerErrors({});
       setTouched({});
       const fallback = eventRef.current.ticketTypes[0];
@@ -462,14 +534,16 @@ export function TicketsStep({
         setBannerError(result.message);
         reportState('refused');
       } else {
-        const offline = result.kind === 'offline' || !navigator.onLine;
-        reportState(offline ? 'offline' : 'failed');
+        // A removal isn't kept on the phone, so say so rather than "Saved on this phone".
+        setBannerError(REMOVE_OFFLINE_ERROR);
+        reportState('saved');
       }
       return;
     }
 
     eventRef.current = result.event;
     onTicketChanged(result.event);
+    await forgetTicketEdit(store, result.event.id, id);
     reportState('saved');
 
     if (activeIdRef.current === id) {

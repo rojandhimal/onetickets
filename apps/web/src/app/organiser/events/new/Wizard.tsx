@@ -5,7 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
-import type { PendingChanges } from '@/lib/draft-store';
+import { type PendingChanges, defaultDraftStore } from '@/lib/draft-store';
+import { type TicketEdits, type TicketEditStore, syncTicketEdits } from '@/lib/ticket-edit';
 import { type SaveState, useAutosave } from '@/lib/use-autosave';
 import {
   STEP_LABELS,
@@ -63,7 +64,15 @@ function serverFields(server: EventDraftDto) {
   return { version, updatedAt, ticketTypes, banner, slug, status };
 }
 
-export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; userId: string }) {
+export function Wizard({
+  initialEvent,
+  userId,
+  ticketStore: ticketStoreOption,
+}: {
+  initialEvent: EventDraftDto;
+  userId: string;
+  ticketStore?: TicketEditStore;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const segment = pathname.split('/').pop() ?? '';
@@ -74,6 +83,9 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const [serverErrors, setServerErrors] = useState<ServerErrors>({});
   const [ticketSaveState, setTicketSaveState] = useState<TicketSaveState>('saved');
   const ticketFlushRef = useRef<(() => Promise<void>) | null>(null);
+  const ticketStore = useRef(ticketStoreOption ?? defaultDraftStore<TicketEdits>(userId)).current;
+  // Ticket edits still on this phone, for steps other than Tickets (which reports its own).
+  const [ticketsPending, setTicketsPending] = useState(false);
   const { saveState, change, flush, accept } = useAutosave({
     event: initialEvent,
     userId,
@@ -126,6 +138,35 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
     window.scrollTo(0, 0);
   }, [step]);
 
+  const eventRef = useRef(event);
+  eventRef.current = event;
+
+  /** Sends ticket edits kept on this phone; the Tickets step sends its own while it's open. */
+  const syncTickets = useCallback(async () => {
+    const result = await syncTicketEdits(eventRef.current, ticketStore);
+    if (result.event) accept(result.event);
+    setTicketsPending(result.pending);
+  }, [accept, ticketStore]);
+
+  useEffect(() => {
+    if (step === 'tickets') return;
+    void syncTickets();
+    const retry = () => void syncTickets();
+    const tick = window.setInterval(retry, 10_000);
+    window.addEventListener('online', retry);
+    return () => {
+      window.clearInterval(tick);
+      window.removeEventListener('online', retry);
+    };
+  }, [step, syncTickets]);
+
+  /** Everything this phone holds goes to the api first, so publishing sees the latest. */
+  const flushAll = useCallback(async () => {
+    await ticketFlushRef.current?.();
+    await syncTickets();
+    await flush();
+  }, [flush, syncTickets]);
+
   /** Step changes stay on this page so typing in flight is never lost. */
   const go = useCallback(
     (to: WizardStep) => (e?: MouseEvent) => {
@@ -154,7 +195,11 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
   const refused = Object.keys(serverErrors).length > 0;
   const draftShownState: TicketSaveState = refused && saveState === 'saved' ? 'refused' : saveState;
   const shownState: TicketSaveState =
-    step === 'tickets' && ticketSaveState !== 'saved' ? ticketSaveState : draftShownState;
+    step === 'tickets' && ticketSaveState !== 'saved'
+      ? ticketSaveState
+      : step !== 'tickets' && ticketsPending && draftShownState === 'saved'
+        ? 'offline'
+        : draftShownState;
 
   const back = previousStep(step);
   const next = nextStep(step);
@@ -179,6 +224,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
         <TicketsStep
           event={event}
           headingRef={headingRef}
+          store={ticketStore}
           flushRef={ticketFlushRef}
           onTicketChanged={accept}
           onSaveStateChange={setTicketSaveState}
@@ -202,7 +248,7 @@ export function Wizard({ initialEvent, userId }: { initialEvent: EventDraftDto; 
         <ReviewStep
           event={event}
           headingRef={headingRef}
-          flush={flush}
+          flush={flushAll}
           goTo={go}
           onPublished={setPublished}
         />

@@ -42,6 +42,13 @@ again online, so two saves can race.
   this, and the api's `POST /auth/sign-out` is asked to send `Clear-Site-Data: "storage"` as a
   backstop.
 - A field the api refuses with 422 is dropped from the queue so the rest still saves.
+- Ticket type edits (S1-2 follow-up from QA's #31 review) use the same store under the key
+  `{eventId}:ticket`, one entry per type id (or `new` for a type not created yet), holding the form
+  fields and the input to send. They are retried when the connection returns and every 10 seconds,
+  from whichever wizard step is open, and before publishing. Ticket saves for one event run one at
+  a time (`withTicketLock` in `src/lib/ticket-edit.ts`), so a kept "new" type is never created
+  twice. An edit the api refuses is dropped, since retrying can't help. Removing a type isn't kept
+  offline: the step says it couldn't remove it instead.
 
 ## Consequences
 

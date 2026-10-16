@@ -9,7 +9,7 @@ export type PendingChanges = Omit<EventDraftPatch, 'version'>;
 
 export const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-type Entry = { userId: string; savedAt: number; changes: PendingChanges };
+type Entry<T = unknown> = { userId: string; savedAt: number; changes: T };
 
 function isExpired(entry: Entry, now: number): boolean {
   return now - entry.savedAt > DRAFT_MAX_AGE_MS;
@@ -21,10 +21,15 @@ function isForeign(entry: unknown, userId: string): boolean {
   return !e || typeof e !== 'object' || e.userId !== userId || typeof e.savedAt !== 'number';
 }
 
-export interface DraftStore {
-  get(eventId: string): Promise<PendingChanges | null>;
-  put(eventId: string, changes: PendingChanges): Promise<void>;
-  remove(eventId: string): Promise<void>;
+/** Keyed by event id; ticket edits use `ticketEditKey` so they never mix with draft changes. */
+export interface DraftStore<T = PendingChanges> {
+  get(key: string): Promise<T | null>;
+  put(key: string, changes: T): Promise<void>;
+  remove(key: string): Promise<void>;
+}
+
+export function ticketEditKey(eventId: string): string {
+  return `${eventId}:ticket`;
 }
 
 const DB_NAME = 'onetickets';
@@ -86,7 +91,7 @@ async function sweep(userId: string, now: number): Promise<void> {
   }
 }
 
-function indexedDbStore(userId: string, now: () => number): DraftStore {
+function indexedDbStore<T>(userId: string, now: () => number): DraftStore<T> {
   let swept: Promise<void> | null = null;
   const ready = () => (swept ??= sweep(userId, now()).catch(() => clearDeviceDrafts()));
   return {
@@ -94,11 +99,11 @@ function indexedDbStore(userId: string, now: () => number): DraftStore {
       await ready();
       const entry = await withStore('readonly', (s) => s.get(eventId));
       if (!entry || isForeign(entry, userId) || isExpired(entry as Entry, now())) return null;
-      return (entry as Entry).changes;
+      return (entry as Entry<T>).changes;
     },
     async put(eventId, changes) {
       await ready();
-      const entry: Entry = { userId, savedAt: now(), changes };
+      const entry: Entry<T> = { userId, savedAt: now(), changes };
       await withStore('readwrite', (s) => s.put(entry, eventId));
     },
     async remove(eventId) {
@@ -111,15 +116,15 @@ function indexedDbStore(userId: string, now: () => number): DraftStore {
  * For browsers without IndexedDB (private modes) and tests: changes live only as long as the tab.
  * Follows the same ownership and expiry rules as the IndexedDB store.
  */
-export function memoryDraftStore(
+export function memoryDraftStore<T = PendingChanges>(
   userId = 'u_1',
   now: () => number = Date.now,
   map = new Map<string, unknown>(),
-): DraftStore {
+): DraftStore<T> {
   return {
     async get(id) {
       if ([...map.values()].some((e) => isForeign(e, userId))) map.clear();
-      const entry = map.get(id) as Entry | undefined;
+      const entry = map.get(id) as Entry<T> | undefined;
       if (!entry) return null;
       if (isExpired(entry, now())) {
         map.delete(id);
@@ -132,8 +137,8 @@ export function memoryDraftStore(
   };
 }
 
-export function defaultDraftStore(userId: string): DraftStore {
+export function defaultDraftStore<T = PendingChanges>(userId: string): DraftStore<T> {
   return typeof indexedDB === 'undefined'
-    ? memoryDraftStore(userId)
-    : indexedDbStore(userId, Date.now);
+    ? memoryDraftStore<T>(userId)
+    : indexedDbStore<T>(userId, Date.now);
 }

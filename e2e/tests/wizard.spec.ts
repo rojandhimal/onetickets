@@ -309,3 +309,44 @@ test('a refused field says so in the header in at most two lines', async ({ page
   expect(lines).toBeLessThanOrEqual(2);
   await expectAccessible(page);
 });
+
+test('a ticket edit made offline stays on the phone, survives a reload and syncs', async ({
+  page,
+  context,
+}) => {
+  await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  const draft = new URL(page.url()).searchParams.get('draft')!;
+  await page.getByRole('link', { name: 'Next: tickets' }).click();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('40');
+  const orgs = await (await page.request.get('/api/me/organisations')).json();
+  const org = (orgs.organisations ?? orgs.items ?? orgs)[0];
+  const serverCapacity = async () => {
+    const res = await page.request.get(`/api/organisations/${org.id}/events/${draft}`);
+    return ((await res.json()) as { ticketTypes: { capacity: number }[] }).ticketTypes[0]?.capacity;
+  };
+
+  // Offline: the edit is kept on this phone, and the header says so (row 1.6).
+  await context.setOffline(true);
+  await page.getByLabel('How many tickets?').fill('14');
+  await page.getByLabel('Ticket name').focus();
+  await expect(status(page)).toHaveText('Saved on this phone');
+
+  // Still not reaching the api, the draft reopens with the edit.
+  await page.route('**/ticket-types/**', (route) => route.abort());
+  await context.setOffline(false);
+  await page.reload();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('14');
+  expect(await serverCapacity()).toBe(40);
+
+  // Once the api can be reached, the edit goes through without touching anything.
+  await page.unroute('**/ticket-types/**');
+  await context.setOffline(true);
+  await context.setOffline(false);
+  await expect(status(page)).toHaveText('Draft saved');
+  await expect.poll(serverCapacity).toBe(14);
+  await page.reload();
+  await expect(page.getByLabel('How many tickets?')).toHaveValue('14');
+  await expectAccessible(page);
+});

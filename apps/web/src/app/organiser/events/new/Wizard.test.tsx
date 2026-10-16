@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { memoryDraftStore } from '@/lib/draft-store';
 import { ABOUT_PROMPTS } from '@/lib/templates';
+import type { TicketEdits } from '@/lib/ticket-edit';
 import { draftEvent, readyEvent } from '@/test/event-fixture';
 import { CONTACT_EMAIL_ERROR } from './DetailsStep';
 import { Wizard } from './Wizard';
@@ -719,5 +721,90 @@ describe('details step', () => {
       ),
     );
     expect(email).toHaveValue('jo@example.test');
+  });
+});
+
+describe('ticket edits made offline', () => {
+  const ticketPath = 'PATCH /api/organisations/org_1/events/evt_1/ticket-types/tt_1';
+  const withCapacity = (capacity: number) => {
+    const base = draftEvent({ lastStep: 'tickets' });
+    return draftEvent({
+      lastStep: 'tickets',
+      version: 2,
+      ticketTypes: base.ticketTypes.map((t) => ({ ...t, capacity })),
+    });
+  };
+
+  it('keeps the edit on the phone, shows it on reopening and sends it when back online', async () => {
+    pathname = '/organiser/events/new/tickets';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    api({
+      [ticketPath]: () => {
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    const user = userEvent.setup();
+    const first = render(
+      <Wizard
+        initialEvent={draftEvent({ lastStep: 'tickets' })}
+        userId="u_1"
+        ticketStore={store}
+      />,
+    );
+    const capacity = screen.getByLabelText('How many tickets?');
+    await user.clear(capacity);
+    await user.type(capacity, '14');
+    await user.tab();
+    expect(await screen.findByText('Saved on this phone')).toHaveAttribute('role', 'status');
+    expect(await store.get('evt_1:ticket')).toMatchObject({
+      tt_1: { input: { capacity: 14 }, fields: { capacityText: '14' } },
+    });
+    first.unmount();
+
+    // Reopened with the connection back: the edit shows and goes to the api.
+    const fetch = api({ [ticketPath]: () => json(withCapacity(14)) });
+    render(
+      <Wizard
+        initialEvent={draftEvent({ lastStep: 'tickets' })}
+        userId="u_1"
+        ticketStore={store}
+      />,
+    );
+    await waitFor(() => expect(screen.getByLabelText('How many tickets?')).toHaveValue(14));
+    await waitFor(() =>
+      expect(patches(fetch)).toEqual([expect.objectContaining({ capacity: 14 })]),
+    );
+    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
+    await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
+  });
+
+  it('sends an edit kept on the phone from any step, before publishing', async () => {
+    pathname = '/organiser/events/new/details';
+    const store = memoryDraftStore<TicketEdits>('u_1');
+    await store.put('evt_1:ticket', {
+      tt_1: {
+        fields: { capacityText: '14' },
+        input: {
+          name: 'General admission',
+          capacity: 14,
+          maxPerOrder: 10,
+          priceCents: 0,
+          salesStart: { kind: 'on_publish' },
+          salesEnd: { kind: 'event_start' },
+        },
+      },
+    });
+    const fetch = api({
+      [ticketPath]: () => json(withCapacity(14)),
+      'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 3 })),
+    });
+    render(<Wizard initialEvent={draftEvent()} userId="u_1" ticketStore={store} />);
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/organisations/org_1/events/evt_1/ticket-types/tt_1',
+        expect.objectContaining({ method: 'PATCH' }),
+      ),
+    );
+    await waitFor(async () => expect(await store.get('evt_1:ticket')).toBeNull());
   });
 });

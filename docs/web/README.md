@@ -109,7 +109,7 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
 
 Every change autosaves ([ADR 0016](../adr/0016-wizard-autosave-with-versions-and-on-device-drafts.md)):
 on blur, every 10 seconds while there are changes, and when the tab is hidden. Offline changes are
-kept in IndexedDB and synced when the connection returns. The header shows "Draft saved", "Saving…",
+kept in IndexedDB and synced when the connection returns, ticket type edits included. The header shows "Draft saved", "Saving…",
 "Saved on this phone" when offline, or "Couldn't save. We'll keep trying." when the api fails while
 online. A field the api refuses (422) keeps its value on screen with the api's message under it, and
 the header says "Couldn't save one field. Check the message under it." until it's changed.
