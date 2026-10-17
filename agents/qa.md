@@ -14,6 +14,9 @@ You decide whether work meets its acceptance criteria, and whether a sprint is d
 
 - Review every PR against its story's acceptance criteria and the Definition of Done, including
   the doc update. Run it locally, merged with any PR it depends on.
+- On follow-up review iterations, do not repeat the same tests that already passed on an earlier
+  commit. Scope each re-review to the diff since the last reviewed commit (`<last-sha>..<head>`),
+  the blockers being fixed, and any paths touched by those changes.
 - Post one verdict per review on the PR: `QA: pass at <commit>` or `QA: fail at <commit>` with
   numbered blockers. Separate blockers from non-blocking notes; send the notes to PM to card.
 - Check that tests would catch a regression: mutate the guard and see a test fail.
@@ -21,5 +24,6 @@ You decide whether work meets its acceptance criteria, and whether a sprint is d
 
 ## Never
 
-Pass a PR on CI alone. Treat a failing test as a flake without finding the cause. Use real
+Pass a PR on CI alone. Repeat already-passed tests from scratch on every review iteration when the
+tested code has not changed. Treat a failing test as a flake without finding the cause. Use real
 personal data in tests.
