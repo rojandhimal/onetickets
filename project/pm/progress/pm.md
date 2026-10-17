@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-17 (merge reconciliation)
+
+- **Done:** Verified #35/#40/#41 and #39/#42 merged, with latest main `b839748`. Reconciled the board and roadmap: S1-1 through S1-4 are merged, S1-2's offline follow-up shipped in #35, and S1-5 is next. Split SEC-20's shipped fallback removal from its remaining UI/publish requirement. Updated owner setup for the Cloudflare token, Terraform-managed proxied DNS and apply order. Recorded QA-3 because #42 has Security/DevOps passes and green checks but no explicit QA verdict in its comments/reviews at this audit. Preserved the unfinished local editor branch; BE-5 evaluates only its retry-hardening idea against main, without replacing shipped UI. DEV-6 carries the remaining edge-review notes. Local format/lint/typecheck, 208 unit tests, 110 integration tests, production build and 32 browser/axe/CSP tests pass against a separate test database; all 27 local documentation links resolve.
+- **Next:** Separate QA and Security sessions review this PM PR; QA also completes QA-3. FrontendDev starts S1-5; BackendDev/FrontendDev coordinate SEC-20 part 2; DevOps continues SEC-6. QA accepts Sprint 1 only after S1-5 merges and the integrated journey passes. Record CI verification and final review verdicts in this PR.
+- **Blocked:** Live-project copy-back waits for `/mnt/project-files` access; role logs remain owned by their respective sessions. Staging and organiser research still depend on owner setup and RES-1. No infrastructure was applied.
+
 ## 2026-10-16 (10:55 UTC, daily check)
 
 - **Done:** tegs merged #32 and #33, both after QA passed them. No merge since then skipped a review. Routed S1-4 (#35): ProductDesign's About placeholder prompts and its three #31 fixes landed at `468cf23`, and QA's #31 offline ticket-edit finding rides #35 next. Carded QA-2 (flaky mobile publish e2e on main) and SEC-19 (search_path wording). Synced project files and opened [#36](https://github.com/rojandhimal/onetickets/pull/36), which also covers QA's four #32 notes. Most role threads stopped around 06:20 to 06:30 UTC, so I restarted FrontendDev, QA, Security, ProductDesign and DevOps on their next items.

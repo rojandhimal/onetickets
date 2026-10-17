@@ -28,12 +28,16 @@ QA [accepted Sprint 0 on 15 October](../project/qa/sprint-0-acceptance.md), incl
 (S0-5) and the web Docker build fix (#18). AWS remains unapplied; its deploy, email, Google sign-in
 and observability checks carry forward to the first staging deploy.
 
-Sprint 1 started early on 10 October. The events API (#16), create-event wizard (S1-1, #17), free
-ticket types (S1-2, #31) and public event page (S1-3, #23) have merged, along with public cache
-headers and revalidation of every web task (#25) and its infra wiring (#26). FrontendDev's next
-stories are accessibility and other event details (S1-4), then browse (S1-5). AWS remains
-unapplied. The [live board](../project/pm/board.md) has the review evidence and the remaining
-handoff.
+Sprint 1 started early on 10 October. The events API (#16), wizard (S1-1, #17), ticket editor
+(S1-2, #31), public event page (S1-3, #23) and Details/accessibility (S1-4, #35) have merged.
+#35 also fixes offline ticket edits and publishing while changes are still being saved. Browse
+(S1-5) is the next frontend story. Public cache/revalidation (#25/#26), Cloudflare infrastructure
+(#39) and Docker image builds in PR CI (#42) have merged. Infrastructure remains unapplied.
+
+The silent publisher-email fallback was removed in #41 (SEC-20 part 1). The visible contact-email
+prefill, Review summary and saved-email publish requirement remain part 2, due before Sprint 2
+sends attendee emails. The [live board](../project/pm/board.md) records review evidence, the
+post-merge QA follow-up for #42 and the remaining handoff.
 
 Sprint 1 closes only after S1-1 through S1-5 merge and QA accepts the integrated publish-and-browse
 journey. SEC-14 (site-wide enforced CSP) remains required before Sprint 2 free checkout ships.
