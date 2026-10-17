@@ -38,7 +38,18 @@ has been applied. Nothing in AWS exists yet. The plan:
 - Separate AWS accounts for staging and production under one management account, created by
   Terraform. No dev account.
 - Containers on ECS Fargate behind a load balancer, Postgres on RDS, email through SES, QR signing
-  keys in KMS. Cloudflare in front for DNS and protection.
+  keys in KMS. Cloudflare sits in front (`infra/edge`) for proxied DNS, Full (strict) TLS,
+  `x-origin-verify` origin authentication, `sentry-trace`/`baggage` stripping toward the API, and
+  edge rate limits:
+  - On Cloudflare Free (`cloudflare_plan = "free"`, the default), the single custom rate-limiting
+    rule combines the sign-in endpoints (`/api/auth/*` and `/auth/*`) and `/csp-report` into one
+    shared 20-requests-per-10-seconds per-IP counter (blocked for 10 s). A burst of CSP reports from
+    browsers behind a shared NAT can therefore spend that IP's sign-in budget for 10 seconds;
+    splitting them into separate counters requires the second rule on Cloudflare Pro.
+  - When `behind_cloudflare` is `true`, the ALB security group allows only Cloudflare's published
+    IPv4 (`cloudflare_ipv4_ranges`) and IPv6 (`cloudflare_ipv6_ranges`) ranges, so any future switch
+    of the ALB to dual-stack already restricts IPv6 ingress to Cloudflare. Verify both lists against
+    `https://www.cloudflare.com/ips-v4` and `https://www.cloudflare.com/ips-v6` before each apply.
 - Staging is minimal and switched off out of hours (weekdays 7:00 to 22:00 Sydney time).
 - Deploys go through GitHub Actions using short-lived OIDC credentials, never stored AWS keys.
   Production deploys need tegs's approval.

@@ -62,7 +62,9 @@ locals {
   # page sends at most a few CSP reports. The api's own per-IP and per-email
   # limits still apply behind these.
   rate_limit_rules = {
-    # One rule, counting both kinds of request together over 10 s.
+    # One rule, counting both kinds of request together in one 20-per-10-s
+    # per-IP counter: a burst of CSP reports from browsers behind a shared NAT
+    # can spend that IP's sign-in budget for 10 s until the zone moves to Pro.
     free = [{
       description = "Sign-in and CSP reports: 20 requests in 10 s per IP"
       expression  = "(${local.sign_in_expression}) or (${local.csp_expression})"

@@ -57,15 +57,21 @@ variable "api_hostname" {
 }
 
 variable "behind_cloudflare" {
-  description = "Cloudflare proxies the hostnames (infra/edge). Limits the load balancer to Cloudflare's IP ranges, requires Cloudflare's origin header on app requests, and sets TRUST_PROXY_HOPS to 2. These change together, never one at a time."
+  description = "Cloudflare proxies the hostnames (infra/edge). Limits the load balancer to Cloudflare's IPv4 and IPv6 ranges, requires Cloudflare's origin header on app requests, and sets TRUST_PROXY_HOPS to 2. These change together, never one at a time."
   type        = bool
   default     = true
 }
 
 variable "ingress_cidrs" {
-  description = "Who may reach the load balancer when behind_cloudflare is false."
+  description = "IPv4 ranges that may reach the load balancer when behind_cloudflare is false."
   type        = list(string)
   default     = ["0.0.0.0/0"]
+}
+
+variable "ingress_ipv6_cidrs" {
+  description = "IPv6 ranges that may reach the load balancer when behind_cloudflare is false (if the ALB is switched to dualstack)."
+  type        = list(string)
+  default     = []
 }
 
 variable "db_address" {
