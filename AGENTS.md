@@ -58,8 +58,10 @@ push; CI runs the same ones.
 5. **Reviews before merge.** QA reviews every PR against the story's acceptance criteria. Security
    reviews anything touching auth, sessions, RLS, database migrations, personal data, uploads,
    payments or infra. ProductDesign reviews anything a user sees. Each review comes from a separate
-   agent session for that role, not the author's own subagents. A PR is ready for tegs only when CI
-   is green and every reviewer it needs has passed it.
+   agent session for that role, not the author's own subagents. On follow-up iterations after an
+   initial review, QA does not repeat tests that already passed; re-reviews check only the diff
+   since the last reviewed commit (`<last-sha>..<head>`) and any open findings or affected paths. A
+   PR is ready for tegs only when CI is green and every reviewer it needs has passed it.
 6. **Log your progress.** Add a dated entry to `project/pm/progress/<role>.md`, newest first: Done,
    Next, Blocked. Only edit your own file.
 7. **Ask through the board, not by guessing.** Decisions that change scope, cost or what users see

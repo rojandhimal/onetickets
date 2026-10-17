@@ -1,0 +1,324 @@
+/* Public browse page (S1-5, design artboard 1 Discover). Phone-first; widens to a multi-column
+   card grid from 768 px. */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.header {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.header :focus-visible {
+  outline-color: var(--white);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.headerInner,
+.main {
+  width: 100%;
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+.headerInner {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cityTrigger {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background: transparent;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cityTrigger:hover {
+  border-color: var(--white);
+}
+
+.cityChange {
+  color: var(--marigold);
+  font-weight: 700;
+}
+
+.cityPicker {
+  display: flex;
+  flex-wrap: wrap;
+  flex-wrap: balance;
+  gap: 8px;
+}
+
+.cityOption {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background: transparent;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cityOption[aria-pressed='true'] {
+  background: var(--marigold);
+  border-color: var(--marigold);
+  color: var(--ink);
+}
+
+.main {
+  flex: 1;
+  padding-top: 20px;
+  padding-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  flex-wrap: balance;
+  gap: 8px;
+  align-items: center;
+}
+
+.filterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  flex-wrap: balance;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-field);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: var(--white);
+}
+
+.headingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.cardItem {
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--radius-card);
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  overflow: hidden;
+  color: var(--ink);
+}
+
+.card:hover {
+  color: var(--ink);
+  border-color: var(--line-field);
+}
+
+.cardMedia {
+  position: relative;
+  height: 148px;
+  overflow: hidden;
+  background: var(--indigo-ink);
+}
+
+.cardBanner {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardWord {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+}
+
+.workshop {
+  background: #e6e3ff;
+  color: #2e2799;
+}
+
+.gig {
+  background: #ffe2b8;
+  color: #7a3e00;
+}
+
+.school_night {
+  background: #ffd9d4;
+  color: #8c1d12;
+}
+
+.meetup,
+.blank {
+  background: #d7f2e6;
+  color: #0b5a3a;
+}
+
+.freeBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--success-ink);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgb(22 22 29 / 0.14);
+}
+
+.cardBody {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardEyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.cardVenue {
+  font-size: 14px;
+  color: var(--slate);
+  overflow-wrap: anywhere;
+}
+
+.cardPrice {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.empty {
+  margin: 0;
+  padding: 24px 18px;
+  border-radius: var(--radius-card);
+  background: var(--white);
+  border: 1px dashed var(--line-field);
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .headerInner,
+  .main {
+    max-width: 1040px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .cardList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .cardList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

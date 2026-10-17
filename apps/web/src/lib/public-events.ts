@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import type { PublicEventDto } from '@onetickets/shared';
+import type { BrowseResponse, PublicEventDto } from '@onetickets/shared';
+import { type BrowseFilters, browseQueryString } from './browse';
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
 
@@ -25,3 +26,15 @@ export const getPublicEvent = cache(async (slug: string): Promise<PublicEventDto
   if (!res.ok) throw new Error(`GET /public/events/:slug failed with ${res.status}`);
   return (await res.json()) as PublicEventDto;
 });
+
+/**
+ * Upcoming published events for the Discover page (S1-5), cached for 60 s under `BROWSE_TAG` and
+ * cleared whenever the api publishes or edits a live event.
+ */
+export async function browseEvents(filters: BrowseFilters): Promise<BrowseResponse> {
+  const res = await fetch(`${apiUrl}/public/events?${browseQueryString(filters)}`, {
+    next: { revalidate: PUBLIC_EVENT_TTL_S, tags: [BROWSE_TAG] },
+  });
+  if (!res.ok) throw new Error(`GET /public/events failed with ${res.status}`);
+  return (await res.json()) as BrowseResponse;
+}

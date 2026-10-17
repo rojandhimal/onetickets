@@ -1,6 +1,6 @@
 # Web app (`apps/web`)
 
-Next.js (App Router) site for organisers and, later, attendees. It never talks to the database:
+Next.js (App Router) site for attendees and organisers. It never talks to the database:
 every read and write goes through the api.
 
 ## Run it locally
@@ -20,7 +20,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 | --------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time.                                                          |
 | `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404. |
-| `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                                       |
+| `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages and browse cards show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                      |
 | `FEATURE_BOOKING`                                   | server, at request time | `true` turns "Tickets open soon" on event pages into a Get tickets link. Off until booking ships in Sprint 2.                                                          |
 | `WEB_URL`                                           | server, at request time | Public address of the site, used for absolute share-image links in event link previews.                                                                                |
 | `REVALIDATE_SECRET`                                 | server, at request time | Bearer secret the api sends to `POST /internal/revalidate`. Unset turns the route off (404).                                                                           |
@@ -33,7 +33,8 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 
 | Route                                                           | What it does                                                                                                                                                               |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                                                             | Redirects to `/signup` for now.                                                                                                                                            |
+| `/`                                                             | Public browse of upcoming published events in Sydney and Melbourne (`GET /public/events`), with deselectable When and Price chips (S1-5, artboard 1).                      |
+| `/e/{slug}`                                                     | Public event page and 1200 × 630 Open Graph share image (`GET /public/events/:slug`), served under an enforced per-request nonce CSP (S1-3, artboards 2 and 2b).           |
 | `/signup`                                                       | Email-only sign-up, or continue with Google. Signed-in organisers are sent to `/organiser`.                                                                                |
 | `/signin`                                                       | The same form with returning-organiser copy.                                                                                                                               |
 | `/auth/verify`                                                  | Landing page for the magic link. Exchanges the token and goes to `/organiser`.                                                                                             |
@@ -156,7 +157,7 @@ image tag and axe, and that an unknown slug is a 404.
 
 The page HTML is never cached by anyone: it carries a per-request CSP nonce, so `src/proxy.ts`
 sends `Cache-Control: private, no-store`. What is cached is the api read inside Next: the data
-cache keeps it for 60 seconds under the tag `event:{slug}` (browse will use `browse`). After the api
+cache keeps it for 60 seconds under the tag `event:{slug}` (and `browse` for the public browse list). After the api
 publishes an event or commits a change to a live one, it calls `POST /internal/revalidate` on the
 web's private address (`WEB_INTERNAL_URL`) with `Authorization: Bearer $REVALIDATE_SECRET` and
 `{ "slugs": ["…"] }`. The route compares the secret in constant time, then expires those tags and
@@ -167,6 +168,30 @@ address and POSTs to each in parallel, so the Cloud Map endpoint invalidates eve
 task it returns. HTTPS and IP endpoints receive one request; a failed DNS lookup also falls back
 to the original endpoint. Missed signals never fail the organiser's save, and affected tasks
 catch up when their 60-second cache entry expires.
+
+## Public browse (S1-5)
+
+`/` renders the Discover screen (design artboard 1, `src/app/page.tsx` and `src/app/Browse.tsx`).
+The server fetches the initial list from `GET /public/events` (`src/lib/public-events.ts`, cached
+for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`, `?when=`,
+`?price=`, defaulting to Sydney with no filters).
+
+- **City picker**: `Near Sydney · Change` (or `Near Melbourne · Change`) opens the city group
+  (`Sydney`, `Melbourne`). Switching city fetches `/api/public/events` for the chosen city and
+  updates the address bar.
+- **Filter chips**: `When` (`Tonight`, `This weekend`, `Next 7 days`) and `Price` (`Free`, `Paid`),
+  each in a labelled `role="group"` with `aria-pressed` buttons. Each group is single-select and
+  deselectable; the page heading follows the active `When` chip (`Coming up near you`, `On tonight`,
+  `This weekend`, `Next 7 days`), and a visually hidden `role="status"` announces the result count
+  (`{n} event(s)`).
+- **Cards**: each card shows the organiser's banner (or the template tint and category word when
+  there is no banner or `FEATURE_EVENT_BANNER` is `false`), a `Free` badge when the all-in from
+  price is zero, the date eyebrow in the event's time zone, the title, `suburb · venue` (or
+  `Online`), and the API's all-in from price (`Free` or `From A$… all-in`, never recomputed in the
+  web app). Every card is a single plain `<a href="/e/{slug}">` whose `aria-label` reads all four
+  facts; plain anchors ensure clicking a card triggers a full document navigation that loads the
+  event page's enforced nonce CSP ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md)).
+- **Empty state**: when no events match, the page shows `Nothing on for that yet. Try Next 7 days.`
 
 ## How the browser reaches the api
 
