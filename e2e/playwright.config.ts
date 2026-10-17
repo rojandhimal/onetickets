@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 // Locally: `docker compose up -d postgres mailpit`, `pnpm build`, then `pnpm e2e`.
 const webUrl = 'http://localhost:3000';
 const apiUrl = 'http://localhost:3001';
+// Shared test-only secret (32 bytes, base64) so publish/edit in e2e invalidates Next's data cache.
+const revalidateSecret = Buffer.alloc(32, 9).toString('base64');
 
 export default defineConfig({
   testDir: './tests',
@@ -40,6 +42,7 @@ export default defineConfig({
           'postgres://onetickets_app:onetickets_app@localhost:5432/onetickets',
         PORT: '3001',
         WEB_URL: webUrl,
+        REVALIDATE_SECRET: revalidateSecret,
         SESSION_COOKIE_SECURE: 'false',
         MAIL_TRANSPORT: 'console',
         TRUST_PROXY_HOPS: '0',
@@ -49,11 +52,15 @@ export default defineConfig({
     },
     {
       command: 'pnpm --filter @onetickets/web start',
-      url: webUrl,
+      url: `${webUrl}/healthz`,
       reuseExistingServer: !process.env.CI,
       // Flags are turned on at run time only. CI builds with them off, so this also proves a
       // build made with a flag off picks it up at run time instead of baking in a 404.
-      env: { API_URL: apiUrl, FEATURE_EVENT_WIZARD: 'true' },
+      env: {
+        API_URL: apiUrl,
+        FEATURE_EVENT_WIZARD: 'true',
+        REVALIDATE_SECRET: revalidateSecret,
+      },
     },
   ],
 });

@@ -7,7 +7,9 @@ import { signUpOrganiser } from './session';
 // the empty state when nothing matches, and links to /e/:slug with plain <a> tags so the event
 // page's enforced nonce CSP loads (ADR 0018).
 
-type DraftEvent = { id: string; version: number };
+type DraftEvent = { id: string; version: number; slug: string | null };
+
+const revalidateSecret = Buffer.alloc(32, 9).toString('base64');
 
 function futureWindow(daysAhead: number, timeZone: string) {
   const start = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
@@ -23,15 +25,18 @@ function futureWindow(daysAhead: number, timeZone: string) {
 async function createDraft(
   page: import('@playwright/test').Page,
   orgId: string,
+  origin: string,
   patch: Record<string, unknown>,
 ): Promise<DraftEvent> {
   const created = await page.request.post(`/api/organisations/${orgId}/events`, {
+    headers: { origin },
     data: { template: 'workshop' },
   });
   expect(created.ok()).toBe(true);
   const draft = (await created.json()) as DraftEvent;
 
   const updated = await page.request.patch(`/api/organisations/${orgId}/events/${draft.id}`, {
+    headers: { origin },
     data: { version: draft.version, ...patch },
   });
   expect(updated.ok()).toBe(true);
@@ -48,10 +53,11 @@ test('visitors can browse upcoming events, switch city, toggle filters and open 
   const melbourneTitle = `Collingwood Synth Night ${tag}`;
 
   await signUpOrganiser(page, `Browse Org ${tag}`);
+  const origin = new URL(page.url()).origin;
   const meRes = await page.request.get('/api/me');
   expect(meRes.ok()).toBe(true);
-  const me = (await meRes.json()) as { memberships: Array<{ organisation: { id: string } }> };
-  const orgId = me.memberships[0]!.organisation.id;
+  const me = (await meRes.json()) as { organisation: { id: string } };
+  const orgId = me.organisation.id;
 
   const sydneyPlace = await (
     await page.request.get('/api/places/fake-marrickville-town-hall')
@@ -59,33 +65,44 @@ test('visitors can browse upcoming events, switch city, toggle filters and open 
   const melbournePlace = await (await page.request.get('/api/places/fake-the-tote')).json();
 
   // 1. Published Sydney event (2 days from now -> within Next 7 days).
-  const sydneyDraft = await createDraft(page, orgId, {
+  const sydneyDraft = await createDraft(page, orgId, origin, {
     name: sydneyTitle,
     ...futureWindow(2, 'Australia/Sydney'),
     venue: sydneyPlace,
   });
   const pubSydney = await page.request.post(
     `/api/organisations/${orgId}/events/${sydneyDraft.id}/publish`,
+    { headers: { origin } },
   );
   expect(pubSydney.ok()).toBe(true);
+  const publishedSydney = (await pubSydney.json()) as DraftEvent;
 
   // 2. Unpublished Sydney draft (must never appear in public browse, row 5.1).
-  await createDraft(page, orgId, {
+  await createDraft(page, orgId, origin, {
     name: draftTitle,
     ...futureWindow(2, 'Australia/Sydney'),
     venue: sydneyPlace,
   });
 
   // 3. Published Melbourne event (must appear under Melbourne, not Sydney, rows 5.1 & 5.2).
-  const melbourneDraft = await createDraft(page, orgId, {
+  const melbourneDraft = await createDraft(page, orgId, origin, {
     name: melbourneTitle,
     ...futureWindow(2, 'Australia/Melbourne'),
     venue: melbournePlace,
   });
   const pubMel = await page.request.post(
     `/api/organisations/${orgId}/events/${melbourneDraft.id}/publish`,
+    { headers: { origin } },
   );
   expect(pubMel.ok()).toBe(true);
+  const publishedMel = (await pubMel.json()) as DraftEvent;
+
+  // Ensure the web app's data cache has processed the revalidation before opening `/`.
+  const revalidated = await page.request.post('/internal/revalidate', {
+    headers: { authorization: `Bearer ${revalidateSecret}` },
+    data: { slugs: [publishedSydney.slug!, publishedMel.slug!] },
+  });
+  expect(revalidated.status()).toBe(204);
 
   // Public visitor with no session.
   await context.clearCookies();
