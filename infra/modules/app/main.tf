@@ -34,6 +34,38 @@ locals {
   internal_api_url   = "http://api.${local.internal_namespace}:3001"
   internal_web_url   = "http://web.${local.internal_namespace}:3000"
 
+  # Cloudflare's published IPv4 ranges (https://www.cloudflare.com/ips-v4, last
+  # changed 2023-09-28). Behind Cloudflare, only these may reach the load
+  # balancer. Check the list before each apply; Cloudflare announces changes
+  # well ahead.
+  cloudflare_ipv4_ranges = [
+    "103.21.244.0/22",
+    "103.22.200.0/22",
+    "103.31.4.0/22",
+    "104.16.0.0/13",
+    "104.24.0.0/14",
+    "108.162.192.0/18",
+    "131.0.72.0/22",
+    "141.101.64.0/18",
+    "162.158.0.0/15",
+    "172.64.0.0/13",
+    "173.245.48.0/20",
+    "188.114.96.0/20",
+    "190.93.240.0/20",
+    "197.234.240.0/22",
+    "198.41.128.0/17",
+  ]
+  alb_ingress_cidrs = var.behind_cloudflare ? local.cloudflare_ipv4_ranges : var.ingress_cidrs
+
+  # Each proxy in front of the API appends the client address to
+  # X-Forwarded-For: Cloudflare, then the load balancer. The web app's /api
+  # rewrite forwards it unchanged. Tied to behind_cloudflare so the count can
+  # never be higher than the real number of proxies, which would let clients
+  # choose their own IP.
+  trust_proxy_hops = var.behind_cloudflare ? 2 : 1
+
+  origin_verify_header = "x-origin-verify"
+
   services = {
     api = {
       port              = 3001
@@ -49,7 +81,7 @@ locals {
         { name = "WEB_URL", value = "https://${var.web_hostname}" },
         { name = "MAIL_TRANSPORT", value = "ses" },
         { name = "EMAIL_FROM_DOMAIN", value = var.email_domain },
-        { name = "TRUST_PROXY_HOPS", value = tostring(var.api_trust_proxy_hops) },
+        { name = "TRUST_PROXY_HOPS", value = tostring(local.trust_proxy_hops) },
         { name = "LOG_LEVEL", value = var.api_log_level },
         { name = "MAGIC_LINK_HOURLY_CAP", value = tostring(var.api_magic_link_hourly_cap) },
         # SENTRY_RELEASE (the commit) is added by infra/scripts/deploy.sh.
@@ -329,7 +361,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb" {
-  for_each = { for pair in setproduct(var.ingress_cidrs, [80, 443]) : "${pair[0]}-${pair[1]}" => pair }
+  for_each = { for pair in setproduct(local.alb_ingress_cidrs, [80, 443]) : "${pair[0]}-${pair[1]}" => pair }
 
   security_group_id = aws_security_group.alb.id
   cidr_ipv4         = each.value[0]
@@ -508,6 +540,16 @@ resource "aws_lb_listener_rule" "internal_paths" {
   }
 }
 
+# Cloudflare adds this header to every request it proxies to our hostnames
+# (infra/edge). Without it a request gets the listener's 404, so nobody can
+# skip Cloudflare's rate limits and header stripping by pointing their own
+# Cloudflare zone, or anything else in Cloudflare's IP ranges, at the load
+# balancer. No wildcard characters, which ALB header conditions would match.
+resource "random_password" "origin_verify" {
+  length  = 48
+  special = false
+}
+
 resource "aws_lb_listener_rule" "app" {
   for_each = local.services
 
@@ -517,6 +559,16 @@ resource "aws_lb_listener_rule" "app" {
   condition {
     host_header {
       values = each.value.hostnames
+    }
+  }
+
+  dynamic "condition" {
+    for_each = var.behind_cloudflare ? [1] : []
+    content {
+      http_header {
+        http_header_name = local.origin_verify_header
+        values           = [random_password.origin_verify.result]
+      }
     }
   }
 

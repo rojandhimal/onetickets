@@ -52,12 +52,18 @@ variable "web_hostname" {
 }
 
 variable "api_hostname" {
-  description = "Public hostname for the API, e.g. api.staging.onetickets.com.au."
+  description = "Public hostname for the API, e.g. api-staging.onetickets.com.au. One level below the domain, which Cloudflare's free edge certificate covers."
   type        = string
 }
 
+variable "behind_cloudflare" {
+  description = "Cloudflare proxies the hostnames (infra/edge). Limits the load balancer to Cloudflare's IP ranges, requires Cloudflare's origin header on app requests, and sets TRUST_PROXY_HOPS to 2. These change together, never one at a time."
+  type        = bool
+  default     = true
+}
+
 variable "ingress_cidrs" {
-  description = "Who may reach the load balancer. Narrow to Cloudflare's IP ranges once DNS is proxied."
+  description = "Who may reach the load balancer when behind_cloudflare is false."
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
@@ -84,12 +90,6 @@ variable "api_health_check_path" {
   description = "Liveness only: a database blip must not make every task fail its load balancer check."
   type        = string
   default     = "/health/live"
-}
-
-variable "api_trust_proxy_hops" {
-  description = "Proxies that append to X-Forwarded-For before the API: the load balancer (the web app's /api rewrite forwards it unchanged). Set to 2 once Cloudflare proxies the hostnames. Too high lets clients spoof their IP past rate limits."
-  type        = number
-  default     = 1
 }
 
 variable "api_sentry_dsn" {
