@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-17
+
+- **Done:** DEV-6 SEC-5 follow-ups: added Cloudflare's published IPv6 ranges (`cloudflare_ipv6_ranges`) and `aws_vpc_security_group_ingress_rule.alb_ipv6` (plus `ingress_ipv6_cidrs` when `behind_cloudflare = false`) in `infra/modules/app` and `infra/modules/environment` so a future switch of the ALB to dual-stack already enforces Cloudflare IPv6 ingress; documented in `infra/README.md` and `docs/environments.md` that Cloudflare Free combines sign-in (`/api/auth/*`, `/auth/*`) and `/csp-report` into one shared 20-requests-per-10-seconds per-IP counter (shared-NAT impact until Pro) and that both `ips-v4` and `ips-v6` must be checked before each apply. Also verified that [#39](https://github.com/rojandhimal/onetickets/pull/39) and [#42](https://github.com/rojandhimal/onetickets/pull/42) merged cleanly on `main`.
+- **Next:** SEC-6 (Postgres `sslmode=verify-full` with the RDS CA bundle, with BackendDev) and DEV-5 (S3 banner adapter and CloudFront wiring before staging goes live).
+- **Blocked:** nothing.
+
 ## 2026-10-16 (later)
 
 - **Done:** [#26](https://github.com/rojandhimal/onetickets/pull/26) merged (3191149) after Security and QA passed it. SEC-5 is ready for tegs as [#39](https://github.com/rojandhimal/onetickets/pull/39) at 2a21efc, with Security and QA passed and CI green. A new `infra/edge` stack puts both environments behind Cloudflare: proxied DNS, Full (strict) TLS, an origin header the ALB requires, sentry-trace and baggage stripped toward the api, and rate limits on sign-in and `/csp-report` that match any letter case and a trailing slash. In the environments, `behind_cloudflare` limits the ALB to Cloudflare's IPv4 ranges and sets TRUST_PROXY_HOPS=2 in the same apply. Staging's API host is now `api-staging.<domain>`. Free plan, US$0; Pro isn't authorised.

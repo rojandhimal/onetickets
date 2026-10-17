@@ -35,9 +35,10 @@ locals {
   internal_web_url   = "http://web.${local.internal_namespace}:3000"
 
   # Cloudflare's published IPv4 ranges (https://www.cloudflare.com/ips-v4, last
-  # changed 2023-09-28). Behind Cloudflare, only these may reach the load
-  # balancer. Check the list before each apply; Cloudflare announces changes
-  # well ahead.
+  # changed 2023-09-28) and IPv6 ranges (https://www.cloudflare.com/ips-v6).
+  # Behind Cloudflare, only these may reach the load balancer (IPv6 rules also
+  # cover any future switch of the ALB to dualstack). Check both lists before
+  # each apply; Cloudflare announces changes well ahead.
   cloudflare_ipv4_ranges = [
     "103.21.244.0/22",
     "103.22.200.0/22",
@@ -55,7 +56,17 @@ locals {
     "197.234.240.0/22",
     "198.41.128.0/17",
   ]
-  alb_ingress_cidrs = var.behind_cloudflare ? local.cloudflare_ipv4_ranges : var.ingress_cidrs
+  cloudflare_ipv6_ranges = [
+    "2400:cb00::/32",
+    "2606:4700::/32",
+    "2803:f800::/32",
+    "2405:b500::/32",
+    "2405:8100::/32",
+    "2a06:98c0::/29",
+    "2c0f:f248::/32",
+  ]
+  alb_ingress_cidrs      = var.behind_cloudflare ? local.cloudflare_ipv4_ranges : var.ingress_cidrs
+  alb_ingress_ipv6_cidrs = var.behind_cloudflare ? local.cloudflare_ipv6_ranges : var.ingress_ipv6_cidrs
 
   # Each proxy in front of the API appends the client address to
   # X-Forwarded-For: Cloudflare, then the load balancer. The web app's /api
@@ -365,6 +376,16 @@ resource "aws_vpc_security_group_ingress_rule" "alb" {
 
   security_group_id = aws_security_group.alb.id
   cidr_ipv4         = each.value[0]
+  ip_protocol       = "tcp"
+  from_port         = each.value[1]
+  to_port           = each.value[1]
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_ipv6" {
+  for_each = { for pair in setproduct(local.alb_ingress_ipv6_cidrs, [80, 443]) : "${pair[0]}-${pair[1]}" => pair }
+
+  security_group_id = aws_security_group.alb.id
+  cidr_ipv6         = each.value[0]
   ip_protocol       = "tcp"
   from_port         = each.value[1]
   to_port           = each.value[1]

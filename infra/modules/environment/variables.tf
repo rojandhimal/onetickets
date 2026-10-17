@@ -84,9 +84,15 @@ variable "behind_cloudflare" {
 }
 
 variable "ingress_cidrs" {
-  description = "Who may reach the load balancer when behind_cloudflare is false."
+  description = "IPv4 ranges that may reach the load balancer when behind_cloudflare is false."
   type        = list(string)
   default     = ["0.0.0.0/0"]
+}
+
+variable "ingress_ipv6_cidrs" {
+  description = "IPv6 ranges that may reach the load balancer when behind_cloudflare is false (if the ALB is switched to dualstack)."
+  type        = list(string)
+  default     = []
 }
 
 variable "db_instance_class" {
