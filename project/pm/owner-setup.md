@@ -29,7 +29,9 @@ new PR starting from the latest `main`. No branch-policy answer is needed for th
 - [ ] Two unique emails for those accounts' root users (for example aws+staging@yourdomain), plus one alerts email
 - [ ] A domain, with DNS on Cloudflare (free plan)
 - [ ] Request SES production access in the production account's SES console as soon as it exists (AWS takes about a day; until then magic-link emails only reach verified addresses)
-- [ ] Add the DNS records Terraform prints in Cloudflare after each apply: certificate, web and API CNAMEs, and email records (DKIM, MX and SPF on bounce.<domain>, DMARC). If the domain already sends mail (for example Google Workspace), set up that provider's SPF and DKIM first
+- [ ] Create a zone-scoped Cloudflare API token for `infra/edge`: Zone DNS Edit, Config Rules Edit, Transform Rules Edit and Zone WAF Edit. Keep it in a password manager and export `CLOUDFLARE_API_TOKEN` only for the owner-run apply; see [infra setup](../../infra/README.md#what-the-owner-must-set-up-first)
+- [ ] Add the certificate-validation and email DNS records Terraform prints, as DNS-only records. `infra/edge` creates the proxied web and API records; remove manually created duplicates before applying it. Staging's API hostname is `api-staging.<domain>`. If the domain already sends mail, configure that provider's SPF/DKIM first
+- [ ] Follow the apply order in [infra/README](../../infra/README.md): environment first, then `infra/edge`. Until the edge is configured, the ALB rejects requests without its origin header. Cloudflare Free is the agreed plan; Pro is not authorised
 - [ ] Google sign-in client (OAuth client ID) for organiser sign-up, with redirect URI https://<web host>/api/auth/google/callback per environment. After the apply, paste its id and secret into the onetickets-<env>/google-oauth secret
 - [ ] In GitHub, create `staging` and `production` environments in the repo settings, and add yourself as the required reviewer on production, and restrict both environments to the main branch
 - [ ] Run the Terraform applies in the order in `infra/README.md` (PR #4). DevOps then gives you the values to paste into GitHub
