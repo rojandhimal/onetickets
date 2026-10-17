@@ -5,9 +5,9 @@ people in at the door with a phone. Think Eventbrite, built for small and mid-si
 events, with prices shown including GST and payouts through Stripe Connect.
 
 **Status:** Sprint 1 (publish and browse). QA accepted Sprint 0 on 15 October. The events API,
-create-event wizard and public event page are in `main`; free ticket editing, event details and
-browse are next. Public launch is planned for May 2027 in Sydney and Melbourne. See the
-[live board](project/pm/board.md) and [roadmap](docs/roadmap.md).
+create-event wizard (including free ticket types and accessibility/event details), public event page
+and public browse (`/` for Sydney and Melbourne) are built. Public launch is planned for May 2027 in
+Sydney and Melbourne. See the [live board](project/pm/board.md) and [roadmap](docs/roadmap.md).
 
 ## What's in the repo
 

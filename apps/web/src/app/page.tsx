@@ -1,6 +1,17 @@
-import { redirect } from 'next/navigation';
+import { parseBrowseFilters } from '@/lib/browse';
+import { isEventBannerShown } from '@/lib/flags';
+import { browseEvents } from '@/lib/public-events';
+import { Browse } from './Browse';
 
-// Public browse arrives in Sprint 1 (S1-5). Until then the site is the organiser app.
-export default function Home() {
-  redirect('/signup');
+type SearchParams = Promise<{
+  city?: string | string[];
+  when?: string | string[];
+  price?: string | string[];
+}>;
+
+// S1-5, design artboard 1 Discover: public browse of upcoming published events.
+export default async function Home({ searchParams }: { searchParams?: SearchParams } = {}) {
+  const filters = parseBrowseFilters(await searchParams);
+  const { items } = await browseEvents(filters);
+  return <Browse initialFilters={filters} initialItems={items} showBanner={isEventBannerShown()} />;
 }

@@ -2,6 +2,19 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-17 (S1-5 browse upcoming events)
+
+- **Done:**
+  - #35 (S1-4 Details and S1-2 offline ticket follow-ups) merged. Restarted from `main` on `frontend/s1-5-browse`.
+  - Built S1-5 (public browse upcoming events, design artboard 1 Discover) at `/`:
+    - Server-rendered initial load (`apps/web/src/app/page.tsx`) backed by `browseEvents()` (`GET /public/events`, cached 60 s under tag `browse` and invalidated by `POST /internal/revalidate`).
+    - City picker (`Near Sydney · Change` / `Near Melbourne · Change`) switching between Sydney and Melbourne (`apps/web/src/app/Browse.tsx`).
+    - Single-select, deselectable `When` (`Tonight`, `This weekend`, `Next 7 days`) and `Price` (`Free`, `Paid`) filter chip groups with `aria-pressed`, matching headings (`Coming up near you`, `On tonight`, `This weekend`, `Next 7 days`), `Prices shown are what you pay. No fees added later.`, and a visually hidden `role="status"` result count (`{n} event(s)`).
+    - Event cards with organiser banner (behind `FEATURE_EVENT_BANNER`, falling back to template tint and category word), `Free` badge, date eyebrow in the event's time zone, title, `suburb · venue` (or `Online`), and API-supplied all-in from price (`Free` or `From A$… all-in`, never recomputed in the web app). Each card is a single plain `<a href="/e/{slug}">` whose `aria-label` reads all four facts (ADR 0018).
+    - Empty state (`Nothing on for that yet. Try Next 7 days.`), unit tests (`browse.test.ts`, `page.test.tsx`), Playwright E2E spec (`e2e/tests/browse.spec.ts`), and docs (`docs/web/README.md`, `README.md`).
+- **Next:** get QA, ProductDesign and Security reviews on S1-5; complete independent post-merge review of #38 (QA-2); then Sprint 1 integrated acceptance and Sprint 2 (S2-1 ticket holds and checkout).
+- **Blocked:** nothing.
+
 ## 2026-10-16 (11:15 UTC, S1-4 rework, #35)
 
 - **Done:**
