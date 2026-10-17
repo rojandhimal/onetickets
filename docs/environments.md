@@ -24,7 +24,8 @@ stay off until the repository variable `DEPLOY_ENABLED` is `true`.
 Two workflows run on every pull request and on pushes to `main`:
 
 - **CI** (`.github/workflows/ci.yml`): format, lint and module boundaries, type check, unit tests,
-  build, and integration tests against a real Postgres 16.
+  build, integration tests against a real Postgres 16, end-to-end and accessibility tests, and a
+  build of the api and web Docker images (the same Dockerfiles and cache as the deploy, not pushed).
 - **Security** (`.github/workflows/security.yml`): secret scanning with gitleaks and a dependency
   audit that fails on high or critical advisories in production dependencies.
 
