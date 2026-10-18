@@ -8,6 +8,7 @@ import {
   type EventDraftDto,
   type EventDraftPatch,
   type EventTemplate,
+  type PlaceDto,
   type PublicEventDto,
   type PublishNotReadyBody,
   type TicketTypeInput,
@@ -23,9 +24,11 @@ import {
   type EventChanges,
   type EventRow,
   EventsRepository,
+  type PublicEventRow,
   type TicketTypeRow,
 } from './events.repository.js';
 import { toPlainLine, toPlainText } from '../../text/plain-text.js';
+import { PlacesProvider } from './places.js';
 import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { PublicPageRevalidator } from './revalidation.js';
@@ -49,6 +52,7 @@ export class EventsService {
     private readonly uow: UnitOfWork,
     private readonly events: EventsRepository,
     private readonly storage: BannerStorage,
+    private readonly places: PlacesProvider,
     private readonly revalidator: PublicPageRevalidator,
     @Inject(CATALOGUE_CONFIG) private readonly config: CatalogueConfig,
   ) {}
@@ -92,12 +96,14 @@ export class EventsService {
 
   /** Autosave. A stale version gets 409 with the current draft so the client can reconcile. */
   async update(actor: Actor, eventId: string, patch: EventDraftPatch): Promise<EventDraftDto> {
+    const resolvedPlace =
+      patch.venue?.kind === 'place' ? await this.places.get(patch.venue.placeId) : null;
     const result = await this.inScope(actor, async (tx) => {
       const event = await this.lockedEvent(tx, actor, eventId);
       if (event.version !== patch.version) {
         return { stale: await this.draftDto(tx, actor, eventId) };
       }
-      const changes = this.changesFrom(patch);
+      const changes = this.changesFrom(patch, resolvedPlace);
       const startsAt = resolveTime(changes.starts_at, event.starts_at);
       const endsAt = resolveTime(changes.ends_at, event.ends_at);
       if (startsAt && endsAt && endsAt <= startsAt) {
@@ -108,7 +114,22 @@ export class EventsService {
           'endsAt',
         );
       }
-      if (event.status === 'published') this.refuseUnpublishing(changes);
+      if (event.status === 'published') {
+        this.refuseUnpublishing(changes);
+        if (
+          changes.starts_at !== undefined &&
+          startsAt &&
+          (event.starts_at === null || startsAt.getTime() !== event.starts_at.getTime()) &&
+          startsAt <= new Date()
+        ) {
+          throw new ApiError(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            'starts_in_past',
+            'A live event must start in the future.',
+            'startsAt',
+          );
+        }
+      }
       const times = { startsAt, endsAt, publishedAt: event.published_at };
       const types = await this.events.ticketTypes(tx, [eventId]);
       if (types.some((t) => !windowIsValid(t.sales_start, t.sales_end, times))) {
@@ -301,9 +322,8 @@ export class EventsService {
       if (!event) return null;
       const now = new Date();
       const types = await this.events.ticketTypes(tx, [event.id]);
-      const organiser = await this.events.organiserName(tx, event.organisation_id);
       const fromCents = await this.events.fromPriceCents(tx, event.id, now);
-      return this.toPublicDto(event, types, organiser ?? '', fromCents, now);
+      return this.toPublicDto(event, types, fromCents, now);
     });
   }
 
@@ -326,20 +346,20 @@ export class EventsService {
     const last = page.at(-1);
     return {
       items: page.map((row) => ({
-        slug: row.slug!,
-        name: row.name!,
-        startsAt: row.starts_at!.toISOString(),
+        slug: row.slug,
+        name: row.name,
+        startsAt: row.starts_at.toISOString(),
         timeZone: row.time_zone,
         template: row.template,
-        suburb: row.venue?.kind === 'place' ? row.venue.suburb : null,
-        venueName: row.venue?.kind === 'place' ? row.venue.name : null,
-        online: row.venue?.kind === 'online',
+        suburb: row.suburb,
+        venueName: row.venue_name,
+        online: row.online,
         banner: this.bannerDto(row),
         priceFromAllInCents: allInPriceCents(row.price_from_cents),
       })),
       nextCursor:
         rows.length > query.limit && last
-          ? encodeCursor(last.starts_at!.toISOString(), last.id)
+          ? encodeCursor(last.starts_at.toISOString(), last.id)
           : null,
     };
   }
@@ -367,7 +387,23 @@ export class EventsService {
     return this.toDraftDto(event, await this.events.ticketTypes(tx, [eventId]));
   }
 
-  private changesFrom(patch: EventDraftPatch): EventChanges {
+  private changesFrom(patch: EventDraftPatch, resolvedPlace: PlaceDto | null): EventChanges {
+    let venue: EventChanges['venue'];
+    if (patch.venue === undefined || patch.venue === null) {
+      venue = patch.venue;
+    } else if (patch.venue.kind === 'place') {
+      if (!resolvedPlace) {
+        throw new ApiError(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'unknown_place',
+          'Choose a venue from the search results.',
+          'venue',
+        );
+      }
+      venue = cleanVenue(resolvedPlace);
+    } else {
+      venue = cleanVenue(patch.venue);
+    }
     return {
       name:
         patch.name === undefined || patch.name === null
@@ -376,13 +412,8 @@ export class EventsService {
       starts_at: patch.startsAt,
       ends_at: patch.endsAt,
       time_zone: patch.timeZone === undefined ? undefined : validTimeZone(patch.timeZone),
-      venue: patch.venue ? cleanVenue(patch.venue) : patch.venue,
-      city:
-        patch.venue === undefined
-          ? undefined
-          : patch.venue?.kind === 'place'
-            ? patch.venue.city
-            : null,
+      venue,
+      city: venue === undefined ? undefined : venue?.kind === 'place' ? venue.city : null,
       about: patch.about === undefined ? undefined : toPlainText(patch.about),
       accessibility_features: patch.accessibility
         ? [...new Set(patch.accessibility.features)]
@@ -448,7 +479,12 @@ export class EventsService {
     }
   }
 
-  private bannerDto(row: EventRow): BannerDto | null {
+  private bannerDto(
+    row: Pick<
+      EventRow,
+      'banner_key' | 'banner_width' | 'banner_height' | 'banner_focus_x' | 'banner_focus_y'
+    >,
+  ): BannerDto | null {
     if (!row.banner_key) return null;
     return {
       url: this.storage.publicUrl(row.banner_key),
@@ -494,9 +530,8 @@ export class EventsService {
   }
 
   private toPublicDto(
-    row: EventRow,
+    row: PublicEventRow,
     types: TicketTypeRow[],
-    organiser: string,
     fromCents: number,
     now: Date,
   ): PublicEventDto {
@@ -508,21 +543,19 @@ export class EventsService {
       onSale: onSale(t.sales_start, t.sales_end, times(row), now),
       maxPerOrder: t.max_per_order,
     }));
-    const venue = row.venue!;
     return {
-      slug: row.slug!,
-      name: row.name!,
-      startsAt: row.starts_at!.toISOString(),
-      endsAt: row.ends_at!.toISOString(),
+      slug: row.slug,
+      name: row.name,
+      startsAt: row.starts_at.toISOString(),
+      endsAt: row.ends_at.toISOString(),
       timeZone: row.time_zone,
       template: row.template,
-      organiser: { name: organiser },
-      // The online link is only for ticket holders.
-      venue: venue.kind === 'online' ? { kind: 'online' } : venue,
+      organiser: { name: row.organiser_name ?? '' },
+      venue: row.venue,
       about: row.about,
       accessibility: { features: row.accessibility_features, notes: row.accessibility_notes },
       cancellationPolicy: row.cancellation_policy,
-      hasContactEmail: row.contact_email !== null,
+      hasContactEmail: row.has_contact_email,
       banner: this.bannerDto(row),
       priceFromAllInCents: allInPriceCents(fromCents),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
@@ -579,7 +612,7 @@ function cleanTicketType(input: TicketTypeInput): TicketTypeInput {
   return { ...input, name: plainLineOrRefuse(input.name, 'name') };
 }
 
-function times(row: EventRow): EventTimes {
+function times(row: Pick<EventRow, 'starts_at' | 'ends_at' | 'published_at'>): EventTimes {
   return { startsAt: row.starts_at, endsAt: row.ends_at, publishedAt: row.published_at };
 }
 

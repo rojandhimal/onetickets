@@ -60,13 +60,13 @@ describe('public caching and revalidation', () => {
         endsAt: new Date(startsAt.getTime() + 3 * HOUR).toISOString(),
         venue: {
           kind: 'place',
-          placeId: 'place-123',
+          placeId: 'fake-marrickville-town-hall',
           name: 'Marrickville Town Hall',
           address: '303 Marrickville Rd, Marrickville NSW 2204',
           suburb: 'Marrickville',
           city: 'sydney',
-          lat: -33.911,
-          lng: 151.155,
+          lat: -33.9112,
+          lng: 151.1552,
         },
         contactEmail: 'hello@example.test',
       })
