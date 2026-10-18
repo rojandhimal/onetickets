@@ -466,7 +466,7 @@ describe('events and ticket types API', () => {
     const response = await as(owner).post(`${events()}/${event.id}/publish`).expect(422);
     expect(response.body).toMatchObject({
       code: 'not_ready',
-      missing: ['name', 'date_time', 'venue', 'ticket_type'],
+      missing: ['name', 'date_time', 'venue', 'ticket_type', 'contact_email'],
     });
   });
 
@@ -815,12 +815,18 @@ describe('events and ticket types API', () => {
       .patch(`${events()}/${live.id}`, { version: live.version, startsAt: null })
       .expect(422);
     expect(refused.body).toMatchObject({ code: 'required_when_live', field: 'startsAt' });
+    const noContact = await as(owner)
+      .patch(`${events()}/${live.id}`, { version: live.version, contactEmail: null })
+      .expect(422);
+    expect(noContact.body).toMatchObject({ code: 'required_when_live', field: 'contactEmail' });
   });
 
-  it("publishes with no contact email, never filling it from a member's email", async () => {
+  it("refuses publishing with no contact email, never filling it from a member's email", async () => {
     const event = await publishable({ contactEmail: null });
-    const { body: live } = await as(admin).post(`${events()}/${event.id}/publish`).expect(200);
-    expect(live).toMatchObject({ status: 'published', contactEmail: null });
+    const { body } = await as(admin).post(`${events()}/${event.id}/publish`).expect(422);
+    expect(body).toMatchObject({ code: 'not_ready', missing: ['contact_email'] });
+    const draft = await as(owner).get(`${events()}/${event.id}`).expect(200);
+    expect(draft.body).toMatchObject({ status: 'draft', contactEmail: null, slug: null });
 
     const stored = await withOwner(async (client) => {
       const { rows } = await client.query<{ contact_email: string | null; members: string[] }>(
@@ -836,8 +842,23 @@ describe('events and ticket types API', () => {
     expect(stored.members.length).toBeGreaterThan(1);
     expect(stored.contact_email).toBeNull();
 
+    // The refusal does not mutate or backfill the existing draft.
+  });
+
+  it('leaves legacy live events with no contact email unchanged until explicitly edited', async () => {
+    const live = await publish(await publishable());
+    await withOwner((client) =>
+      client.query('update catalogue.events set contact_email = null where id = $1', [live.id]),
+    );
+    const edited = await as(owner)
+      .patch(`${events()}/${live.id}`, { version: live.version, about: 'Updated description' })
+      .expect(200);
+    expect(edited.body.contactEmail).toBeNull();
+    const same = await as(owner).post(`${events()}/${live.id}/publish`).expect(200);
+    expect(same.body).toMatchObject({ status: 'published', contactEmail: null, slug: live.slug });
     const { body } = await anon().get(`/public/events/${live.slug}`).expect(200);
     expect(body.hasContactEmail).toBe(false);
+    expect(body).not.toHaveProperty('contactEmail');
   });
 
   it('keeps the contact email the organiser gave when publishing', async () => {

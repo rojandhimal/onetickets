@@ -260,6 +260,7 @@ export class EventsService {
           endsAt: event.ends_at,
           hasVenue: event.venue !== null,
           ticketTypeCount: types.length,
+          contactEmail: event.contact_email,
         },
         new Date(),
       );
@@ -403,13 +404,14 @@ export class EventsService {
         ['startsAt', changes.starts_at],
         ['endsAt', changes.ends_at],
         ['venue', changes.venue],
+        ['contactEmail', changes.contact_email],
       ] as const
     ).find(([, value]) => value === null);
     if (cleared) {
       throw new ApiError(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'required_when_live',
-        'A live event needs a name, start and end times, and a venue or online link.',
+        'A live event needs a name, start and end times, a venue or online link, and a contact email.',
         cleared[0],
       );
     }

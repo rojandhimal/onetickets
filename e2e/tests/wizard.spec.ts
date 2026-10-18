@@ -12,7 +12,7 @@ const status = (page: import('@playwright/test').Page) =>
   page.getByRole('banner').getByRole('status');
 
 test('a template becomes a draft that autosaves, resumes and publishes', async ({ page }) => {
-  await signUpOrganiser(page);
+  const { email } = await signUpOrganiser(page);
 
   // Template to draft.
   await page.getByRole('link', { name: /Workshop/ }).click();
@@ -54,7 +54,14 @@ test('a template becomes a draft that autosaves, resumes and publishes', async (
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expectAccessible(page);
   await page.getByRole('link', { name: 'Next: details' }).click();
+  await expect(page.getByLabel('Contact email for attendees', { exact: true })).toHaveValue(email);
+  // A displayed default is not a saved contact until blur or Next.
+  const me = await (await page.request.get('/api/me')).json();
+  const eventPath = `/api/organisations/${me.organisation.id}/events/${draftUrl.searchParams.get('draft')}`;
+  const draftBeforeNext = await (await page.request.get(eventPath)).json();
+  expect(draftBeforeNext.contactEmail).toBeNull();
   await page.getByRole('link', { name: 'Next: review' }).click();
+  await expect(page.getByText(`Replies from attendees go to ${email}`)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Check and publish');
   await expectAccessible(page);
 
@@ -242,7 +249,7 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
 
   // Cancellations and the contact email, which is checked before it saves (row 4.4).
   await page.getByRole('radio', { name: 'Up to 24 hours before' }).check();
-  const contact = page.getByLabel('Contact email for attendees');
+  const contact = page.getByLabel('Contact email for attendees', { exact: true });
   await contact.fill('zines@example');
   await notes.focus();
   await expect(contact).toHaveAttribute('aria-invalid', 'true');
@@ -257,16 +264,20 @@ test('step 3 holds About, accessibility, cancellations and a private contact ema
   await expect(page.getByLabel('About this event')).toHaveValue(/risograph/);
   await expect(page.getByRole('checkbox', { name: 'Hearing loop' })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Up to 24 hours before' })).toBeChecked();
-  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+  await expect(page.getByLabel('Contact email for attendees', { exact: true })).toHaveValue(
+    'zines@example.test',
+  );
 
   // A mistyped edit never replaces the saved address (QA's #35 review).
-  const saved = page.getByLabel('Contact email for attendees');
+  const saved = page.getByLabel('Contact email for attendees', { exact: true });
   await saved.fill('zines@example');
   await page.getByLabel('Anything else people should know?').focus();
   await expect(saved).toHaveAttribute('aria-invalid', 'true');
   await expect(status(page)).toHaveText("Couldn't save one field. Check the message under it.");
   await page.reload();
-  await expect(page.getByLabel('Contact email for attendees')).toHaveValue('zines@example.test');
+  await expect(page.getByLabel('Contact email for attendees', { exact: true })).toHaveValue(
+    'zines@example.test',
+  );
 
   // Published, the page shows the summary row and the full list (row 4.2) but never the email.
   await page.getByRole('link', { name: 'Next: review' }).click();
@@ -356,5 +367,64 @@ test('a ticket edit made offline stays on the phone, survives a reload and syncs
   await expect.poll(serverCapacity).toBe(14);
   await page.reload();
   await expect(page.getByLabel('How many tickets?')).toHaveValue('14');
+  await expectAccessible(page);
+});
+
+test('a missing attendee contact blocks publish, and Review returns focus to the editable address', async ({
+  page,
+  context,
+}, testInfo) => {
+  const { email } = await signUpOrganiser(page);
+  await page.getByRole('link', { name: /Workshop/ }).click();
+  await page.waitForURL(/\/basics\?draft=/);
+  await page.getByLabel('Event name').fill('Contact consent workshop');
+  await page.getByLabel('Date').fill(eventDate);
+  await page.getByLabel('Starts').fill('10:00');
+  await page.getByLabel('Ends').fill('13:00');
+  await pickMarrickville(page);
+  await expect(status(page)).toHaveText('Draft saved');
+  const draft = new URL(page.url()).searchParams.get('draft')!;
+  await page.goto(`/organiser/events/new/review?draft=${draft}`);
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Add a contact email to publish.' }),
+  ).toContainText('Everything else is ready.');
+  await expectAccessible(page);
+  await page.getByRole('link', { name: 'Add contact email for attendees' }).click();
+  const contact = page.getByLabel('Contact email for attendees', { exact: true });
+  await expect(contact).toBeFocused();
+  await expect(contact).toHaveValue(email);
+  await expectAccessible(page);
+  await contact.fill('team@example.test');
+  await page.getByRole('link', { name: 'Next: review' }).click();
+  await expect(page.getByText('Replies from attendees go to team@example.test')).toBeVisible();
+  await page.getByRole('link', { name: 'Change contact email for attendees' }).click();
+  await expect(contact).toBeFocused();
+  await contact.clear();
+  await expect(contact).toHaveAccessibleDescription(
+    'Needed to publish, so people can reply to booking emails.',
+  );
+  await page.getByRole('link', { name: 'Next: review' }).click();
+  await expect(status(page)).toHaveText('Draft saved');
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Add a contact email to publish.' }),
+  ).toContainText('Everything else is ready.');
+  await page.getByRole('link', { name: 'Add contact email for attendees' }).click();
+  await expect(contact).toHaveValue('');
+  await contact.fill('final@example.test');
+  await page.getByRole('link', { name: 'Next: review' }).click();
+  await expect(page.getByText('Replies from attendees go to final@example.test')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: testInfo.outputPath('contact-review.png'), fullPage: true });
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Publish event' }).click();
+  const path = await page.getByRole('link', { name: 'See your event page' }).getAttribute('href');
+  await context.clearCookies();
+  await page.goto(path!);
+  expect(await page.content()).not.toContain('final@example.test');
+  expect(await page.content()).not.toContain(email);
   await expectAccessible(page);
 });
