@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-18 (Sprint 1 accepted, S1-5 and DEV-6 merged, PR #46 & #47 ready)
+
+- **Done:** Verified S1-5 (#44, `869f8b6`) and DEV-6 (#45, `8655fc8`) merged by tegs, bringing all 5 Sprint 1 stories to `main`. QA completed the integrated Sprint 1 acceptance pass on `main` at `8655fc8` and wrote [project/qa/sprint-1-acceptance.md](/project/qa/sprint-1-acceptance.md) accepting Sprint 1 with staging deferrals carried forward. Reviewed and routed PR #46 (BE-1 catalogue hardening) and PR #47 (Docs local sign-in): both passed QA and Security reviews with all CI checks green, and both are marked ready for tegs. Updated the sprint board to mark Sprint 1 Done and open Sprint 2.
+- **Next:** tegs merges PR #46 and PR #47. Team commences Sprint 2 (Free tickets: S2-1 ticket holds and orders, S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal) and SEC-20 part 2.
+- **Blocked:** Staging checks remain deferred until AWS account and Google OAuth client setup.
+
 ## 2026-10-17 (merge reconciliation)
 
 - **Done:** Verified #35/#40/#41 and #39/#42 merged, with latest main `b839748`. Reconciled the board and roadmap: S1-1 through S1-4 are merged, S1-2's offline follow-up shipped in #35, and S1-5 is next. Split SEC-20's shipped fallback removal from its remaining UI/publish requirement. Updated owner setup for the Cloudflare token, Terraform-managed proxied DNS and apply order. Recorded QA-3 because #42 has Security/DevOps passes and green checks but no explicit QA verdict in its comments/reviews at this audit. Preserved the unfinished local editor branch; BE-5 evaluates only its retry-hardening idea against main, without replacing shipped UI. DEV-6 carries the remaining edge-review notes. Local format/lint/typecheck, 208 unit tests, 110 integration tests, production build and 32 browser/axe/CSP tests pass against a separate test database; all 27 local documentation links resolve.

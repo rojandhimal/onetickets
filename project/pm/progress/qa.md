@@ -2,6 +2,15 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 18 Oct 2026
+
+- **Done:**
+  - Reviewed PR #46 (BE-1: catalogue backend hardening) at ddb0b28: pass. Verified startsAt validation, PlacesProvider resolution (422 unknown_place), public repository queries selecting only public SQL columns and stripping online URLs in SQL, integration tests, and docs. Posted verdict on PR #46.
+  - Reviewed PR #47 (Docs: local email sign-in & Mailpit inbox) at a1888ad: pass. Verified port :8025, /signin flow, 15-minute link expiry, example.test domain, and troubleshooting. Posted verdict on PR #47.
+  - Completed Sprint 1 integrated acceptance pass on `main` at 8655fc8 across all 5 stories (S1-1, S1-2, S1-3, S1-4, S1-5). Wrote [project/qa/sprint-1-acceptance.md](/project/qa/sprint-1-acceptance.md) accepting Sprint 1 with staging deferrals recorded.
+- **Next:** Sprint 2 (Free tickets: holds, checkout, signed QR tickets, attendee portal) reviews as PRs open.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 16 Oct 2026 (late afternoon: #36, #37, #38, #39)
 
 - **Done:**
