@@ -8,7 +8,9 @@ the organiser routes; the public event page and browse use the public ones.
 
 - Owns the `catalogue` schema (events, ticket types) and the `inventory` schema (one inventory
   row per ticket type).
-- Stores descriptions and names as plain text (SEC-3) and banners as re-encoded images.
+- Stores descriptions and names as plain text (SEC-3), resolves `place` venues on the server from
+  `PlacesProvider.get(placeId)` (`422 unknown_place` if missing), refuses moving a live event's
+  `startsAt` into the past (`422 starts_in_past`), and stores banners as re-encoded images.
 - Does not take bookings, hold or sell tickets: that is Sprint 2's orders module, which will
   change `sold` and `held` through the inventory row with one conditional update (ADR 0007).
 
@@ -49,9 +51,15 @@ Invariants the database enforces:
   role may delete an inventory row. Tested in `test/catalogue.int.test.ts` ("never lets
   oversell"), which sends raw updates as `ot_app` that must fail.
 - Row-level security is forced on every table. `ot_app` sees its own organisation's rows, plus
-  published events, their ticket types and their inventory for the public routes.
-  `catalogue.organiser_name()` returns an organisation's name only when it has a published event;
-  it runs as `ot_public_reader`, a role nobody logs in as. Tested in `test/rls.int.test.ts`.
+  published events (`events_public`), their ticket types and their inventory for the public routes.
+  Because Postgres RLS is row-level, the public repository queries (`EventsRepository.findPublished`
+  and `EventsRepository.browse`) also narrow the column projection in SQL (`PUBLIC_EVENT_COLUMNS`
+  and the browse card projection): SQL computes `catalogue.organiser_name(organisation_id) as organiser_name`,
+  `(contact_email is not null) as has_contact_email`, and strips an online venue's `url` before the
+  row leaves Postgres, so `organisation_id`, `contact_email` and the online `url` are never read
+  into the API process on public routes. `catalogue.organiser_name()` returns an organisation's
+  name only when it has a published event; it runs as `ot_public_reader`, a role nobody logs in as.
+  Tested in `test/rls.int.test.ts` and `test/catalogue.int.test.ts`.
 
 ## Configuration
 

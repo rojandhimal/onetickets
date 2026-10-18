@@ -7,6 +7,8 @@ import sharp from 'sharp';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { EventsRepository } from '../src/modules/catalogue/events.repository.js';
+import { PlacesProvider } from '../src/modules/catalogue/places.js';
 import { onSale } from '../src/modules/catalogue/sales-window.js';
 import type { AppRequest } from '../src/modules/identity/index.js';
 import { appDatabaseUrl, seedOrganisation, seedUser, uniqueEmail, withOwner } from './db.js';
@@ -17,13 +19,24 @@ const DAY = 24 * HOUR;
 
 const sydneyPlace = {
   kind: 'place',
-  placeId: 'place-123',
+  placeId: 'fake-marrickville-town-hall',
   name: 'Marrickville Town Hall',
   address: '303 Marrickville Rd, Marrickville NSW 2204',
   suburb: 'Marrickville',
   city: 'sydney',
-  lat: -33.911,
-  lng: 151.155,
+  lat: -33.9112,
+  lng: 151.1552,
+} as const;
+
+const melbournePlace = {
+  kind: 'place',
+  placeId: 'fake-fitzroy-town-hall',
+  name: 'Fitzroy Town Hall',
+  address: '201 Napier St, Fitzroy VIC 3065',
+  suburb: 'Fitzroy',
+  city: 'melbourne',
+  lat: -37.8008,
+  lng: 144.9784,
 } as const;
 
 describe('events and ticket types API', () => {
@@ -221,41 +234,93 @@ describe('events and ticket types API', () => {
   });
 
   it('keeps names and venues to one clean line, with no hidden or reordering characters', async () => {
+    const places = app.get(PlacesProvider);
+    const originalGet = places.get.bind(places);
+    places.get = async (placeId: string) =>
+      placeId === 'p1'
+        ? {
+            kind: 'place',
+            placeId: 'p1',
+            name: 'The\u2066 Hall',
+            address: '1 Main St\r\nLevel 2',
+            suburb: 'Newtown\u200D',
+            city: 'sydney',
+            lat: -33.89,
+            lng: 151.18,
+          }
+        : originalGet(placeId);
+    try {
+      const event = await draft();
+      const { body } = await as(owner)
+        .patch(`${events()}/${event.id}`, {
+          version: 0,
+          name: 'Free gig \u202Egpj.exe\u200B\nnow',
+          venue: {
+            kind: 'place',
+            placeId: 'p1',
+            name: 'Ignored client name',
+            address: 'Ignored client address',
+            suburb: 'Ignored client suburb',
+            city: 'sydney',
+            lat: -33.89,
+            lng: 151.18,
+          },
+        })
+        .expect(200);
+      expect(body).toMatchObject({
+        name: 'Free gig gpj.exe now',
+        venue: { name: 'The Hall', address: '1 Main St Level 2', suburb: 'Newtown' },
+      });
+      await as(owner)
+        .patch(`${events()}/${event.id}`, { version: 1, name: '\u202E\u200B' })
+        .expect(422);
+      const ticket = await as(owner)
+        .post(`${events()}/${event.id}/ticket-types`, {
+          name: 'General\u202E admission',
+          capacity: 10,
+          maxPerOrder: 2,
+          priceCents: 0,
+          salesStart: { kind: 'on_publish' },
+          salesEnd: { kind: 'event_start' },
+        })
+        .expect(201);
+      expect(ticket.body.ticketTypes.map((t: { name: string }) => t.name)).toContain(
+        'General admission',
+      );
+    } finally {
+      places.get = originalGet;
+    }
+  });
+
+  it('resolves a place venue on the server and refuses an unknown place id', async () => {
     const event = await draft();
     const { body } = await as(owner)
       .patch(`${events()}/${event.id}`, {
-        version: 0,
-        name: 'Free gig ‮gpj.exe​\nnow',
+        version: event.version,
         venue: {
           kind: 'place',
-          placeId: 'p1',
-          name: 'The⁦ Hall',
-          address: '1 Main St\r\nLevel 2',
-          suburb: 'Newtown‍',
+          placeId: 'fake-fitzroy-town-hall',
+          name: 'Spoofed Name',
+          address: '1 Fake St',
+          suburb: 'Nowhere',
           city: 'sydney',
-          lat: -33.89,
-          lng: 151.18,
+          lat: 0,
+          lng: 0,
         },
       })
       .expect(200);
-    expect(body).toMatchObject({
-      name: 'Free gig gpj.exe now',
-      venue: { name: 'The Hall', address: '1 Main St Level 2', suburb: 'Newtown' },
-    });
-    await as(owner).patch(`${events()}/${event.id}`, { version: 1, name: '‮​' }).expect(422);
-    const ticket = await as(owner)
-      .post(`${events()}/${event.id}/ticket-types`, {
-        name: 'General‮ admission',
-        capacity: 10,
-        maxPerOrder: 2,
-        priceCents: 0,
-        salesStart: { kind: 'on_publish' },
-        salesEnd: { kind: 'event_start' },
+    expect(body.venue).toEqual(melbournePlace);
+
+    const unknown = await as(owner)
+      .patch(`${events()}/${event.id}`, {
+        version: body.version,
+        venue: { ...sydneyPlace, placeId: 'no-such-place' },
       })
-      .expect(201);
-    expect(ticket.body.ticketTypes.map((t: { name: string }) => t.name)).toContain(
-      'General admission',
-    );
+      .expect(422);
+    expect(unknown.body).toMatchObject({ code: 'unknown_place', field: 'venue' });
+
+    const after = await as(owner).get(`${events()}/${event.id}`).expect(200);
+    expect(after.body.venue).toEqual(melbournePlace);
   });
 
   it('refuses a stale autosave and returns the current draft', async () => {
@@ -507,9 +572,7 @@ describe('events and ticket types API', () => {
         [past.id],
       ),
     );
-    const melbourne = await publish(
-      await publishable({ venue: { ...sydneyPlace, city: 'melbourne', suburb: 'Fitzroy' } }),
-    );
+    const melbourne = await publish(await publishable({ venue: melbournePlace }));
 
     const sydney = await browseAll({ city: 'sydney' });
     expect(sydney).toContain(upcoming.slug);
@@ -556,9 +619,7 @@ describe('events and ticket types API', () => {
         endsAt: new Date(Date.now() + 10 * DAY + HOUR).toISOString(),
       }),
     );
-    const melbourne = await publish(
-      await publishable({ venue: { ...sydneyPlace, city: 'melbourne', suburb: 'Fitzroy' } }),
-    );
+    const melbourne = await publish(await publishable({ venue: melbournePlace }));
 
     const sydney = await browseAll({ city: 'sydney' });
     expect(sydney).toEqual(expect.arrayContaining([soon.slug, later.slug]));
@@ -817,6 +878,54 @@ describe('events and ticket types API', () => {
     expect(refused.body).toMatchObject({ code: 'required_when_live', field: 'startsAt' });
   });
 
+  it('refuses moving a live event into the past, while letting an already-started live event be edited', async () => {
+    const live = await publish(await publishable());
+    await withOwner((client) =>
+      client.query(
+        "update catalogue.events set published_at = now() - interval '2 days' where id = $1",
+        [live.id],
+      ),
+    );
+    const pastStart = new Date(Date.now() - HOUR).toISOString();
+    const pastEnd = new Date(Date.now() + HOUR).toISOString();
+    const refused = await as(owner)
+      .patch(`${events()}/${live.id}`, {
+        version: live.version,
+        startsAt: pastStart,
+        endsAt: pastEnd,
+      })
+      .expect(422);
+    expect(refused.body).toMatchObject({ code: 'starts_in_past', field: 'startsAt' });
+    const unchanged = await as(owner).get(`${events()}/${live.id}`).expect(200);
+    expect(unchanged.body.startsAt).toBe(live.startsAt);
+
+    // Once the live event has started, other fields can still be edited (and sending the same
+    // startsAt does not trip the guard), while moving startsAt to another past time is refused.
+    const startedAt = new Date(Date.now() - 30 * 60 * 1000);
+    await withOwner((client) =>
+      client.query('update catalogue.events set starts_at = $2 where id = $1', [
+        live.id,
+        startedAt,
+      ]),
+    );
+    const edited = await as(owner)
+      .patch(`${events()}/${live.id}`, {
+        version: live.version,
+        startsAt: startedAt.toISOString(),
+        about: 'Doors are open.',
+      })
+      .expect(200);
+    expect(edited.body.about).toBe('Doors are open.');
+
+    const movedEarlier = await as(owner)
+      .patch(`${events()}/${live.id}`, {
+        version: edited.body.version,
+        startsAt: new Date(Date.now() - HOUR).toISOString(),
+      })
+      .expect(422);
+    expect(movedEarlier.body).toMatchObject({ code: 'starts_in_past', field: 'startsAt' });
+  });
+
   it("publishes with no contact email, never filling it from a member's email", async () => {
     const event = await publishable({ contactEmail: null });
     const { body: live } = await as(admin).post(`${events()}/${event.id}/publish`).expect(200);
@@ -846,13 +955,52 @@ describe('events and ticket types API', () => {
   });
 
   it('never puts the online link or contact email in the public projection', async () => {
+    const startsAt = new Date(Date.now() + 5 * 60_000).toISOString();
+    const endsAt = new Date(Date.now() + 65 * 60_000).toISOString();
     const live = await publish(
-      await publishable({ venue: { kind: 'online', url: 'https://meet.example.test/room-42' } }),
+      await publishable({
+        startsAt,
+        endsAt,
+        venue: { kind: 'online', url: 'https://meet.example.test/room-42' },
+      }),
     );
     const { body } = await anon().get(`/public/events/${live.slug}`).expect(200);
     expect(body).not.toHaveProperty('contactEmail');
     expect(body).not.toHaveProperty('organisationId');
     expect(body.venue).toEqual({ kind: 'online' });
+
+    // Even the SQL rows read by the public repository methods omit organisation_id, contact_email
+    // and the online venue's url, rather than reading them and stripping them in memory.
+    const repo = app.get(EventsRepository);
+    const pool = new pg.Pool({ connectionString: appDatabaseUrl() });
+    try {
+      const client = await pool.connect();
+      try {
+        const rawEvent = await repo.findPublished(client, live.slug!);
+        expect(rawEvent).not.toBeNull();
+        expect(rawEvent).not.toHaveProperty('organisation_id');
+        expect(rawEvent).not.toHaveProperty('contact_email');
+        expect(rawEvent!.venue).toEqual({ kind: 'online' });
+
+        const rawBrowse = await repo.browse(client, {
+          city: 'sydney',
+          timeZone: 'Australia/Sydney',
+          limit: 50,
+          now: new Date(),
+        });
+        const row = rawBrowse.find((r) => r.slug === live.slug);
+        expect(row).toBeDefined();
+        expect(row).not.toHaveProperty('organisation_id');
+        expect(row).not.toHaveProperty('contact_email');
+        expect(row).not.toHaveProperty('venue');
+        expect(JSON.stringify({ rawEvent, row })).not.toContain('room-42');
+        expect(JSON.stringify({ rawEvent, row })).not.toContain('hello@example.test');
+      } finally {
+        client.release();
+      }
+    } finally {
+      await pool.end();
+    }
   });
 
   it('looks up venues for signed-in organisers only', async () => {

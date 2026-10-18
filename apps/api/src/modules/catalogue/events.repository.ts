@@ -4,6 +4,7 @@ import type {
   CancellationPolicy,
   EventStatus,
   EventTemplate,
+  PublicVenueDto,
   SalesEnd,
   SalesStart,
   TicketTypeInput,
@@ -39,6 +40,33 @@ export interface EventRow {
   updated_at: Date;
 }
 
+/**
+ * Columns read for the public event page. Private columns (organisation_id, contact_email and an
+ * online event's url) stay inside Postgres and are never projected into the api process.
+ */
+export interface PublicEventRow {
+  id: string;
+  slug: string;
+  name: string;
+  starts_at: Date;
+  ends_at: Date;
+  published_at: Date;
+  time_zone: string;
+  template: EventTemplate;
+  organiser_name: string | null;
+  venue: PublicVenueDto;
+  about: string;
+  accessibility_features: AccessibilityFeature[];
+  accessibility_notes: string;
+  cancellation_policy: CancellationPolicy;
+  has_contact_email: boolean;
+  banner_key: string | null;
+  banner_width: number | null;
+  banner_height: number | null;
+  banner_focus_x: number;
+  banner_focus_y: number;
+}
+
 export interface TicketTypeRow {
   id: string;
   event_id: string;
@@ -71,7 +99,22 @@ export interface EventChanges {
   last_step?: WizardStep;
 }
 
-export interface BrowseRow extends EventRow {
+/** Columns read for browse cards. Private and detail-only columns are omitted in SQL. */
+export interface BrowseRow {
+  id: string;
+  slug: string;
+  name: string;
+  starts_at: Date;
+  time_zone: string;
+  template: EventTemplate;
+  suburb: string | null;
+  venue_name: string | null;
+  online: boolean;
+  banner_key: string | null;
+  banner_width: number | null;
+  banner_height: number | null;
+  banner_focus_x: number;
+  banner_focus_y: number;
   /** catalogue.from_price_cents(): the "from" rule, before fees. */
   price_from_cents: number;
 }
@@ -80,6 +123,13 @@ const EVENT_COLUMNS = `id, organisation_id, status, version, template, name, sta
   time_zone, venue, about, accessibility_features, accessibility_notes, cancellation_policy,
   contact_email, banner_key, banner_width, banner_height, banner_focus_x, banner_focus_y,
   last_step, slug, published_at, updated_at`;
+
+const PUBLIC_EVENT_COLUMNS = `id, slug, name, starts_at, ends_at, published_at, time_zone,
+  template, catalogue.organiser_name(organisation_id) as organiser_name,
+  case when venue ->> 'kind' = 'online' then '{"kind":"online"}'::jsonb else venue end as venue,
+  about, accessibility_features, accessibility_notes, cancellation_policy,
+  (contact_email is not null) as has_contact_email,
+  banner_key, banner_width, banner_height, banner_focus_x, banner_focus_y`;
 
 const TICKET_TYPE_COLUMNS = `t.id, t.event_id, t.name, t.capacity, t.max_per_order, t.price_cents,
   t.sales_start, t.sales_end, i.sold, i.held`;
@@ -252,9 +302,9 @@ export class EventsRepository {
 
   // ---------- public reads: published events only, through the events_public policy ----------
 
-  async findPublished(tx: pg.PoolClient, slug: string): Promise<EventRow | null> {
-    const { rows } = await tx.query<EventRow>(
-      `select ${EVENT_COLUMNS} from catalogue.events where slug = $1 and status = 'published'`,
+  async findPublished(tx: pg.PoolClient, slug: string): Promise<PublicEventRow | null> {
+    const { rows } = await tx.query<PublicEventRow>(
+      `select ${PUBLIC_EVENT_COLUMNS} from catalogue.events where slug = $1 and status = 'published'`,
       [slug],
     );
     return rows[0] ?? null;
@@ -267,14 +317,6 @@ export class EventsRepository {
       [eventId, now],
     );
     return rows[0]!.cents;
-  }
-
-  async organiserName(tx: pg.PoolClient, organisationId: string): Promise<string | null> {
-    const { rows } = await tx.query<{ name: string | null }>(
-      'select catalogue.organiser_name($1) as name',
-      [organisationId],
-    );
-    return rows[0]?.name ?? null;
   }
 
   /**
@@ -321,9 +363,11 @@ export class EventsRepository {
          from days
        ),
        priced as (
-         select ${EVENT_COLUMNS.split(',')
-           .map((c) => `e.${c.trim()}`)
-           .join(', ')},
+         select e.id, e.slug, e.name, e.starts_at, e.time_zone, e.template,
+                case when e.venue ->> 'kind' = 'place' then e.venue ->> 'suburb' end as suburb,
+                case when e.venue ->> 'kind' = 'place' then e.venue ->> 'name' end as venue_name,
+                (e.venue ->> 'kind' = 'online') as online,
+                e.banner_key, e.banner_width, e.banner_height, e.banner_focus_x, e.banner_focus_y,
                 catalogue.from_price_cents(e.id, $8::timestamptz) as price_from_cents
          from catalogue.events e
          where e.status = 'published' and (e.city = $1 or e.city is null)
