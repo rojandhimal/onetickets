@@ -26,8 +26,20 @@ Everything runs on your own machine with Docker for now. There is no shared stag
 staging and production on AWS come later (see [environments](docs/environments.md)).
 
 To just try it, install Docker Desktop and run `docker compose up --build`, then open
-http://localhost:3000 (emails land in the test inbox at http://localhost:8025). Details, and how to
-share a demo link, are in [docs/local-development.md](docs/local-development.md#run-the-whole-app).
+[OneTickets](http://localhost:3000).
+
+**Local sign-in emails go to Mailpit, the test inbox, not your personal email inbox.** To sign in
+with the Docker stack:
+
+1. Open [Sign in](http://localhost:3000/signin), enter an email address (for example,
+   `jo@example.test`) and select **Email me a sign-in link**.
+2. Open the [test inbox](http://localhost:8025) and find **Your OneTickets sign-in link** for that
+   address.
+3. Open the link in that message within 15 minutes. Each link works once; request a fresh one if
+   it has expired or already been used.
+
+Keep Docker running while using the app and test inbox. Details, and how to share a demo link,
+are in [docs/local-development.md](docs/local-development.md#run-the-whole-app).
 
 To develop, you need Node 22 (see `.nvmrc`), pnpm 10 (`corepack enable`) and Docker Desktop.
 
