@@ -55,7 +55,9 @@ event_not_found`, the same as one that does not exist.
   one from a member's sign-in email. It is shown only to ticket holders, never on the public page
   (which has `hasContactEmail`). Publish will also require it (`contact_email` in `missing`) once the
   wizard has the field (SEC-20).
-- **A live event** keeps its name, times, venue and at least one ticket type.
+- **A live event** keeps its name, times, venue and at least one ticket type. Editing a live event
+  may not move `startsAt` into the past (`422 starts_in_past`, `field: 'startsAt'`); an
+  already-started live event can still edit other fields when `startsAt` is omitted or unchanged.
 
 ## Venue lookup
 
@@ -67,7 +69,10 @@ list of real venues for now (`PLACES_PROVIDER=fake`); a real one comes later beh
 | `GET /places/search`   | `q` (2 to 100 chars), `city` | 200 `PlaceSearchResponse`  |
 | `GET /places/:placeId` | none                         | 200 `PlaceDto` (a `place`) |
 
-Put the returned `PlaceDto` straight into the draft's `venue`.
+Put the returned `PlaceDto` straight into the draft's `venue`. When saving a `place` venue, the api
+resolves `placeId` through `PlacesProvider.get(placeId)` on the server and stores the provider's
+canonical `name`, `address`, `suburb`, `city`, `lat` and `lng` (cleaned through `toPlainLine`),
+ignoring any client-supplied fields; an unknown `placeId` gets `422 unknown_place` (`field: 'venue'`).
 
 ## Public routes
 
@@ -80,7 +85,9 @@ No session needed. Only published events are visible; drafts are `404 event_not_
 | `GET /public/banners/:key` | none                                       | 200 WebP image       |
 
 - **Private details stay private.** The public event has no organisation id, no contact email
-  (only `hasContactEmail`) and, for online events, no link: those are for ticket holders.
+  (only `hasContactEmail`) and, for online events, no link: those are for ticket holders. The public
+  SQL queries (`findPublished` and `browse`) project only public columns and strip online `url` in
+  SQL before rows leave Postgres.
 - **Browse** lists events that haven't started yet, soonest first, 20 a page by default (up to
   50), with `nextCursor` for the next page. `city` defaults to `sydney`; online events show in
   every city. `when` follows design's handoff (S1-5): wall-clock times in the city's time zone,
@@ -126,6 +133,8 @@ No session needed. Only published events are visible; drafts are `404 event_not_
 | 415    | `unsupported_image`      | Banner is not a readable JPEG, PNG or WebP                           |
 | 422    | `invalid_request`        | Validation failed; `field` names the first bad field                 |
 | 422    | `ends_before_start`      | The end would be at or before the start                              |
+| 422    | `starts_in_past`         | Moving `startsAt` of a live event into the past                      |
+| 422    | `unknown_place`          | `placeId` on a `place` venue was not found in `PlacesProvider`       |
 | 422    | `sales_end_before_start` | A ticket type would stop selling before it starts                    |
 | 422    | `paid_tickets_disabled`  | A price above 0 while the `paid_tickets` flag is off                 |
 | 422    | `not_ready`              | Publishing with something missing; see `missing`                     |

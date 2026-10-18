@@ -2,6 +2,16 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-18
+
+- **Done:** Built the remaining BE-1 catalogue hardening items on `backend/be-1-catalogue-hardening`:
+  - Patching a `published` event now refuses moving `startsAt` into the past (`startsAt <= now`) with `422 starts_in_past` (`field: 'startsAt'`), while still allowing edits to other fields on an already-started live event when `startsAt` is unchanged or omitted.
+  - Patching an event with `{ kind: 'place', placeId, ... }` now resolves the venue from `PlacesProvider.get(placeId)` on the server, stores the provider's canonical `name`, `address`, `suburb`, `city`, `lat`, and `lng` (cleaned through `toPlainLine`), and refuses unknown `placeId`s with `422 unknown_place` (`field: 'venue'`).
+  - Public repository queries (`EventsRepository.findPublished` and `EventsRepository.browse`) now project only public columns in SQL (`PUBLIC_EVENT_COLUMNS` and explicit browse card columns), computing `catalogue.organiser_name(organisation_id) as organiser_name`, `(contact_email is not null) as has_contact_email`, and stripping an online venue's `url` in SQL so `organisation_id`, `contact_email`, and online `url` never enter the API process on public reads.
+  - Added integration tests for all three items (verified by mutation checks) and updated `docs/backend/catalogue.md` and `docs/api/events.md`.
+- **Next:** QA and Security reviews on the BE-1 hardening PR, then Sprint 2 free ticket checkout (`S2-1`).
+- **Blocked:** nothing. The S3 banner adapter (`S1-3`) waits on DevOps' bucket (`DEV-3`).
+
 ## 2026-10-16 (evening)
 
 - **Done:** QA and Security passed [#34](https://github.com/rojandhimal/onetickets/pull/34) at c5acdb3, and all five checks are green there. I marked it ready for review, and PM has queued it for tegs.
