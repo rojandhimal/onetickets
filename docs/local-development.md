@@ -176,6 +176,14 @@ transaction.
 
 ### Troubleshooting
 
+**Sign-in says "Check your email", but nothing arrives in your personal inbox.** With
+`docker compose up --build`, emails stay in the local [Mailpit test inbox](http://localhost:8025).
+Open the message addressed to the email you entered and follow its sign-in link within 15 minutes.
+Each link works once; request a fresh link at [Sign in](http://localhost:3000/signin) if needed.
+Keep the Docker stack running. When running the API from source, the default
+`MAIL_TRANSPORT=console` prints emails in the API terminal instead; see
+[First-time setup](#first-time-setup) for the SMTP option.
+
 **`DATABASE_URL is not set` when starting the api.** Start it with `--env-file=apps/api/.env` as
 above; the api does not load `.env` by itself.
 
