@@ -8,6 +8,7 @@ const ready = {
   endsAt: new Date('2026-11-14T11:00:00Z'),
   hasVenue: true,
   ticketTypeCount: 1,
+  contactEmail: 'host@example.test',
 };
 
 describe('publish checklist', () => {
@@ -18,10 +19,21 @@ describe('publish checklist', () => {
   it('lists everything missing, in checklist order', () => {
     expect(
       missingForPublish(
-        { name: null, startsAt: null, endsAt: null, hasVenue: false, ticketTypeCount: 0 },
+        {
+          name: null,
+          startsAt: null,
+          endsAt: null,
+          hasVenue: false,
+          ticketTypeCount: 0,
+          contactEmail: null,
+        },
         now,
       ),
-    ).toEqual(['name', 'date_time', 'venue', 'ticket_type']);
+    ).toEqual(['name', 'date_time', 'venue', 'ticket_type', 'contact_email']);
+  });
+
+  it('requires a saved contact email', () => {
+    expect(missingForPublish({ ...ready, contactEmail: null }, now)).toEqual(['contact_email']);
   });
 
   it('needs both times, in order, and in the future', () => {

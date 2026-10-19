@@ -67,10 +67,12 @@ function serverFields(server: EventDraftDto) {
 export function Wizard({
   initialEvent,
   userId,
+  userEmail = '',
   ticketStore: ticketStoreOption,
 }: {
   initialEvent: EventDraftDto;
   userId: string;
+  userEmail?: string;
   ticketStore?: TicketEditStore;
 }) {
   const router = useRouter();
@@ -79,6 +81,11 @@ export function Wizard({
   const step: WizardStep = isWizardStep(segment) ? segment : 'basics';
 
   const [event, setEvent] = useState(initialEvent);
+  const [savedContactEmail, setSavedContactEmail] = useState(initialEvent.contactEmail);
+  const contact = useRef({ desired: initialEvent.contactEmail, saved: initialEvent.contactEmail });
+  const prefillContact = useRef(true);
+  const detailsCommitRef = useRef<(() => boolean) | null>(null);
+  const focusContact = useRef(false);
   const [restored, setRestored] = useState(0);
   const [serverErrors, setServerErrors] = useState<ServerErrors>({});
   const [ticketSaveState, setTicketSaveState] = useState<TicketSaveState>('saved');
@@ -114,8 +121,16 @@ export function Wizard({
   const { saveState, change, flush, accept } = useAutosave({
     event: initialEvent,
     userId,
-    onSaved: (server) => setEvent((prev) => ({ ...prev, ...serverFields(server) })),
+    onSaved: (server) => {
+      contact.current.saved = server.contactEmail;
+      setSavedContactEmail(server.contactEmail);
+      setEvent((prev) => ({ ...prev, ...serverFields(server) }));
+    },
     onRestore: (changes) => {
+      if ('contactEmail' in changes) {
+        contact.current.desired = changes.contactEmail ?? null;
+        prefillContact.current = false;
+      }
       setEvent((prev) => applyChanges(prev, changes));
       // Remount the step so its fields show what was kept on this device.
       setRestored((n) => n + 1);
@@ -129,6 +144,10 @@ export function Wizard({
 
   const update = useCallback(
     (changes: PendingChanges) => {
+      if ('contactEmail' in changes) {
+        contact.current.desired = changes.contactEmail ?? null;
+        prefillContact.current = false;
+      }
       setEvent((prev) => applyChanges(prev, changes));
       setServerErrors((prev) => {
         const touched = Object.keys(changes).filter((k) => k in prev);
@@ -159,8 +178,11 @@ export function Wizard({
   useEffect(() => {
     if (firstStep.current === step) return;
     firstStep.current = '' as WizardStep;
-    headingRef.current?.focus();
     window.scrollTo(0, 0);
+    if (focusContact.current && step === 'details') {
+      document.getElementById('ev-contact')?.focus();
+      focusContact.current = false;
+    } else headingRef.current?.focus();
   }, [step]);
 
   const eventRef = useRef(event);
@@ -191,25 +213,33 @@ export function Wizard({
     await ticketFlushRef.current?.();
     await syncTickets();
     await flush();
+    // Never publish with an old saved address while its replacement is offline or refused.
+    return contact.current.desired === contact.current.saved;
   }, [flush, settle, syncTickets]);
 
   /** Step changes stay on this page so typing in flight is never lost. */
   const go = useCallback(
-    (to: WizardStep) => (e?: MouseEvent) => {
-      e?.preventDefault();
-      // A ticket edit with a mistake can't be saved, so stay and point at it rather than drop it.
-      const mistake =
-        step === 'tickets' && ticketSaveState === 'refused'
-          ? document.querySelector<HTMLElement>('main [aria-invalid="true"]')
-          : null;
-      if (mistake) {
-        mistake.focus();
-        return;
-      }
-      void ticketFlushRef.current?.();
-      void settle().then(() => flush());
-      window.history.pushState(null, '', stepHref(to, event.id));
-    },
+    (to: WizardStep, contactField = false) =>
+      (e?: MouseEvent) => {
+        e?.preventDefault();
+        if (step === 'details' && to === 'review' && !detailsCommitRef.current?.()) {
+          document.getElementById('ev-contact')?.focus();
+          return;
+        }
+        focusContact.current = contactField;
+        // A ticket edit with a mistake can't be saved, so stay and point at it rather than drop it.
+        const mistake =
+          step === 'tickets' && ticketSaveState === 'refused'
+            ? document.querySelector<HTMLElement>('main [aria-invalid="true"]')
+            : null;
+        if (mistake) {
+          mistake.focus();
+          return;
+        }
+        void ticketFlushRef.current?.();
+        void settle().then(() => flush());
+        window.history.pushState(null, '', stepHref(to, event.id));
+      },
     [event.id, flush, settle, step, ticketSaveState],
   );
 
@@ -281,6 +311,8 @@ export function Wizard({
           headingRef={headingRef}
           serverErrors={serverErrors}
           onLocalError={localError}
+          defaultEmail={prefillContact.current ? userEmail : ''}
+          commitRef={detailsCommitRef}
           onChange={update}
           onBlur={() => void flush()}
         />
@@ -289,10 +321,10 @@ export function Wizard({
     case 'review':
       body = (
         <ReviewStep
-          event={event}
+          event={{ ...event, contactEmail: savedContactEmail }}
           headingRef={headingRef}
           flush={flushAll}
-          pending={lookingUp > 0 || ticketsPending}
+          pending={lookingUp > 0 || ticketsPending || contact.current.desired !== savedContactEmail}
           goTo={go}
           onPublished={setPublished}
         />
@@ -334,7 +366,8 @@ export function Wizard({
           <ol aria-label="Steps" className={styles.steps}>
             {WIZARD_STEPS.map((s, i) => {
               const current = s === step;
-              const done = !current && isStepComplete(s, event);
+              const done =
+                !current && isStepComplete(s, { ...event, contactEmail: savedContactEmail });
               const label = `${i + 1} ${STEP_LABELS[s]}`;
               return (
                 <li

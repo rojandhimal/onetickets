@@ -29,10 +29,10 @@ export function ReviewStep({
 }: {
   event: EventDraftDto;
   headingRef: RefObject<HTMLHeadingElement | null>;
-  flush: () => Promise<void>;
+  flush: () => Promise<void | boolean>;
   /** A venue lookup or ticket edits haven't reached `event` yet, so it may lack what they add. */
   pending?: boolean;
-  goTo: (step: WizardStep) => (e?: MouseEvent) => void;
+  goTo: (step: WizardStep, contactField?: boolean) => (e?: MouseEvent) => void;
   onPublished: (event: EventDraftDto) => void;
 }) {
   const [blocked, setBlocked] = useState<{ missing: Requirement[]; fromApi: boolean } | null>(null);
@@ -72,7 +72,11 @@ export function ReviewStep({
       return;
     }
     setPublishing(true);
-    await flush();
+    if ((await flush()) === false) {
+      setPublishing(false);
+      setFailed(true);
+      return;
+    }
     const result = await publishEvent(event);
     setPublishing(false);
     if (result.ok) onPublished(result.event);
@@ -122,7 +126,8 @@ export function ReviewStep({
           <h2 id="need-h">Needed to publish</h2>
           <ul ref={listRef} tabIndex={-1} className={styles.card} aria-labelledby="need-h">
             {rows.map((row) => {
-              const action = row.done ? 'Edit' : 'Add';
+              const isContact = row.requirement === 'contact_email';
+              const action = row.done ? (isContact ? 'Change' : 'Edit') : 'Add';
               return (
                 <li key={row.requirement} className={styles.row}>
                   {row.done ? (
@@ -140,12 +145,14 @@ export function ReviewStep({
                       {row.label}
                     </span>
                     <span className={`${styles.rowValue} ${row.done ? '' : styles.rowMissing}`}>
-                      {row.value}
+                      {isContact && row.done
+                        ? `Replies from attendees go to ${row.value}`
+                        : row.value}
                     </span>
                   </span>
                   <a
                     href={stepHref(row.step, event.id)}
-                    onClick={goTo(row.step)}
+                    onClick={goTo(row.step, isContact)}
                     className={styles.rowAction}
                     aria-label={`${action} ${row.label.toLowerCase()}`}
                   >

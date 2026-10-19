@@ -12,7 +12,12 @@ import {
 
 describe('wizard model', () => {
   it('lists what a new draft still needs, in checklist order', () => {
-    expect(missingRequirements(draftEvent())).toEqual(['name', 'date_time', 'venue']);
+    expect(missingRequirements(draftEvent())).toEqual([
+      'name',
+      'date_time',
+      'venue',
+      'contact_email',
+    ]);
     expect(missingRequirements(readyEvent())).toEqual([]);
     expect(missingRequirements(readyEvent({ ticketTypes: [] }))).toEqual(['ticket_type']);
     expect(missingRequirements(readyEvent({ name: '   ' }))).toEqual(['name']);
@@ -37,6 +42,7 @@ describe('wizard model', () => {
       ['Date and time', 'Sat 14 Nov, 10:00 am to 1:00 pm', true],
       ['Venue', 'Not added yet', false],
       ['At least one ticket type', 'General admission · Free · 40 tickets', true],
+      ['Contact email for attendees', 'bookings@example.test', true],
     ]);
     expect(
       publishChecklist(readyEvent({ venue: { kind: 'online', url: 'https://x.test' } }))[2],
@@ -48,7 +54,10 @@ describe('wizard model', () => {
     expect(isStepComplete('basics', readyEvent())).toBe(true);
     expect(isStepComplete('tickets', draftEvent())).toBe(true);
     expect(isStepComplete('details', draftEvent())).toBe(false);
-    expect(isStepComplete('details', draftEvent({ about: 'Bring an apron' }))).toBe(true);
+    expect(isStepComplete('details', draftEvent({ about: 'Bring an apron' }))).toBe(false);
+    expect(isStepComplete('details', readyEvent())).toBe(true);
+    expect(missingRequirements(readyEvent({ contactEmail: null }))).toEqual(['contact_email']);
+    expect(missingMessage(['contact_email'])).toBe('Add a contact email to publish.');
   });
 
   it('moves between steps', () => {
