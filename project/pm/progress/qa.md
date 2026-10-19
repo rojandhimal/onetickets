@@ -7,8 +7,10 @@ Newest first. Format: date, Done, Next, Blocked.
 - **Done:**
   - Reviewed PR #46 (BE-1: catalogue backend hardening) at ddb0b28: pass. Verified startsAt validation, PlacesProvider resolution (422 unknown_place), public repository queries selecting only public SQL columns and stripping online URLs in SQL, integration tests, and docs. Posted verdict on PR #46.
   - Reviewed PR #47 (Docs: local email sign-in & Mailpit inbox) at a1888ad: pass. Verified port :8025, /signin flow, 15-minute link expiry, example.test domain, and troubleshooting. Posted verdict on PR #47.
+  - Reviewed PR #48 (SEC-20 part 2: explicit attendee contact email before publish) at 5b7d411: pass. Verified contact email publish requirement, visible prefill on Details, focus handling on Change/Add from Review, no silent draft backfills, and no contact email leakage on public routes. Posted verdict on PR #48.
   - Completed Sprint 1 integrated acceptance pass on `main` at 8655fc8 across all 5 stories (S1-1, S1-2, S1-3, S1-4, S1-5). Wrote [project/qa/sprint-1-acceptance.md](/project/qa/sprint-1-acceptance.md) accepting Sprint 1 with staging deferrals recorded.
-- **Next:** Sprint 2 (Free tickets: holds, checkout, signed QR tickets, attendee portal) reviews as PRs open.
+  - Prepared Sprint 2 QA checklist in [project/qa/sprint-2-checklist.md](/project/qa/sprint-2-checklist.md) covering S2-1 (holds and inventory), S2-2 (one-screen checkout), S2-3 (signed QR tickets), S2-4 (attendee portal/release), and prerequisites (SEC-14 site-wide CSP, SEC-20 attendee contact email).
+- **Next:** Sprint 2 reviews (S2-1 holds, S2-2 free checkout, S2-3 QR signing, S2-4 My tickets) as PRs open.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 
 ## 16 Oct 2026 (late afternoon: #36, #37, #38, #39)
