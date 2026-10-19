@@ -36,6 +36,8 @@ const count = new Intl.NumberFormat('en-AU');
 /** Artboard 8b: About, Accessibility, Cancellations and the attendee contact email. */
 export function DetailsStep({
   event,
+  defaultEmail,
+  commitRef,
   headingRef,
   serverErrors = {},
   onChange,
@@ -43,6 +45,8 @@ export function DetailsStep({
   onLocalError,
 }: {
   event: EventDraftDto;
+  defaultEmail: string;
+  commitRef: RefObject<(() => boolean) | null>;
   headingRef: RefObject<HTMLHeadingElement | null>;
   serverErrors?: ServerErrors;
   /** A mistake caught here and not sent, so the header doesn't say everything is saved. */
@@ -54,7 +58,7 @@ export function DetailsStep({
   const [features, setFeatures] = useState<AccessibilityFeature[]>(event.accessibility.features);
   const [notes, setNotes] = useState(event.accessibility.notes);
   const [policy, setPolicy] = useState(event.cancellationPolicy);
-  const [email, setEmail] = useState(event.contactEmail ?? '');
+  const [email, setEmail] = useState(event.contactEmail ?? defaultEmail);
   const [emailError, setEmailError] = useState<string | null>(null);
 
   function changeFeature(feature: AccessibilityFeature, on: boolean) {
@@ -95,7 +99,16 @@ export function DetailsStep({
     onLocalError?.('contactEmail', error);
     if (valid) onChange({ contactEmail: trimmed ? trimmed.toLowerCase() : null });
     onBlur();
+    return valid;
   }
+
+  // Next must commit even if the prefilled field was never focused.
+  useEffect(() => {
+    commitRef.current = checkEmail;
+    return () => {
+      commitRef.current = null;
+    };
+  });
 
   // Leaving the step drops the half-typed address; the saved one shows again on return.
   useEffect(() => () => onLocalError?.('contactEmail', null), [onLocalError]);
@@ -110,7 +123,9 @@ export function DetailsStep({
         <h1 ref={headingRef} tabIndex={-1}>
           Tell people more
         </h1>
-        <span className={styles.lede}>All optional, but events with these get more bookings.</span>
+        <span className={styles.lede}>
+          Add a contact email. The rest is optional, but events with these get more bookings.
+        </span>
       </div>
 
       <div className={styles.field}>
@@ -230,7 +245,9 @@ export function DetailsStep({
         />
         <FieldError id="ev-contact-error" message={shownEmailError} />
         <span id="ev-contact-hint" className={styles.hint}>
-          Only shown to people with a ticket.
+          {email.trim()
+            ? 'Only shown to people with a ticket. Their replies to booking emails come here.'
+            : 'Needed to publish, so people can reply to booking emails.'}
         </span>
       </div>
     </main>

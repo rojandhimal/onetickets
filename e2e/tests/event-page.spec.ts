@@ -22,7 +22,8 @@ test('a published event has a public page anyone can open', async ({ page, conte
   await expect(page.getByRole('banner').getByRole('status')).toHaveText('Draft saved');
 
   const draft = new URL(page.url()).searchParams.get('draft')!;
-  await page.goto(`/organiser/events/new/review?draft=${draft}`);
+  await page.goto(`/organiser/events/new/details?draft=${draft}`);
+  await page.getByRole('link', { name: 'Next: review' }).click();
   await page.getByRole('button', { name: 'Publish event' }).click();
   const eventLink = page.getByRole('link', { name: 'See your event page' });
   const path = await eventLink.getAttribute('href');

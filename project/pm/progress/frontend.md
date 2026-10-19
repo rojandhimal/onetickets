@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-18 (SEC-20 explicit attendee contact email)
+
+- **Done:** Continued feature development at tegs's request after verifying S1-5 merged in #44. Implemented the agreed SEC-20 part 2: visible editable viewer-email prefill, save on blur or Next, required contact checklist and focused Add/Change links, server-confirmed Review summary, and API publish refusal with `contact_email` in `missing`. A live event cannot clear its saved contact; existing empty records are not backfilled. Regression coverage includes clearing, mistyped/rejected/offline replacements, private public pages and both browser widths. Updated web and API docs. Format, lint, typecheck, 225 unit tests, 111 integration tests, production build and all 36 browser/axe/CSP checks pass at 375/1280 px; both Review layouts inspected. Integration and browser runs used separate disposable databases. The wizard remains behind `FEATURE_EVENT_WIZARD`; no infrastructure was applied.
+- **Next:** Independent QA, Security and ProductDesign review this feature; tegs merges after their verdicts and CI pass. BackendDev checks compatibility with the separate BE-1 PR #46, which edits other portions of the same service. Sprint 1 acceptance remains with QA; SEC-14 is still required before checkout ships.
+- **Blocked:** Required independent review verdicts pending; no product scope decision outstanding.
+
 ## 2026-10-17 (S1-5 browse upcoming events, #44)
 
 - **Done:**

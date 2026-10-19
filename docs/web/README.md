@@ -87,7 +87,7 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
    `POST /organisations/:orgId/events/:id/ticket-types`,
    `PATCH …/ticket-types/:typeId` and `DELETE …/ticket-types/:typeId`, each returning the refreshed
    event with its new `version` so wizard autosave stays in sync.
-3. **Details** (`DetailsStep.tsx`, artboard 8b), all optional:
+3. **Details** (`DetailsStep.tsx`, artboard 8b); contact email is required to publish:
    - **About this event**, up to 2,000 characters. It always starts empty. The template only sets
      the placeholder, a few questions to answer (`ABOUT_PROMPTS` in `src/lib/templates.ts`), so
      nothing the organiser didn't write is published as theirs.
@@ -97,13 +97,21 @@ wizard then lives on `/organiser/events/new/{step}?draft=…`:
      wording the event page uses.
    - **Contact email for attendees**. It is only for people with a ticket: the public event page
      and its api response carry `hasContactEmail`, never the address, and the page has no `mailto`.
-     A mistyped address shows "Enter an email address, like name@example.com" on blur and isn't
-     saved until it's fixed; the api runs its own check too.
+     An empty field visibly prefills the signed-in viewer's own email; an existing saved address
+     stays unchanged. The prefill is saved only on blur or Next, never just by opening a draft.
+     A mistyped address shows "Enter an email address, like name@example.com" on blur or Next and
+     isn't saved until fixed; Next focuses the mistake. Clearing it saves an empty draft value,
+     explains that it is needed to publish, and does not silently restore the prefill in this session.
+     The api validates the address and refuses publishing without a saved one (SEC-20).
 
    The two long fields show a count ("168 / 2,000") beside their hint. Screen readers hear "1,832
    characters left" through a polite live region once typing pauses, not on every key.
 
-4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type). The
+4. **Review**: the "Needed to publish" checklist (name, date and time, venue, a ticket type and
+   saved contact email). The contact row shows "Replies from attendees go to {email}" and Change;
+   Add/Change returns to Details with the email field focused. It uses the server-confirmed value,
+   and publishing waits for a pending contact save; a failed replacement cannot publish the old address.
+   The
    Publish button is never disabled; pressing it with something missing shows "Add … to publish.
    Everything else is ready." and moves focus to the checklist. While a venue lookup or ticket
    edits kept on the phone are still on their way, it sends them first and lets the api say what's

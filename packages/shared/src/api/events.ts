@@ -251,7 +251,13 @@ export interface EventListDto {
 }
 
 /** What publishing needs. `date_time` means both start and end, with the end after the start. */
-export const PUBLISH_REQUIREMENTS = ['name', 'date_time', 'venue', 'ticket_type'] as const;
+export const PUBLISH_REQUIREMENTS = [
+  'name',
+  'date_time',
+  'venue',
+  'ticket_type',
+  'contact_email',
+] as const;
 export type PublishRequirement = (typeof PUBLISH_REQUIREMENTS)[number];
 
 /** 422 body from publish when something needed is missing (code `not_ready`). */

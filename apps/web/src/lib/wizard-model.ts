@@ -43,6 +43,7 @@ export function missingRequirements(event: EventDraftDto): Requirement[] {
       !!event.startsAt && !!event.endsAt && Date.parse(event.endsAt) > Date.parse(event.startsAt),
     venue: !!event.venue,
     ticket_type: event.ticketTypes.length > 0,
+    contact_email: !!event.contactEmail?.trim(),
   };
   return PUBLISH_REQUIREMENTS.filter((r) => !has[r]);
 }
@@ -56,11 +57,7 @@ export function isStepComplete(step: WizardStep, event: EventDraftDto): boolean 
     case 'tickets':
       return !missing.includes('ticket_type');
     case 'details':
-      return (
-        !!event.about.trim() ||
-        event.accessibility.features.length > 0 ||
-        !!event.accessibility.notes.trim()
-      );
+      return !missing.includes('contact_email');
     case 'review':
       return false;
   }
@@ -71,6 +68,7 @@ const REQUIREMENT_NOUN: Record<Requirement, string> = {
   date_time: 'a date with start and end times',
   venue: 'a venue',
   ticket_type: 'a ticket type',
+  contact_email: 'a contact email',
 };
 
 /** "Add a venue to publish." or "Add an event name and a venue to publish." */
@@ -122,6 +120,12 @@ export function publishChecklist(event: EventDraftDto): ChecklistRow[] {
             .concat(event.ticketTypes.length > 1 ? ` and ${event.ticketTypes.length - 1} more` : '')
         : '',
       step: 'tickets',
+    },
+    {
+      requirement: 'contact_email',
+      label: 'Contact email for attendees',
+      value: event.contactEmail ?? '',
+      step: 'details',
     },
   ];
   return rows.map((row) => ({

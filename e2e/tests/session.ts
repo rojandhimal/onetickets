@@ -19,7 +19,7 @@ function signInLink(email: string): string | null {
 
 /** A fresh owner with an organisation, signed in on `page`, landing on /organiser. */
 export async function signUpOrganiser(page: Page, organiserName = 'E2E Print Club') {
-  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
   await page.goto('/signup');
   await page.getByLabel(/email/i).fill(email);
   await page.getByRole('button', { name: /email me/i }).click();

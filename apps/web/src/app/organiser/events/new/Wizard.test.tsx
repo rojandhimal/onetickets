@@ -179,7 +179,7 @@ describe('create-event wizard', () => {
       render(<Wizard initialEvent={readyEvent({ venue: null })} userId="u_1" />);
 
       expect(screen.getByRole('link', { name: 'Back to details' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /3 Details/ })).not.toHaveTextContent('completed');
+      expect(screen.getByRole('link', { name: /3 Details/ })).toHaveTextContent('completed');
       expect(screen.getByRole('link', { name: '1 Basics' })).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Publish event' }));
@@ -228,7 +228,7 @@ describe('create-event wizard', () => {
           new Promise<Response>((resolve) => {
             release = () => resolve(json(readyEvent().venue));
           }),
-        'PATCH /api/organisations/org_1/events/evt_1': () => json(draftEvent({ version: 2 })),
+        'PATCH /api/organisations/org_1/events/evt_1': () => json(readyEvent({ version: 2 })),
         'POST /api/organisations/org_1/events/evt_1/publish': () =>
           json(readyEvent({ status: 'published', slug: 'screen-printing' })),
       });
@@ -714,12 +714,14 @@ describe('details step', () => {
     render(<Wizard initialEvent={draftEvent()} userId="u_1" />);
 
     const email = screen.getByLabelText('Contact email for attendees');
-    expect(email).toHaveAccessibleDescription('Only shown to people with a ticket.');
+    expect(email).toHaveAccessibleDescription(
+      'Needed to publish, so people can reply to booking emails.',
+    );
     await user.type(email, 'jo@example');
     await user.tab();
     expect(email).toHaveAttribute('aria-invalid', 'true');
     expect(email).toHaveAccessibleDescription(
-      `${CONTACT_EMAIL_ERROR} Only shown to people with a ticket.`,
+      `${CONTACT_EMAIL_ERROR} Only shown to people with a ticket. Their replies to booking emails come here.`,
     );
 
     await user.type(email, '.test');
@@ -750,7 +752,7 @@ describe('details step', () => {
     await user.tab();
     await waitFor(() =>
       expect(email).toHaveAccessibleDescription(
-        'Use an email address you can receive mail at Only shown to people with a ticket.',
+        'Use an email address you can receive mail at Only shown to people with a ticket. Their replies to booking emails come here.',
       ),
     );
     expect(email).toHaveValue('jo@example.test');
@@ -953,4 +955,136 @@ describe('details and basics save state', () => {
     release();
     expect(await screen.findByText('Draft saved')).toBeInTheDocument();
   });
+});
+
+describe('explicit attendee contact email', () => {
+  function saves(initial = readyEvent({ lastStep: 'details', contactEmail: null })) {
+    let current = initial;
+    return api({
+      'PATCH /api/organisations/org_1/events/evt_1': (init) => {
+        const patch = JSON.parse(init!.body as string);
+        current = { ...current, ...patch, version: current.version + 1 };
+        return json(current);
+      },
+    });
+  }
+
+  it('shows the viewer email without saving it until Next, and focuses it from Review', async () => {
+    pathname = '/organiser/events/new/details';
+    const initial = readyEvent({ lastStep: 'details', contactEmail: null });
+    const fetch = saves(initial);
+    const user = userEvent.setup();
+    const view = render(
+      <Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />,
+    );
+    expect(screen.getByLabelText('Contact email for attendees')).toHaveValue('viewer@example.test');
+    expect(patches(fetch).some((p) => 'contactEmail' in p)).toBe(false);
+    await user.click(screen.getByRole('link', { name: 'Next: review' }));
+    await waitFor(() =>
+      expect(patches(fetch).some((p) => p.contactEmail === 'viewer@example.test')).toBe(true),
+    );
+    pathname = '/organiser/events/new/review';
+    view.rerender(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    expect(
+      await screen.findByText('Replies from attendees go to viewer@example.test'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Change contact email for attendees' }));
+    pathname = '/organiser/events/new/details';
+    view.rerender(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    expect(screen.getByLabelText('Contact email for attendees')).toHaveFocus();
+  });
+
+  it('keeps an explicitly saved address instead of replacing it with the viewer email', async () => {
+    pathname = '/organiser/events/new/details';
+    const initial = readyEvent({ lastStep: 'details', contactEmail: 'team@example.test' });
+    const fetch = saves(initial);
+    const user = userEvent.setup();
+    render(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    const field = screen.getByLabelText('Contact email for attendees');
+    expect(field).toHaveValue('team@example.test');
+    await user.clear(field);
+    await user.type(field, 'Other@Example.test');
+    await user.tab();
+    await waitFor(() =>
+      expect(patches(fetch).at(-1)).toMatchObject({ contactEmail: 'other@example.test' }),
+    );
+  });
+
+  it('keeps a cleared email empty when returning from Review and blocks publishing', async () => {
+    pathname = '/organiser/events/new/details';
+    const initial = readyEvent({ lastStep: 'details', contactEmail: 'team@example.test' });
+    const fetch = saves(initial);
+    const user = userEvent.setup();
+    const view = render(
+      <Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />,
+    );
+    await user.clear(screen.getByLabelText('Contact email for attendees'));
+    await user.click(screen.getByRole('link', { name: 'Next: review' }));
+    await waitFor(() => expect(patches(fetch).at(-1)).toMatchObject({ contactEmail: null }));
+    pathname = '/organiser/events/new/review';
+    view.rerender(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    await user.click(screen.getByRole('button', { name: 'Publish event' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Add a contact email to publish.');
+    expect(fetch.mock.calls.some(([url]) => url.endsWith('/publish'))).toBe(false);
+    await user.click(screen.getByRole('link', { name: 'Add contact email for attendees' }));
+    pathname = '/organiser/events/new/details';
+    view.rerender(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    expect(screen.getByLabelText('Contact email for attendees')).toHaveValue('');
+    expect(screen.getByLabelText('Contact email for attendees')).toHaveFocus();
+  });
+
+  it('stays on Details when Next would discard a mistyped replacement', async () => {
+    pathname = '/organiser/events/new/details';
+    const initial = readyEvent({ lastStep: 'details' });
+    const fetch = saves(initial);
+    const user = userEvent.setup();
+    const history = vi.spyOn(window.history, 'pushState');
+    render(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+    const field = screen.getByLabelText('Contact email for attendees');
+    await user.clear(field);
+    await user.type(field, 'mistyped');
+    await user.click(screen.getByRole('link', { name: 'Next: review' }));
+    expect(field).toHaveFocus();
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(history).not.toHaveBeenCalled();
+    expect(patches(fetch).some((p) => 'contactEmail' in p)).toBe(false);
+    history.mockRestore();
+  });
+
+  it.each(['offline', 'refused'])(
+    'does not publish with the old address when a replacement is %s',
+    async (failure) => {
+      pathname = '/organiser/events/new/details';
+      const initial = readyEvent({ lastStep: 'details' });
+      const fetch = api({
+        'PATCH /api/organisations/org_1/events/evt_1': () => {
+          if (failure === 'refused')
+            return json(
+              { code: 'invalid_request', message: 'Invalid email', field: 'contactEmail' },
+              422,
+            );
+          throw new TypeError('offline');
+        },
+      });
+      const user = userEvent.setup();
+      const view = render(
+        <Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />,
+      );
+      const field = screen.getByLabelText('Contact email for attendees');
+      await user.clear(field);
+      await user.type(field, 'replacement@example.test');
+      await user.click(screen.getByRole('link', { name: 'Next: review' }));
+      pathname = '/organiser/events/new/review';
+      view.rerender(<Wizard initialEvent={initial} userId="u_1" userEmail="viewer@example.test" />);
+      expect(
+        screen.getByText('Replies from attendees go to bookings@example.test'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('Replies from attendees go to replacement@example.test'),
+      ).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Publish event' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't publish");
+      expect(fetch.mock.calls.some(([url]) => url.endsWith('/publish'))).toBe(false);
+    },
+  );
 });

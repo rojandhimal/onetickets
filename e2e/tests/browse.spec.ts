@@ -37,7 +37,7 @@ async function createDraft(
 
   const updated = await page.request.patch(`/api/organisations/${orgId}/events/${draft.id}`, {
     headers: { origin },
-    data: { version: draft.version, ...patch },
+    data: { version: draft.version, contactEmail: 'browse@example.test', ...patch },
   });
   expect(updated.ok()).toBe(true);
   return (await updated.json()) as DraftEvent;

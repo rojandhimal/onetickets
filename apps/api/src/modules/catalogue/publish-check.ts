@@ -6,6 +6,7 @@ export interface PublishCandidate {
   endsAt: Date | null;
   hasVenue: boolean;
   ticketTypeCount: number;
+  contactEmail: string | null;
 }
 
 /** What is still needed before an event can be published, in checklist order. */
@@ -17,6 +18,7 @@ export function missingForPublish(event: PublishCandidate, now: Date): PublishRe
   }
   if (!event.hasVenue) missing.push('venue');
   if (event.ticketTypeCount === 0) missing.push('ticket_type');
+  if (!event.contactEmail?.trim()) missing.push('contact_email');
   return missing;
 }
 

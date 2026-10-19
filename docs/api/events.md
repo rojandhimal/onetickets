@@ -30,7 +30,7 @@ event_not_found`, the same as one that does not exist.
   up to 10 per order; on sale from publishing until the event starts).
 - **Autosave.** `PATCH` takes any subset of fields plus `version`, the version the client last
   saw. `null` clears `name`, `startsAt`, `endsAt`, `venue` or `contactEmail`; a live event refuses
-  clearing the first four with `422 required_when_live`. A bad field gets `422` with `field` set,
+  clearing any of these with `422 required_when_live`. A bad field gets `422` with `field` set,
   so the client can drop that field and save the rest. Every change, including ticket types and banners, bumps the version, so ticket-type and
   banner routes return the whole event. A stale version gets `409 stale_draft` with the current
   draft in `current`.
@@ -47,15 +47,17 @@ event_not_found`, the same as one that does not exist.
   URL. The crop focus is set with `bannerFocus` in the autosave. Each banner also gets a
   1200 × 630 JPEG for link previews (`BannerDto.ogUrl`), cut from the 2:1 banner.
 - **Publishing** needs a name, a start and end in the future with the end after the start, a venue
-  or online link, and at least one ticket type. Otherwise `422 not_ready` lists what is missing in
-  `missing` (`name`, `date_time`, `venue`, `ticket_type`), in checklist order. The event gets a
+  or online link, at least one ticket type and a saved contact email. Otherwise `422 not_ready` lists what is missing in
+  `missing` (`name`, `date_time`, `venue`, `ticket_type`, `contact_email`), in checklist order. The event gets a
   slug (the name in kebab case plus a random suffix) and its public page is live at once.
   Publishing an event that is already live returns it unchanged.
 - **Contact email.** Publishing keeps it exactly as the organiser left it and never fills an empty
   one from a member's sign-in email. It is shown only to ticket holders, never on the public page
-  (which has `hasContactEmail`). Publish will also require it (`contact_email` in `missing`) once the
-  wizard has the field (SEC-20).
-- **A live event** keeps its name, times, venue and at least one ticket type. Editing a live event
+  (which has `hasContactEmail`). An empty draft contact email causes `422 not_ready` with
+  `contact_email` in `missing`. The wizard shows the viewer's own address as an editable prefill,
+  saved on blur or Next, and shows the saved address on Review. Existing empty events are not
+  backfilled; publishing an already-live event still returns it unchanged (SEC-20).
+- **A live event** keeps its name, times, venue, saved contact email and at least one ticket type. Editing a live event
   may not move `startsAt` into the past (`422 starts_in_past`, `field: 'startsAt'`); an
   already-started live event can still edit other fields when `startsAt` is omitted or unchanged.
 

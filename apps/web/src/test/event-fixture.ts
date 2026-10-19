@@ -42,6 +42,7 @@ export function draftEvent(overrides: Partial<EventDraftDto> = {}): EventDraftDt
 export function readyEvent(overrides: Partial<EventDraftDto> = {}): EventDraftDto {
   return draftEvent({
     name: 'Screen printing for beginners',
+    contactEmail: 'bookings@example.test',
     startsAt: '2026-11-14T10:00:00+11:00',
     endsAt: '2026-11-14T13:00:00+11:00',
     venue: {
