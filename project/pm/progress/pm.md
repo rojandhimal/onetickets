@@ -2,11 +2,11 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
-## 2026-10-18 (local sign-in guidance)
+## 2026-10-18 (Sprint 1 accepted, S1-5 and DEV-6 merged, PR #46 & #47 ready)
 
-- **Done:** Confirmed #43 merged. Expanded the README's easy-to-miss test-inbox note into explicit Docker sign-in steps, with Mailpit links, a fake example address and the single-use/15-minute expiry. Added troubleshooting that distinguishes Docker's test inbox from source development's console mail. The 17 Oct local diagnosis returned HTTP 202 and delivered a synthetic sign-in message to Mailpit; it did not verify a complete browser login. Format, lint, typecheck, 218 unit tests, 110 integration tests on a disposable database and the production build pass. Browser tests run in CI because the local app occupies their ports.
-- **Next:** Independent QA and Security review the documentation against the existing mail transport and magic-link behaviour; tegs merges after review and CI pass.
-- **Blocked:** Live-project copy-back still depends on access to `/mnt/project-files`. No real email delivery is enabled by this documentation change.
+- **Done:** Verified S1-5 (#44, `869f8b6`) and DEV-6 (#45, `8655fc8`) merged by tegs, bringing all 5 Sprint 1 stories to `main`. QA completed the integrated Sprint 1 acceptance pass on `main` at `8655fc8` and wrote [project/qa/sprint-1-acceptance.md](/project/qa/sprint-1-acceptance.md) accepting Sprint 1 with staging deferrals carried forward. Reviewed and routed PR #46 (BE-1 catalogue hardening) and PR #47 (Docs local sign-in): both passed QA and Security reviews with all CI checks green, and both are marked ready for tegs. Updated the sprint board to mark Sprint 1 Done and open Sprint 2.
+- **Next:** tegs merges PR #46 and PR #47. Team commences Sprint 2 (Free tickets: S2-1 ticket holds and orders, S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal) and SEC-20 part 2.
+- **Blocked:** Staging checks remain deferred until AWS account and Google OAuth client setup.
 
 ## 2026-10-17 (merge reconciliation)
 
