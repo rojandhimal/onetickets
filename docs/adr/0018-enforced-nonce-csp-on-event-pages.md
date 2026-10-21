@@ -1,9 +1,9 @@
-# 0018. Enforce a nonce-based CSP on public event pages first
+# 0018. Enforce a nonce-based CSP on public event pages first, site-wide before checkout
 
-- Status: Proposed
-- Date: 2026-10-10
-- Story: S1-3 (SEC-3)
-- Deciders: FrontendDev, Security (accepted the approach on 2026-10-10, with the conditions under Consequences)
+- Status: Accepted (event pages in S1-3; site-wide enforced in SEC-14 before S2-2 checkout)
+- Date: 2026-10-10 (updated 2026-10-21 for SEC-14)
+- Story: S1-3 (SEC-3), SEC-14
+- Deciders: FrontendDev, Security (accepted the approach on 2026-10-10, site-wide rollout on 2026-10-21)
 
 ## Context
 
@@ -39,15 +39,11 @@ bootstrap scripts to carry a per-request nonce, which forces dynamic rendering o
 ## Consequences
 
 - **Before any checkout or payment page ships, the CSP must be enforced on every page** (Security's
-  condition, 2026-10-10; PM to card it). Report-only elsewhere is acceptable only while event
-  pages are the one place showing organiser content to the public.
-- Every link into `/e/` stays a plain `<a>`, not Next's `<Link>`, until SEC-14 enforces the CSP on
-  every page. A `<Link>` from a report-only page (browse, the organiser home) would navigate on the
-  client and never load the event page's enforced policy.
-- Event page HTML is sent with `Cache-Control: private, no-store`, so no CDN or shared cache can
-  serve one response's nonce to someone else. It can't be statically cached. They were per request already because seat counts
-  change.
-- Any new script on an event page must be loaded by Next or carry the nonce (`headers().get('x-nonce')`),
+  condition, 2026-10-10; fulfilled by SEC-14 on 2026-10-21). `apps/web/src/proxy.ts` applies `strictSiteCsp`
+  with a per-request nonce to all document requests site-wide.
+- With site-wide CSP enforced, all pages carry the nonce policy and `Cache-Control: private, no-store`.
+  Navigation across the site preserves the strict security guarantees.
+- Any new script on any page must be loaded by Next or carry the nonce (`headers().get('x-nonce')`),
   or it will be blocked. The e2e CSP check (PR #13) catches this.
 - If About or access notes ever turn URLs into links, allow only http and https and add
   `rel="noopener noreferrer nofollow ugc"`.

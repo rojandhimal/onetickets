@@ -77,8 +77,8 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [ ] User-authored content (event descriptions etc.) is sanitised on the server with an allowlist; no raw `dangerouslySetInnerHTML`
 - [ ] Security headers set: CSP, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, HSTS
 - [ ] Third-party scripts limited to Stripe and agreed analytics, listed in the CSP
-- [ ] Until SEC-14 enforces the CSP on every page, every link into `/e/` is a plain `<a>`, not Next's `<Link>`, so the event page always loads its own enforced CSP ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
-- [ ] No checkout or payment page ships until the CSP is enforced site-wide (SEC-14, ADR 0018)
+- [x] Site-wide CSP enforced with per-request nonce (SEC-14, [ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
+- [x] No checkout or payment page ships until the CSP is enforced site-wide (SEC-14, [ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
 - [ ] Pages that depend on the session or set cookies are `no-store`; shared-cache headers only on public, cookie-free responses
 
 ## CI and infrastructure (S0-1, S0-2)

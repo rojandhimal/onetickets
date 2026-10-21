@@ -3,6 +3,7 @@ import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { VerifyLink } from './VerifyLink';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Signing you in', robots: { index: false } };
 
 export default function VerifyPage() {
