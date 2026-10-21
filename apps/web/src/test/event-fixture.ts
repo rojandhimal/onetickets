@@ -95,6 +95,7 @@ export function publicEvent(overrides: Partial<PublicEventDto> = {}): PublicEven
     },
     priceFromAllInCents: 0,
     spotsLeft: 18,
+    soldOut: false,
     ticketTypes: [
       {
         id: 'tt_1',
@@ -103,6 +104,7 @@ export function publicEvent(overrides: Partial<PublicEventDto> = {}): PublicEven
         spotsLeft: 18,
         onSale: true,
         maxPerOrder: 10,
+        soldOut: false,
       },
     ],
     ...overrides,
