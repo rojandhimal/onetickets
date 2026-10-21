@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-21 (PR #50 S2-1 passed QA and Security reviews, marked ready for tegs)
+
+- **Done:** Verified PRs #46 (BE-1), #47 (Docs sign-in), #48 (SEC-20 part 2), and #49 (Sprint 1 acceptance rollup) were merged into `main` by tegs. Rebased `backend/s2-1-ticket-holds` onto latest `origin/main` at `fcc6142` and opened PR #50 for S2-1 (Free ticket holds and inventory). All 7 GitHub Actions CI checks passed green. Orchestrated independent reviews: Security passed at `fcc6142` (confirming RLS, ephemeral token hashing, sweeper safety, CSRF origin check); QA passed at `fcc6142` (confirming INV-1, INV-2, INV-3, INV-4, ARCH-2/INV-15, and checklist rows 1.1–1.5). Marked PR #50 ready for review and placed into the merge queue for tegs.
+- **Next:** tegs merges PR #50. FrontendDev and Security start SEC-14 (site-wide enforced CSP, ADR 0018). FrontendDev starts S2-2 (one-screen free checkout).
+- **Blocked:** Staging checks remain deferred until AWS account and Google OAuth client setup. No infrastructure applied.
+
 ## 2026-10-18 (Sprint 1 accepted, S1-5 and DEV-6 merged, PR #46 & #47 ready)
 
 - **Done:** Verified S1-5 (#44, `869f8b6`) and DEV-6 (#45, `8655fc8`) merged by tegs, bringing all 5 Sprint 1 stories to `main`. QA completed the integrated Sprint 1 acceptance pass on `main` at `8655fc8` and wrote [project/qa/sprint-1-acceptance.md](/project/qa/sprint-1-acceptance.md) accepting Sprint 1 with staging deferrals carried forward. Reviewed and routed PR #46 (BE-1 catalogue hardening) and PR #47 (Docs local sign-in): both passed QA and Security reviews with all CI checks green, and both are marked ready for tegs. Updated the sprint board to mark Sprint 1 Done and open Sprint 2.

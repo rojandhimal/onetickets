@@ -2,6 +2,13 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-21
+
+- **Done:**
+  - S2-1 free ticket holds and inventory [#50](https://github.com/rojandhimal/onetickets/pull/50) reviewed at `fcc6142`: **pass** ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316300129)). Verified migration 0008 (`inventory.holds`) with enforced RLS (`holds_tenant`, `holds_public`, `holds_worker`) and `ticket_inventory_public_hold`; column-scoped updates and no DELETE grants; 256-bit crypto-random ephemeral hold tokens stored hashed (SHA-256) and never logged; RequestOriginMiddleware enforcing CSRF origin check on state-changing public endpoints; atomic conditional capacity reservation and CHECK invariants (`INV-1`, `INV-2`); 20-minute maximum hold cap; and sweeper concurrency safety (`INV-3`). All 7 CI checks green.
+- **Next:** SEC-14 (site-wide CSP) before free checkout UI ships. SEC-20 part 2 reviews when ready.
+- **Blocked:** nothing.
+
 ## 2026-10-18
 
 - **Done:**
