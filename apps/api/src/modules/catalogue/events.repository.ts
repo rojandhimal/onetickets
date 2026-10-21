@@ -134,6 +134,23 @@ const PUBLIC_EVENT_COLUMNS = `id, slug, name, starts_at, ends_at, published_at, 
 const TICKET_TYPE_COLUMNS = `t.id, t.event_id, t.name, t.capacity, t.max_per_order, t.price_cents,
   t.sales_start, t.sales_end, i.sold, i.held`;
 
+export interface TicketTypeSummaryRow {
+  id: string;
+  event_id: string;
+  organisation_id: string;
+  name: string;
+  capacity: number;
+  max_per_order: number;
+  price_cents: number;
+  sales_start: SalesStart;
+  sales_end: SalesEnd;
+  event_status: EventStatus;
+  event_starts_at: Date | null;
+  event_ends_at: Date | null;
+  event_published_at: Date | null;
+  event_time_zone: string;
+}
+
 /** SQL for the catalogue schema. Every call runs inside a UnitOfWork transaction. */
 @Injectable()
 export class EventsRepository {
@@ -393,5 +410,21 @@ export class EventsRepository {
       ],
     );
     return rows;
+  }
+
+  async findTicketTypeSummary(
+    tx: pg.PoolClient,
+    ticketTypeId: string,
+  ): Promise<TicketTypeSummaryRow | null> {
+    const { rows } = await tx.query<TicketTypeSummaryRow>(
+      `select t.id, t.event_id, t.organisation_id, t.name, t.capacity, t.max_per_order, t.price_cents,
+              t.sales_start, t.sales_end, e.status as event_status, e.starts_at as event_starts_at,
+              e.ends_at as event_ends_at, e.published_at as event_published_at, e.time_zone as event_time_zone
+       from catalogue.ticket_types t
+       join catalogue.events e on e.id = t.event_id
+       where t.id = $1`,
+      [ticketTypeId],
+    );
+    return rows[0] ?? null;
   }
 }

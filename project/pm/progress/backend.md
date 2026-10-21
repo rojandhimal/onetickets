@@ -2,6 +2,20 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-21
+
+- **Done:** Implemented **S2-1 Free ticket holds and inventory** on `backend/s2-1-ticket-holds`:
+  - Created migration `apps/api/migrations/0008_ticket_holds.sql` adding `inventory.holds` with forced RLS (`holds_tenant`, `holds_public`, `holds_worker`) and added `ticket_inventory_public_hold` to allow atomic updates on published events during checkout.
+  - Implemented `InventoryModule` in `apps/api/src/modules/inventory/`: `HoldsRepository`, `HoldsService`, and `HoldsController` under `/public/holds`.
+  - Atomic hold reservation with a single conditional update on `inventory.ticket_inventory` (`INV-1`, `INV-2`, ADR 0007).
+  - ARCH-2 / INV-15: Distinguishes "sold out" (`sold >= capacity`, `409 sold_out`) from "all taken right now" (`sold + held >= capacity && sold < capacity`, `409 all_taken`). Added `soldOut: boolean` to `PublicTicketTypeDto` and `PublicEventDto`.
+  - Enforced per-order limits (`INV-4`), hold renewal up to 20 minutes maximum cap, hold release, and atomic quantity adjustment.
+  - Expired holds sweeper in one transaction per hold (`INV-3`), returning stock exactly once under concurrency.
+  - Added comprehensive integration tests in `apps/api/test/inventory.int.test.ts` (15 tests covering database CHECK constraint violations, 50 parallel buyers racing for the last 10 tickets, sweeper concurrency with 100 holds, hold lifecycle, and quantity adjustments).
+  - Documented module in `docs/backend/inventory.md` and `docs/api/inventory.md`, and updated `docs/backend/catalogue.md` and `docs/api/events.md`.
+- **Next:** QA and Security reviews for S2-1 PR, then S2-2 (One-screen free checkout frontend) / S2-3 (QR ticket signing).
+- **Blocked:** nothing.
+
 ## 2026-10-18
 
 - **Done:** Built the remaining BE-1 catalogue hardening items on `backend/be-1-catalogue-hardening`:

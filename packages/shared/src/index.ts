@@ -84,3 +84,12 @@ export type {
   VenueInput,
   WizardStep,
 } from './api/events.js';
+export { holdTokenBody, reserveHoldBody } from './api/inventory.js';
+export type {
+  HoldDto,
+  HoldPublicDto,
+  HoldStatus,
+  HoldTokenBody,
+  InsufficientSpotsBody,
+  ReserveHoldBody,
+} from './api/inventory.js';

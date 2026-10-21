@@ -41,6 +41,18 @@ export interface Actor {
   userId: string;
 }
 
+export interface TicketTypeSummary {
+  id: string;
+  eventId: string;
+  organisationId: string;
+  name: string;
+  capacity: number;
+  maxPerOrder: number;
+  priceCents: number;
+  onSale: boolean;
+  eventStatus: string;
+}
+
 const eventNotFound = () =>
   new ApiError(HttpStatus.NOT_FOUND, 'event_not_found', 'Event not found.');
 
@@ -369,6 +381,42 @@ export class EventsService {
     return this.storage.read(key);
   }
 
+  /**
+   * Reads ticket type and event details for inventory hold validation.
+   * Returns null if the ticket type or event does not exist.
+   */
+  async ticketTypeSummary(
+    tx: pg.PoolClient,
+    ticketTypeId: string,
+    now = new Date(),
+  ): Promise<TicketTypeSummary | null> {
+    const row = await this.events.findTicketTypeSummary(tx, ticketTypeId);
+    if (!row) return null;
+    const onSaleNow =
+      row.event_status === 'published' &&
+      onSale(
+        row.sales_start,
+        row.sales_end,
+        {
+          startsAt: row.event_starts_at,
+          endsAt: row.event_ends_at,
+          publishedAt: row.event_published_at,
+        },
+        now,
+      );
+    return {
+      id: row.id,
+      eventId: row.event_id,
+      organisationId: row.organisation_id,
+      name: row.name,
+      capacity: row.capacity,
+      maxPerOrder: row.max_per_order,
+      priceCents: row.price_cents,
+      onSale: onSaleNow,
+      eventStatus: row.event_status,
+    };
+  }
+
   // ---------- helpers ----------
 
   private inScope<T>(actor: Actor, work: (tx: pg.PoolClient) => Promise<T>): Promise<T> {
@@ -542,7 +590,13 @@ export class EventsService {
       spotsLeft: t.capacity - t.sold - t.held,
       onSale: onSale(t.sales_start, t.sales_end, times(row), now),
       maxPerOrder: t.max_per_order,
+      soldOut: t.sold >= t.capacity,
     }));
+    const onSaleTypes = ticketTypes.filter((t) => t.onSale);
+    const soldOut =
+      onSaleTypes.length > 0
+        ? onSaleTypes.every((t) => t.soldOut)
+        : ticketTypes.length > 0 && ticketTypes.every((t) => t.soldOut);
     return {
       slug: row.slug,
       name: row.name,
@@ -559,6 +613,7 @@ export class EventsService {
       banner: this.bannerDto(row),
       priceFromAllInCents: allInPriceCents(fromCents),
       spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
+      soldOut,
       ticketTypes,
     };
   }

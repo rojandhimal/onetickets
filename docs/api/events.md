@@ -103,6 +103,10 @@ No session needed. Only published events are visible; drafts are `404 event_not_
   now, or among all types when none is, so a finished early bird stops pulling the price down.
   `price=free` and `price=paid` filter on that same price, so a card under "Free" never shows
   "From A$x". Never work out a price in the web app.
+- **Sold out vs held (ARCH-2 / DES-10).** `PublicTicketTypeDto.soldOut` is true only when
+  `sold >= capacity`. When `spotsLeft === 0` but `soldOut === false`, tickets are currently held by
+  checkout sessions ("All taken right now. Check back in a few minutes."), never displayed as sold
+  out. `PublicEventDto.soldOut` is true only when all on-sale ticket types are sold out.
 - **Banners** are served by the api only while they are stored on local disk (development). In AWS
   the URL in `BannerDto.url` points at the CDN.
 - **Caching (QA 3.2).** A found event and every browse page send

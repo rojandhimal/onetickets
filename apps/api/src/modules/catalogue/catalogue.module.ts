@@ -20,5 +20,6 @@ import { PublicPageRevalidator, revalidatorFromEnv } from './revalidation.js';
     EventsRepository,
     EventsService,
   ],
+  exports: [EventsService],
 })
 export class CatalogueModule {}

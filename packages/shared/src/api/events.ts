@@ -276,6 +276,8 @@ export interface PublicTicketTypeDto {
   spotsLeft: number;
   onSale: boolean;
   maxPerOrder: number;
+  /** True only when sold >= capacity, distinct from spotsLeft === 0 due to holds (ARCH-2). */
+  soldOut: boolean;
 }
 
 /** The public event page (S1-3). No organiser-private fields. */
@@ -300,6 +302,8 @@ export interface PublicEventDto {
    */
   priceFromAllInCents: number;
   spotsLeft: number;
+  /** True only when all ticket types on sale are sold out (ARCH-2). */
+  soldOut: boolean;
   ticketTypes: PublicTicketTypeDto[];
 }
 
