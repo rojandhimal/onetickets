@@ -57,12 +57,11 @@ export const securityHeaders: Header[] = [
 export const verifyPageHeaders: Header[] = [{ key: 'Referrer-Policy', value: 'no-referrer' }];
 
 /**
- * Enforced CSP for public event pages, where organiser-written text is shown to buyers (threat
- * model T8, SEC-3). Scripts need this request's nonce; Next adds it to its own scripts when it
- * sees the nonce in the request's CSP header. Styles stay 'unsafe-inline' for React style
- * attributes such as the banner focal point: style injection can't run code.
+ * Enforced site-wide CSP (SEC-14, ADR 0018). Scripts need this request's nonce; Next adds it to
+ * its own scripts when it sees the nonce in the request's CSP header. Styles stay 'unsafe-inline'
+ * for React style attributes such as the banner focal point: style injection can't run code.
  */
-export function strictEventPageCsp(nonce: string, opts: { dev?: boolean } = {}): string {
+export function strictSiteCsp(nonce: string, opts: { dev?: boolean } = {}): string {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${opts.dev ? " 'unsafe-eval'" : ''}`,
@@ -77,3 +76,6 @@ export function strictEventPageCsp(nonce: string, opts: { dev?: boolean } = {}):
     ...(cspReportUri() ? [`report-uri ${CSP_REPORT_PATH}`] : []),
   ].join('; ');
 }
+
+/** Legacy alias for backwards compatibility with earlier stories and ADR 0018. */
+export const strictEventPageCsp = strictSiteCsp;

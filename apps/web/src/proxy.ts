@@ -1,11 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { strictEventPageCsp } from './lib/security-headers';
+import { strictSiteCsp } from './lib/security-headers';
 
-// Public event pages get an enforced, per-request nonce CSP (SEC-3). Every other page keeps the
-// report-only policy from next.config.ts until Next's inline scripts carry nonces everywhere.
+// Site-wide enforced per-request nonce CSP (SEC-14, ADR 0018). Every document request receives a
+// fresh nonce and an enforced Content-Security-Policy header. Next adds the nonce to its inline
+// bootstrap scripts.
 export function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
-  const csp = strictEventPageCsp(nonce, { dev: process.env.NODE_ENV === 'development' });
+  const csp = strictSiteCsp(nonce, { dev: process.env.NODE_ENV === 'development' });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
@@ -21,7 +22,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: '/e/:slug',
+      source:
+        '/((?!api|_next/static|_next/image|favicon.ico|csp-report|internal|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
       // Router prefetches fetch the RSC payload, not a document. A browser's own prefetch
       // (`Purpose: prefetch`) can become the page the visitor sees, so it still gets the policy.
       missing: [{ type: 'header', key: 'next-router-prefetch' }],
