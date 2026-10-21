@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (PRs #50, #51, #52 merged to main; S2-2 started)
+
+- **Done:** Verified `tegs` merged PR #50 (S2-1 free ticket holds and inventory as `e7303ba`), PR #51 (Sprint 2 checklist and board rollup as `31553aa`), and PR #52 (SEC-14 site-wide CSP as `7023181`). With site-wide CSP and holds on main, all architectural prerequisites for free checkout are met. Fast-forwarded local `main` to `origin/main` (`7023181`). Updated board and checklist to mark S2-1 and SEC-14 Done. Kicked off Story S2-2 (One-screen free checkout).
+- **Next:** FrontendDev and ProductDesign implement S2-2 free checkout screen (`/e/:slug/tickets`), steppers, hold notice and heartbeat, attendee inputs, and order submission.
+- **Blocked:** Staging checks remain deferred until AWS account and Google OAuth client setup.
+
 ## 2026-10-21 (PR #50 S2-1 passed QA and Security reviews, marked ready for tegs)
 
 - **Done:** Verified PRs #46 (BE-1), #47 (Docs sign-in), #48 (SEC-20 part 2), and #49 (Sprint 1 acceptance rollup) were merged into `main` by tegs. Rebased `backend/s2-1-ticket-holds` onto latest `origin/main` at `fcc6142` and opened PR #50 for S2-1 (Free ticket holds and inventory). All 7 GitHub Actions CI checks passed green. Orchestrated independent reviews: Security passed at `fcc6142` (confirming RLS, ephemeral token hashing, sweeper safety, CSRF origin check); QA passed at `fcc6142` (confirming INV-1, INV-2, INV-3, INV-4, ARCH-2/INV-15, and checklist rows 1.1–1.5). Marked PR #50 ready for review and placed into the merge queue for tegs.

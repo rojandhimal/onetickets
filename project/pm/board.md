@@ -1,17 +1,17 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 21 Oct 2026 by PM (PR #50 S2-1 passed QA and Security reviews; marked ready for tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 22 Oct 2026 by PM (PRs #50, #51, #52 merged to main; S2-2 started). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
 **Phase:** Sprint 1 closed 18 Oct ([QA acceptance](/project/qa/sprint-1-acceptance.md)). Sprint 2 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
-**Health:** 🟢 Sprint 1 is complete and merged to main (#17, #31, #23, #35, #44). BE-1 (#46), Docs sign-in (#47), SEC-20 part 2 (#48), and Sprint 1 rollup (#49) are merged. S2-1 (#50) has passed QA and Security reviews and is in the merge queue.
-**Next milestone:** Sprint 2 (Free tickets: S2-1 ticket holds, S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal). SEC-14 (site-wide CSP) is the next prerequisite before S2-2 free checkout ships. One branch per role, at most two active cards.
+**Health:** 🟢 Sprint 1 is complete and merged to main. Sprint 2 foundations are in: S2-1 (#50) free ticket holds & inventory and SEC-14 (#52) site-wide CSP have both merged to main. All prerequisites for free checkout are met. S2-2 (One-screen free checkout) is in progress.
+**Next milestone:** Sprint 2 (Free tickets: S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal).
 
 **Merge queue for tegs:**
 
-- **PR #50** (S2-1: free ticket holds and inventory, `fcc6142`): Security pass ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316300129)), QA pass ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316316199)), all 7 CI checks green. Marked ready for tegs to merge.
+- *(No open PRs in queue)*
 
 **Review follow-up:** #42 QA-3 post-merge review completed with explicit verdict `QA: pass at 532c207` ([comment](https://github.com/rojandhimal/onetickets/pull/42#issuecomment-6236214571)). All open PRs now have explicit independent QA and Security verdicts.
 
@@ -103,15 +103,19 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### In progress
 
+- **S2-2 One-screen free checkout** (FrontendDev with ProductDesign and QA review): single checkout screen at `/e/:slug/tickets` with hold notice (`role="status"`), ticket stepper per type, attendee details (name, email), opt-in, summary, and idempotency key (INV-5).
 - RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-- **PR #50** (S2-1: free ticket holds and inventory, `fcc6142`): BackendDev opened; QA pass ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316316199)), Security pass ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316300129)), all 7 CI checks green. Marked ready for tegs to merge.
+*(No items currently in review)*
 
 ### Done
 
+- SEC-14 Enforce CSP site-wide with per-request nonce ([#52](https://github.com/rojandhimal/onetickets/pull/52)), merged 22 Oct as `7023181`; QA pass (`926078a`), Security pass (`926078a`), 7 CI checks green. Fulfills ADR 0018 prerequisite before checkout
+- PM Sprint 2 review rollup & checklist update ([#51](https://github.com/rojandhimal/onetickets/pull/51)), merged 22 Oct as `31553aa`; QA pass (`4465756`), Security pass (`4465756`), 7 CI checks green
+- S2-1 Free ticket holds and inventory ([#50](https://github.com/rojandhimal/onetickets/pull/50)), merged 22 Oct as `e7303ba`; QA pass (`fcc6142`), Security pass (`fcc6142`), 7 CI checks green. Invariants INV-1, INV-2, INV-3, INV-4, INV-15/ARCH-2 verified under high concurrency
 - SEC-20 Contact-email default, part 2 ([#48](https://github.com/rojandhimal/onetickets/pull/48)), merged 21 Oct as `717cb69`; QA pass, ProductDesign approved, Security pass. Visible editable prefill on Details and required email publish check in place
 - Docs: local email sign-in & Mailpit inbox ([#47](https://github.com/rojandhimal/onetickets/pull/47)), merged 21 Oct as `0eebb7a`; QA and Security pass, all 7 checks green
 - BE-1 Catalogue backend hardening ([#46](https://github.com/rojandhimal/onetickets/pull/46)), merged 21 Oct as `afb1f52`; QA and Security pass, all 7 checks green
