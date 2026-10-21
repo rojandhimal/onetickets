@@ -2,6 +2,20 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 21 Oct 2026
+
+- **Done:**
+  - Reviewed PR #50 (S2-1: free ticket holds and inventory) at fcc6142: pass.
+    - Verified INV-1 and INV-2 atomic conditional hold reservations on `inventory.ticket_inventory` (`WHERE sold + held + :qty <= capacity`) and concurrent buyer stress test (50 concurrent buyers racing for 10 spots: 10 succeed, 40 fail). Mutation test caught by 4 integration tests.
+    - Verified INV-3 sweeper concurrency (2 sweepers across 100 expired holds release exactly 100 with no underflow) and 20-minute maximum hold lifetime cap.
+    - Verified INV-15 / ARCH-2 separation between `sold_out` (`sold >= capacity`) and `all_taken` (`sold + held >= capacity` while `sold < capacity`).
+    - Verified INV-4 per-order limit guard (`422 invalid_quantity`).
+    - Verified forced RLS on `inventory.holds` (`holds_tenant`, `holds_public`, `holds_worker`).
+    - Updated rows 1.1 to 1.5 in [project/qa/sprint-2-checklist.md](/project/qa/sprint-2-checklist.md) to ✅.
+    - Posted QA pass verdict comment on PR #50: https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316316199.
+- **Next:** Review S2-2 (one-screen free checkout frontend) and S2-3 (signed QR tickets) PRs when opened.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 18 Oct 2026
 
 - **Done:**
