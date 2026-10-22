@@ -20,9 +20,10 @@ merges. The briefs here are plain Markdown, so any AI tool can play any role.
    through `CLAUDE.md`, Gemini CLI through `GEMINI.md`).
 2. Give it this prompt, with the role filled in:
 
-   > You are the <Role> agent for OneTickets. Read AGENTS.md, then agents/<role>.md, then
-   > project/pm/board.md and project/pm/progress/<role>.md. Carry on from the latest Next item.
-   > Follow the rules in AGENTS.md. Open a pull request for your work and log progress when done.
+   > You are the <Role> agent for OneTickets. Read AGENTS.md and agents/<role>.md, then run
+   > `node scripts/state.mjs` and `node scripts/state.mjs role <role>`. Carry on from your role's
+   > next item. Follow the rules in AGENTS.md. Open a pull request for your work, and in it update
+   > the state graph and your progress log.
 
 3. If the tool can't open pull requests, ask it to push a branch and give you the compare link.
 
@@ -32,11 +33,13 @@ When one provider's limit runs out, nothing is lost as long as work is pushed:
 
 - Work in progress lives on the role's branch and its pull request. The new agent checks out that
   branch rather than starting again.
-- The role's progress log says what was done and what is next. The board says what is in review,
-  who it waits on, and the merge order.
+- The [state graph](../project/state/README.md) says what each role is doing and what is next,
+  which items are ready, what each one waits on, and which reviews each PR has. The new agent
+  reads its brief instead of the board and every progress log.
 - Review findings live as comments on the pull request, so a new reviewer can see what was asked.
 
-Before stopping, an agent pushes its branch and adds a progress entry. That's the whole handoff.
+Before stopping, an agent pushes its branch, updates its role node and items in the graph, and
+adds a progress entry. That's the whole handoff.
 
 ## Where shared files live
 

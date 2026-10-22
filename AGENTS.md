@@ -7,7 +7,22 @@ Copilot, Aider or anything else that reads `AGENTS.md`). Humans should start wit
 The project is built by a small team of AI agents, each playing one role, with **tegs** (the owner)
 reviewing and merging. Nothing here depends on one AI provider: if one provider's usage limit runs
 out, start another tool, give it a role from [`agents/`](agents/README.md), and carry on from the
-board and progress logs in [`project/`](project/README.md).
+shared state graph in [`project/state/`](project/state/README.md).
+
+## Start here: the state graph
+
+Don't rebuild the project's status from the board, the progress logs and PR history. Read the
+graph, which is the source of truth for status:
+
+```sh
+node scripts/state.mjs                  # active items, open PRs, roles, what needs tegs
+node scripts/state.mjs role <role>      # your role's node and items
+node scripts/state.mjs show <id>        # one item or PR with its dependencies and links
+```
+
+Update it in the same PR as your work (`node scripts/state.mjs set <id> status=review prs+=55`),
+and claim an item by opening a draft PR whose title starts with its id. The protocol is in
+[project/state/README.md](project/state/README.md).
 
 ## What we're building
 
@@ -28,7 +43,7 @@ sprint board is [project/pm/board.md](project/pm/board.md).
 | `infra`           | Terraform for AWS ap-southeast-2. Never applied by an agent         |
 | `docs`            | How things work, ADRs in `docs/adr`, security docs                  |
 | `agents`          | One brief per agent role                                            |
-| `project`         | Board, progress logs, design handoffs, QA checklists, research      |
+| `project`         | State graph, board, progress logs, design handoffs, QA checklists   |
 
 ## Commands
 
@@ -62,10 +77,12 @@ push; CI runs the same ones.
    initial review, QA does not repeat tests that already passed; re-reviews check only the diff
    since the last reviewed commit (`<last-sha>..<head>`) and any open findings or affected paths. A
    PR is ready for tegs only when CI is green and every reviewer it needs has passed it.
-6. **Log your progress.** Add a dated entry to `project/pm/progress/<role>.md`, newest first: Done,
-   Next, Blocked. Only edit your own file.
+6. **Update the state graph and log your progress.** In each PR, update your role node and your
+   items in `project/state/graph.jsonl` with `node scripts/state.mjs set`, and add a dated entry to
+   `project/pm/progress/<role>.md`, newest first: Done, Next, Blocked. Only edit your own log.
 7. **Ask through the board, not by guessing.** Decisions that change scope, cost or what users see
-   go to tegs. Record them in the decisions log in `project/pm/board.md`.
+   go to tegs. Record them as decision nodes in the graph and in the decisions log in
+   `project/pm/board.md`.
 8. **Security floor.** No secrets, tokens or real personal data in code, tests, fixtures, logs or
    commits. Test data uses fake people at `example.test`. Use the shared redactor for logs and
    Sentry. Follow [docs/security/checklist.md](docs/security/checklist.md).

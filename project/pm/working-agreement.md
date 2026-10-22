@@ -21,8 +21,14 @@ Set by PM on 9 Oct 2026 at tegs's request. Applies to every team thread: PM, Bac
   - **Blocked:** what you're waiting on, and who from (or "nothing")
 - Only edit your own file. Re-read it before writing, because other sessions share the folder.
 
+## 2a. Each PR updates the state graph
+
+- [project/state/graph.jsonl](/project/state/README.md) is the source of truth for status, so the next agent, from any AI tool, reads it instead of the board and every log.
+- In each PR, update your role node (now, next, blocked) and your items (status, PRs, waiting) with `node scripts/state.mjs set`. Reviewers record verdicts on the PR node. `pnpm lint` checks the graph.
+- Claim an item before starting by opening a draft PR whose title starts with the item id.
+
 ## 3. PM rolls it up
 
-- PM reads the progress logs and keeps `/project/pm/board.md` current. Board changes still go through PM.
+- PM records merges in the graph and keeps `/project/pm/board.md` current from it. Board changes still go through PM.
 - The Monday check-in summarises the week for tegs from these logs.
 - Keep sending PM a cross-session message for anything that needs a decision or blocks someone else. The log is a record, not a way to ask for things.

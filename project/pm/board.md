@@ -57,6 +57,8 @@ Last updated: 21 Oct 2026 by PM (PR #50 S2-1 passed QA and Security reviews; mar
 
 WIP limit: 2 cards in progress per builder.
 
+Status source of truth from 22 Oct: [project/state/graph.jsonl](/project/state/README.md). Run `node scripts/state.mjs` for the brief. This board is the narrative view; where they disagree, the graph wins.
+
 Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test strategy, PR checks against acceptance criteria), DevOps (S0-2 Terraform and deploy pipeline, S0-5 infra alarms), Security reviewer (threat model, reviews of auth, RLS, migrations, PII), ProductDesign (owns the design canvas, handoff specs, Sprint 1 and 2 designs, research prep). tegs reviews and merges PRs. Repo documentation thread owns README and docs/. Everyone follows the [working agreement](/project/pm/working-agreement.md): each PR updates its docs, and each thread logs progress in pm/progress/. CI ownership: BackendDev owns the main CI workflow (QA adds the test harness to it), Security reviewer owns a separate security workflow, and DevOps owns the deploy workflows.
 
 ### Backlog
