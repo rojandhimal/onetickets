@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude, S2-3 ready for review, #56)
+
+- **Done:** Built artboard 4 behind `FEATURE_TICKETS`: "You're going!", one stub at a time with a touch swipe and Previous/Next, a QR drawn in the browser with Wake Lock, Add to calendar as a bottom sheet or popover, offline through a service worker scoped to `/tickets/` (ADR 0019). Applied ProductDesign's S2-3 fill-ins and the BackendDev's final orders contract (#58). The key leaves the address bar at once and stays in `sessionStorage` for the tab; checkout can stash the created order for an instant first render with `stashConfirmedOrder`. Format, lint, typecheck, all unit tests and the ticket e2e at 375 and 1280 px with axe and the CSP guard pass.
+- **Next:** QA, ProductDesign and Security review #56. Import the order types from `@onetickets/shared` once #58 merges. Tell the other tool's checkout about `stashConfirmedOrder` once Security agrees the key flow.
+- **Blocked:** Security's OK on the ticket key handling; Design's copy for a revoked ticket ("This ticket no longer works." is a placeholder).
+
 ## 2026-10-22 (Claude, S2-3 confirmation and ticket stub)
 
 - **Done:** Claimed S2-3's frontend part (artboard 4: confirmation screen and ticket stub) with a draft PR. Checked main at 7023181 and the open PRs (#53, #54, #55): nothing else touches the confirmation or ticket screens. S2-2 checkout (`/e/:slug/tickets`) stays with the other tool's FrontendDev.

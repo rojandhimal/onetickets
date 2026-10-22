@@ -30,7 +30,7 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
 
 - `apps/web/public/tickets-sw.js` is registered with scope `/tickets/` by the ticket screen only.
 - Ticket pages and `GET /api/public/orders/:id/tickets` are network first, with the saved copy used
-  only when the network fails, so a released ticket or a changed time shows whenever there's
+  only when the network fails, so a revoked ticket or a changed time shows whenever there's
   signal. Built files under `/_next/static/` are cache first, since their names change with their
   content.
 - After a successful read, the page saves the order response, its own HTML and the
@@ -38,15 +38,19 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
   offline". A new cache name drops the old one when the worker activates.
 - The QR is drawn in the browser from the signed token (ADR 0011) as an inline SVG, so there are no
   QR image URLs to cache or leak.
-- The key stays in the fragment and is never written to storage. Ticket pages are
-  `noindex` and keep `Cache-Control: private, no-store` from the site-wide proxy.
+- The page takes the key out of the address bar with `history.replaceState` as soon as it reads
+  it, and keeps it in `sessionStorage` for that tab only, so a reload still works. It is never put
+  in `localStorage`, Cache Storage or a query string, and the order checkout stashes for the first
+  render leaves it out. Ticket pages are `noindex`, send `Referrer-Policy: no-referrer` and keep
+  `Cache-Control: private, no-store` from the site-wide proxy.
 - The saved HTML keeps the CSP header it was served with. Its nonce matches its own scripts, so a
   page replayed offline still runs under the enforced policy. Registering the worker needs no CSP
   change: `worker-src` falls back to `script-src`, and the e2e CSP guard passes.
 
 ## Consequences
 
-- With no signal, an attendee who opened their tickets once can still show the QR. The e2e test
+- With no signal, an attendee who opened their tickets once can still show the QR, even in a new
+  tab that no longer has the key: the saved copy is read from Cache Storage by order id. The e2e test
   cuts the page and the worker off from the network and checks this at 375 and 1280 px.
 - The holder's name, the order email and the QR token stay in Cache Storage on that device until
   the browser clears site data or the cache name changes. That is the attendee's own device, but a

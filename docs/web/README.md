@@ -206,30 +206,44 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 ## Ticket screen (S2-3)
 
 `/tickets/{orderId}` is where checkout (S2-2) lands and where the ticket email will link
-(`src/app/tickets/[orderId]/TicketScreen.tsx`, design artboard 4). The order is read in the browser
-with the key from the fragment (`#key=…`), sent as `Authorization: Bearer` to
-`GET /api/public/orders/{orderId}/tickets`. The server never sees the key. A missing or wrong key
-shows "We couldn't find these tickets".
+(`src/app/tickets/[orderId]/TicketScreen.tsx`, design artboard 4). It sits behind
+`FEATURE_TICKETS`.
 
+- **Key**: the link carries the order's ticket key in the fragment (`#key=…`), so the server never
+  sees it. The page takes it out of the address bar at once with `history.replaceState` and keeps it
+  in `sessionStorage` for that tab, so a reload still works. It never goes in `localStorage`, Cache
+  Storage or a query string. The order is read with `Authorization: Bearer` from
+  `GET /api/public/orders/{orderId}/tickets`.
+- **Straight after checkout**: checkout calls `stashConfirmedOrder(createdOrder)` before it goes to
+  `confirmationPath(orderId, ticketKey)`. The page shows that order at once with no loading state,
+  then forgets it. The stashed copy never holds the key.
+- **Loading from a link**: a grey stub with `aria-busy` and a visually hidden "Loading your
+  tickets". No spinner.
 - **Confirmation**: "You're going!" and "We've also emailed your tickets to {email}".
-- **Stubs**: one ticket at a time, showing the date eyebrow, event, venue, a QR, name, type and
-  ref. With several tickets, Previous and Next round buttons and a sideways swipe move between
-  them, and "Ticket 1 of 2" is announced politely. At either end the button stays focusable with
-  `aria-disabled`. A released ticket shows no QR.
+- **Stubs**: one ticket at a time: date eyebrow, event, venue (online: "Online · the link is in your
+  email"), a QR, name, ticket type and ref (shown as `K7Q4-M2XA`), then "Turn your screen brightness
+  up at the door so it scans first time." With several tickets, Previous and Next round buttons and
+  a sideways swipe on a touch screen move between them, and "Ticket 1 of 2" is announced politely.
+  At either end the button stays focusable with `aria-disabled`. One ticket has no pager and is
+  labelled "Your ticket". A revoked ticket shows no QR. A QR still being signed shows a grey square,
+  and the page reads the order again every 2 seconds, up to 5 times, until it arrives.
 - **QR**: drawn in the browser as an inline SVG from the ticket's signed token
   (`src/components/QrCode.tsx`, using `qrcode-generator`, level M, four-module quiet zone) on a
   full-white card. While a QR shows, Screen Wake Lock keeps the screen on where the browser allows,
-  and the lock is asked for again when the tab comes back. Web pages can't set brightness, so the
-  note under the QR stays.
+  and the lock is asked for again when the tab comes back.
 - **Offline**: the page registers `public/tickets-sw.js` with scope `/tickets/`, then saves the
   order, its own HTML and the built files it loaded into Cache Storage. "Works offline" shows once
-  that's done. With no signal the worker answers from that cache
+  all of that and every QR is in. With no signal the worker answers from that cache
   ([ADR 0019](../adr/0019-ticket-screen-offline-with-a-scoped-service-worker.md)).
-- **Add to calendar**: opens two links, an `.ics` download (Apple, Outlook and others) and Google
-  Calendar. The wallet button is hidden until Sprint 8.
-- **Contract**: the order types live in `src/lib/tickets.ts` as a typed stub of the tickets api the
-  BackendDev is building. They move to `@onetickets/shared` when that lands. Until then, e2e
-  answers the one read from a fake order (`e2e/tests/tickets.spec.ts`).
+- **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
+  missing, wrong or expired key shows "That link doesn't work any more."
+- **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar
+  or Outlook" (an `.ics` download) and "Google Calendar". Esc or a tap outside closes it and focus
+  returns to the button. The calendar entry links the public event page, never the ticket page. The
+  wallet button and the "My tickets" link stay hidden until those stories land.
+- **Contract**: the order types in `src/lib/tickets.ts` copy the orders contract the BackendDev is
+  adding to `@onetickets/shared` in #58, and move there once it merges. Until then, e2e answers the
+  one read from a fake order (`e2e/tests/tickets.spec.ts`).
 
 ## How the browser reaches the api
 

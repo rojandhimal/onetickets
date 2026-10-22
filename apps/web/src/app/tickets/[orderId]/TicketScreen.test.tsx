@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TICKETS_CACHE } from '@/lib/tickets';
+import { TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
 import { orderFixture, ticketFixture } from '@/test/order-fixture';
 import { TicketScreen } from './TicketScreen';
 
@@ -15,6 +15,7 @@ function api(handler: () => Response | Promise<Response>) {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   window.location.hash = `#key=${KEY}`;
   vi.stubGlobal(
     'URL',
@@ -45,11 +46,15 @@ describe('ticket screen', () => {
     expect(stub).toHaveTextContent('Sat 14 Nov · 10:00 am');
     expect(stub).toHaveTextContent('Screen printing for beginners');
     expect(stub).toHaveTextContent('The Print Shed, 12 Sydenham Rd, Marrickville NSW 2204');
-    expect(screen.getByRole('img', { name: 'QR code for ticket 7K4Q-2M9X' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'QR code for ticket K7Q4-M2XA' })).toBeInTheDocument();
     expect(stub).toHaveTextContent('NameJordan Lee');
+    expect(stub).toHaveTextContent('RefK7Q4-M2XA');
     expect(stub).toHaveTextContent(
-      'Screen brightness goes up while this is open so the door can scan it.',
+      'Turn your screen brightness up at the door so it scans first time.',
     );
+    // The key leaves the address bar at once and stays with this tab only.
+    expect(window.location.hash).toBe('');
+    expect(sessionStorage.getItem('onetickets:ticket-key:ord_1')).toBe(KEY);
 
     const position = screen.getByText('Ticket 1 of 2');
     expect(position).toHaveAttribute('aria-live', 'polite');
@@ -60,7 +65,7 @@ describe('ticket screen', () => {
     await user.click(next);
     expect(position).toHaveTextContent('Ticket 2 of 2');
     expect(screen.getByRole('article', { name: 'Ticket 2 of 2' })).toHaveTextContent('Sam Lee');
-    expect(screen.getByRole('img', { name: 'QR code for ticket 7K4Q-5TQ3' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'QR code for ticket K7Q4-5TQ3' })).toBeInTheDocument();
     expect(next).toHaveAttribute('aria-disabled', 'true');
     // Pressing a button at the end keeps focus there and does nothing.
     await user.click(next);
@@ -74,15 +79,19 @@ describe('ticket screen', () => {
     api(() => json(orderFixture()));
     render(<TicketScreen orderId="ord_1" />);
     const stub = await screen.findByRole('article', { name: 'Ticket 1 of 2' });
-    fireEvent.pointerDown(stub, { clientX: 300, clientY: 400 });
-    fireEvent.pointerUp(stub, { clientX: 200, clientY: 410 });
+    const swipe = (from: [number, number], to: [number, number], pointerType = 'touch') => {
+      fireEvent.pointerDown(stub, { pointerType, clientX: from[0], clientY: from[1] });
+      fireEvent.pointerUp(stub, { pointerType, clientX: to[0], clientY: to[1] });
+    };
+    swipe([300, 400], [200, 410]);
     expect(screen.getByRole('article', { name: 'Ticket 2 of 2' })).toBeInTheDocument();
     // Mostly vertical: that's the page scrolling.
-    fireEvent.pointerDown(stub, { clientX: 200, clientY: 400 });
-    fireEvent.pointerUp(stub, { clientX: 260, clientY: 200 });
+    swipe([200, 400], [260, 200]);
     expect(screen.getByRole('article', { name: 'Ticket 2 of 2' })).toBeInTheDocument();
-    fireEvent.pointerDown(stub, { clientX: 100, clientY: 400 });
-    fireEvent.pointerUp(stub, { clientX: 220, clientY: 400 });
+    // A mouse drag is selecting text, not swiping.
+    swipe([100, 400], [220, 400], 'mouse');
+    expect(screen.getByRole('article', { name: 'Ticket 2 of 2' })).toBeInTheDocument();
+    swipe([100, 400], [220, 400]);
     expect(screen.getByRole('article', { name: 'Ticket 1 of 2' })).toBeInTheDocument();
   });
 
@@ -92,14 +101,14 @@ describe('ticket screen', () => {
     expect(
       await screen.findByText("We've also emailed your ticket to jordan@example.test"),
     ).toBeInTheDocument();
-    expect(screen.getByRole('article', { name: 'Ticket 1 of 1' })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Your ticket' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next ticket' })).not.toBeInTheDocument();
   });
 
-  it('shows a released ticket without its QR', async () => {
-    api(() => json(orderFixture({ tickets: [ticketFixture({ status: 'released' })] })));
+  it('shows a revoked ticket without a QR', async () => {
+    api(() => json(orderFixture({ tickets: [ticketFixture({ status: 'revoked', qr: null })] })));
     render(<TicketScreen orderId="ord_1" />);
-    expect(await screen.findByText('Released. This QR no longer works.')).toBeInTheDocument();
+    expect(await screen.findByText('This ticket no longer works.')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /QR code/ })).not.toBeInTheDocument();
   });
 
@@ -116,7 +125,7 @@ describe('ticket screen', () => {
     Reflect.deleteProperty(navigator, 'wakeLock');
   });
 
-  it('offers an .ics file and Google Calendar', async () => {
+  it('offers an .ics file and Google Calendar in a menu', async () => {
     api(() => json(orderFixture()));
     const user = userEvent.setup();
     render(<TicketScreen orderId="ord_1" />);
@@ -124,7 +133,8 @@ describe('ticket screen', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false');
     await user.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    const ics = screen.getByRole('link', { name: 'Apple, Outlook and others (.ics)' });
+    const ics = screen.getByRole('link', { name: 'Apple Calendar or Outlook' });
+    expect(ics).toHaveFocus();
     expect(ics).toHaveAttribute('href', 'blob:ics');
     expect(ics).toHaveAttribute('download', 'screen-printing-k7q4.ics');
     const google = screen.getByRole('link', { name: 'Google Calendar' });
@@ -133,6 +143,14 @@ describe('ticket screen', () => {
     );
     expect(google).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.queryByRole('button', { name: /wallet/i })).not.toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('link', { name: 'Google Calendar' })).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+    await user.click(button);
+    await user.click(screen.getByRole('heading', { name: "You're going!" }));
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).toHaveFocus();
   });
 
   it('says so when the link has no key or a wrong one', async () => {
@@ -140,7 +158,7 @@ describe('ticket screen', () => {
     const fetch = api(() => json({}, 404));
     const view = render(<TicketScreen orderId="ord_1" />);
     expect(
-      await screen.findByRole('heading', { name: "We couldn't find these tickets" }),
+      await screen.findByRole('heading', { name: "That link doesn't work any more." }),
     ).toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
     view.unmount();
@@ -148,7 +166,9 @@ describe('ticket screen', () => {
     window.location.hash = `#key=${KEY}`;
     render(<TicketScreen orderId="ord_1" />);
     expect(
-      await screen.findByText('Open the link in your confirmation email to see them.'),
+      await screen.findByText(
+        'Open the latest ticket email from OneTickets and use the link in it.',
+      ),
     ).toBeInTheDocument();
   });
 
@@ -161,7 +181,7 @@ describe('ticket screen', () => {
     const user = userEvent.setup();
     render(<TicketScreen orderId="ord_1" />);
     expect(
-      await screen.findByText("We couldn't reach OneTickets. Check your connection and try again."),
+      await screen.findByRole('heading', { name: "We couldn't load your tickets." }),
     ).toBeInTheDocument();
     online = true;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
@@ -195,8 +215,55 @@ describe('ticket screen', () => {
     let resolve: (r: Response) => void = () => undefined;
     api(() => new Promise<Response>((r) => (resolve = r)));
     render(<TicketScreen orderId="ord_1" />);
-    expect(screen.getByRole('status')).toHaveTextContent('Loading your tickets…');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading your tickets');
+    expect(screen.getByRole('main')).toHaveAttribute('aria-busy', 'true');
     await act(async () => resolve(json(orderFixture())));
     expect(await screen.findByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+  });
+
+  it('shows the order checkout just made at once, without reading it again', async () => {
+    const fetch = api(() => json(orderFixture()));
+    stashConfirmedOrder({ ...orderFixture(), ticketKey: KEY });
+    expect(sessionStorage.getItem('onetickets:order:ord_1')).not.toContain(KEY);
+    render(<TicketScreen orderId="ord_1" />);
+    expect(screen.getByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('onetickets:order:ord_1')).toBeNull();
+  });
+
+  it('reads again until a QR still being signed arrives', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const signing = orderFixture({ tickets: [ticketFixture({ qr: null })] });
+      let calls = 0;
+      api(() => (++calls < 3 ? json(signing) : json(orderFixture({ tickets: [ticketFixture()] }))));
+      render(<TicketScreen orderId="ord_1" />);
+      await screen.findByRole('article', { name: 'Your ticket' });
+      expect(screen.queryByRole('img', { name: /QR code/ })).not.toBeInTheDocument();
+      await act(async () => vi.advanceTimersByTimeAsync(4000));
+      expect(
+        await screen.findByRole('img', { name: 'QR code for ticket K7Q4-M2XA' }),
+      ).toBeInTheDocument();
+      expect(calls).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('opens the copy saved on this phone when there is no signal', async () => {
+    const order = orderFixture();
+    vi.stubGlobal('caches', {
+      match: vi.fn(async () => json(order)),
+      open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(async () => undefined) })),
+    });
+    api(() => {
+      throw new TypeError('Failed to fetch');
+    });
+    render(<TicketScreen orderId="ord_1" />);
+    expect(await screen.findByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+    expect(caches.match).toHaveBeenCalledWith('/api/public/orders/ord_1/tickets', {
+      cacheName: TICKETS_CACHE,
+    });
   });
 });

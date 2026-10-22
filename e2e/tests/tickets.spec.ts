@@ -11,11 +11,12 @@ const ORDER = 'ord-e2e-1';
 
 const ticket = (n: number, holderName: string) => ({
   id: `00000000-0000-4000-8000-00000000000${n}`,
-  ref: `7K4Q-${n}M9X`,
+  ref: `K7Q4${n}M9X`,
   holderName,
   ticketTypeName: 'General admission',
   qr: `OT1.k1.evt_e2e.tkt_${n}.1792677665.c2lnbmF0dXJl`,
   status: 'valid',
+  issuedAt: '2027-01-10T03:00:00Z',
 });
 
 const order = {
@@ -65,11 +66,13 @@ test('the confirmation shows each ticket, pages between them and adds to a calen
   await open(page);
 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText("You're going!");
+  // The key leaves the address bar as soon as the page has it.
+  await expect(page).toHaveURL(new RegExp(`/tickets/${ORDER}$`));
   await expect(
     page.getByText("We've also emailed your tickets to jordan@example.test"),
   ).toBeVisible();
   const first = page.getByRole('article', { name: 'Ticket 1 of 2' });
-  await expect(first.getByRole('img', { name: 'QR code for ticket 7K4Q-1M9X' })).toBeVisible();
+  await expect(first.getByRole('img', { name: 'QR code for ticket K7Q4-1M9X' })).toBeVisible();
   await expect(first).toContainText('Jordan Lee');
   await expect(page.getByRole('button', { name: /wallet/i })).toHaveCount(0);
   await expectAccessible(page);
@@ -82,16 +85,20 @@ test('the confirmation shows each ticket, pages between them and adds to a calen
     'true',
   );
 
-  // The key in the fragment never reaches the server or a Referer.
-  await page.getByRole('button', { name: 'Add to calendar' }).click();
+  const calendar = page.getByRole('button', { name: 'Add to calendar' });
+  await calendar.click();
   const download = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Apple, Outlook and others (.ics)' }).click();
+  await page.getByRole('link', { name: 'Apple Calendar or Outlook' }).click();
   expect((await download).suggestedFilename()).toBe('screen-printing-k7q4.ics');
+  await calendar.click();
   await expect(page.getByRole('link', { name: 'Google Calendar' })).toHaveAttribute(
     'href',
     /^https:\/\/calendar\.google\.com\/calendar\/render\?action=TEMPLATE&/,
   );
   await expectAccessible(page);
+  await page.keyboard.press('Escape');
+  await expect(calendar).toBeFocused();
+  await expect(calendar).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('after the first visit the tickets open with no signal', async ({ page, context }) => {
@@ -103,7 +110,7 @@ test('after the first visit the tickets open with no signal', async ({ page, con
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText("You're going!");
-  await expect(page.getByRole('img', { name: 'QR code for ticket 7K4Q-1M9X' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'QR code for ticket K7Q4-1M9X' })).toBeVisible();
   await expect(page.getByText('Works offline')).toBeVisible();
   await context.setOffline(false);
 });
@@ -112,7 +119,7 @@ test('a wrong key shows no tickets', async ({ page, context }) => {
   await fakeTicketsApi(context);
   await open(page, 'tk_wrong_key_0123456789');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    "We couldn't find these tickets",
+    "That link doesn't work any more.",
   );
   await expectAccessible(page);
 });

@@ -1,18 +1,22 @@
 'use client';
 
-import { type PointerEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type PointerEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { QrCode } from '@/components/QrCode';
 import {
   type OrderTicketsDto,
   TICKETS_SW,
   type TicketDto,
+  awaitingQr,
   fetchOrderTickets,
+  formatRef,
   googleCalendarUrl,
   icsFile,
-  placeText,
+  readSavedOrder,
   saveForOffline,
-  ticketKeyFromHash,
+  takeConfirmedOrder,
+  takeTicketKey,
+  venueLine,
 } from '@/lib/tickets';
 import { eventEyebrow } from '@/lib/zoned-time';
 import styles from './tickets.module.css';
@@ -20,78 +24,105 @@ import styles from './tickets.module.css';
 type State =
   | { kind: 'loading' }
   | { kind: 'ready'; order: OrderTicketsDto }
-  | { kind: 'not-found' | 'offline' | 'failed' };
+  | { kind: 'not-found' | 'offline' };
+
+/** Tries for a QR still being signed, a couple of seconds apart. */
+const QR_RETRIES = 5;
 
 /** Artboard 4: "You're going!", then one ticket stub at a time. */
 export function TicketScreen({ orderId }: { orderId: string }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [offlineReady, setOfflineReady] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  const key = useRef<string | null>(null);
 
   useEffect(() => {
     // Only ticket pages: the worker's scope stops it touching the rest of the site.
     navigator.serviceWorker?.register(TICKETS_SW, { scope: '/tickets/' }).catch(() => undefined);
   }, []);
 
+  const show = useCallback(async (order: OrderTicketsDto, cancelled: () => boolean) => {
+    setState({ kind: 'ready', order });
+    if (awaitingQr(order)) return;
+    const saved = await saveForOffline(order);
+    if (!cancelled()) setOfflineReady(saved);
+  }, []);
+
+  const load = useCallback(
+    async (cancelled: () => boolean) => {
+      const result = key.current
+        ? await fetchOrderTickets(orderId, key.current)
+        : ({ ok: false, kind: 'not-found' } as const);
+      if (cancelled()) return;
+      if (result.ok) return show(result.order, cancelled);
+      // A copy saved on this phone by an earlier visit beats an error at the door.
+      const saved = await readSavedOrder(orderId);
+      if (cancelled()) return;
+      if (saved) return show(saved, cancelled);
+      setState({ kind: result.kind === 'not-found' ? 'not-found' : 'offline' });
+    },
+    [orderId, show],
+  );
+
   useEffect(() => {
     let cancelled = false;
-    const key = ticketKeyFromHash(window.location.hash);
-    void (async () => {
-      const result = key
-        ? await fetchOrderTickets(orderId, key)
-        : ({ ok: false, kind: 'not-found' } as const);
-      if (cancelled) return;
-      if (!result.ok) {
-        setState({ kind: result.kind });
-        return;
-      }
-      setState({ kind: 'ready', order: result.order });
-      const saved = await saveForOffline(result.order);
-      if (!cancelled) setOfflineReady(saved);
-    })();
+    const isCancelled = () => cancelled;
+    key.current = takeTicketKey(orderId);
+    const confirmed = takeConfirmedOrder(orderId);
+    void (confirmed ? show(confirmed, isCancelled) : load(isCancelled));
     return () => {
       cancelled = true;
     };
-  }, [orderId, attempt]);
+  }, [orderId, load, show]);
 
-  if (state.kind === 'loading') {
-    return (
-      <Shell>
-        <p role="status" className={styles.lede}>
-          Loading your tickets…
-        </p>
-      </Shell>
-    );
-  }
+  // Straight after the order, QRs are signed a moment later: read again until they're all there.
+  const pending = state.kind === 'ready' && awaitingQr(state.order);
+  useEffect(() => {
+    if (!pending || !key.current) return;
+    const ticketKey = key.current;
+    let cancelled = false;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      if (tries >= QR_RETRIES) window.clearInterval(timer);
+      void fetchOrderTickets(orderId, ticketKey).then((result) => {
+        // A failed retry keeps the stubs on screen; only a fuller order replaces them.
+        if (!cancelled && result.ok) void show(result.order, () => cancelled);
+      });
+    }, 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [pending, orderId, show]);
+
+  if (state.kind === 'loading') return <Loading />;
 
   if (state.kind !== 'ready') {
-    const notFound = state.kind === 'not-found';
+    const offline = state.kind === 'offline';
     return (
       <Shell>
-        <div className={styles.intro}>
-          <h1 className={styles.heading}>
-            {notFound ? "We couldn't find these tickets" : "We couldn't load your tickets"}
+        <div className={styles.messageCard}>
+          <h1 className={styles.messageTitle}>
+            {offline ? "We couldn't load your tickets." : "That link doesn't work any more."}
           </h1>
-          <p className={styles.lede}>
-            {notFound
-              ? 'Open the link in your confirmation email to see them.'
-              : state.kind === 'offline'
-                ? "We couldn't reach OneTickets. Check your connection and try again."
-                : 'Something went wrong on our side. Try again in a moment.'}
+          <p>
+            {offline
+              ? 'Check your connection and try again. Your tickets are also in your email.'
+              : 'Open the latest ticket email from OneTickets and use the link in it.'}
           </p>
+          {offline && (
+            <button
+              type="button"
+              className={styles.darkButton}
+              onClick={() => {
+                setState({ kind: 'loading' });
+                void load(() => false);
+              }}
+            >
+              Try again
+            </button>
+          )}
         </div>
-        {!notFound && (
-          <button
-            type="button"
-            className={styles.lightButton}
-            onClick={() => {
-              setState({ kind: 'loading' });
-              setAttempt((n) => n + 1);
-            }}
-          >
-            Try again
-          </button>
-        )}
         <a href="/" className={styles.moreLink}>
           Find more events
         </a>
@@ -100,7 +131,7 @@ export function TicketScreen({ orderId }: { orderId: string }) {
   }
 
   const { order } = state;
-  const many = order.tickets.length !== 1;
+  const many = order.tickets.length > 1;
   return (
     <Shell>
       <div className={styles.topRow}>
@@ -126,30 +157,60 @@ export function TicketScreen({ orderId }: { orderId: string }) {
   );
 }
 
-function Shell({ children }: { children: ReactNode }) {
+function Shell({ children, busy }: { children: ReactNode; busy?: boolean }) {
   return (
     <div className={styles.page}>
-      <main className={styles.main}>{children}</main>
+      <main className={styles.main} aria-busy={busy || undefined}>
+        {children}
+      </main>
     </div>
   );
 }
 
-/** One stub at a time; Previous and Next, or a swipe, move between them. */
+/** Opened from a link: a grey stub until the order arrives. No spinner. */
+function Loading() {
+  return (
+    <Shell busy>
+      <p className="visually-hidden" role="status">
+        Loading your tickets
+      </p>
+      <div className={styles.topRow} />
+      <div className={styles.intro} aria-hidden="true">
+        <span className={`${styles.bone} ${styles.boneHeading}`} />
+        <span className={`${styles.bone} ${styles.boneLede}`} />
+      </div>
+      <div className={`${styles.stub} ${styles.skeleton}`} aria-hidden="true">
+        <div className={styles.stubHead}>
+          <span className={`${styles.bone} ${styles.boneShort}`} />
+          <span className={`${styles.bone} ${styles.boneLong}`} />
+          <span className={`${styles.bone} ${styles.boneMid}`} />
+        </div>
+        <div className={styles.perforation} />
+        <div className={styles.stubBody}>
+          <span className={`${styles.bone} ${styles.boneQr}`} />
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/** One stub at a time; Previous and Next, or a sideways swipe on a touch screen. */
 function TicketPager({ order }: { order: OrderTicketsDto }) {
   const [index, setIndex] = useState(0);
   const count = order.tickets.length;
   const ticket = order.tickets[Math.min(index, count - 1)];
   const start = useRef<{ x: number; y: number } | null>(null);
 
-  useWakeLock(order.tickets.some((t) => t.status !== 'released'));
+  useWakeLock(order.tickets.some((t) => !!t.qr));
 
   if (!ticket) return null;
+  const many = count > 1;
   const atFirst = index === 0;
   const atLast = index === count - 1;
   const move = (by: number) => setIndex((i) => Math.min(count - 1, Math.max(0, i + by)));
 
   function onPointerDown(e: PointerEvent) {
-    start.current = { x: e.clientX, y: e.clientY };
+    start.current = e.pointerType === 'touch' ? { x: e.clientX, y: e.clientY } : null;
   }
   function onPointerUp(e: PointerEvent) {
     const from = start.current;
@@ -164,10 +225,10 @@ function TicketPager({ order }: { order: OrderTicketsDto }) {
   return (
     <>
       <article
-        aria-label={`Ticket ${index + 1} of ${count}`}
+        aria-label={many ? `Ticket ${index + 1} of ${count}` : 'Your ticket'}
         className={styles.stub}
-        onPointerDown={count > 1 ? onPointerDown : undefined}
-        onPointerUp={count > 1 ? onPointerUp : undefined}
+        onPointerDown={many ? onPointerDown : undefined}
+        onPointerUp={many ? onPointerUp : undefined}
         onPointerCancel={() => (start.current = null)}
       >
         <div className={styles.stubHead}>
@@ -175,13 +236,13 @@ function TicketPager({ order }: { order: OrderTicketsDto }) {
             {eventEyebrow(order.event.startsAt, order.event.timeZone)}
           </span>
           <span className={styles.eventName}>{order.event.name}</span>
-          <span className={styles.place}>{placeText(order.event.venue)}</span>
+          <span className={styles.place}>{venueLine(order.event.venue)}</span>
         </div>
         <div className={styles.perforation} aria-hidden="true" />
         <Stub ticket={ticket} />
       </article>
 
-      {count > 1 && (
+      {many && (
         <div className={styles.pager}>
           <button
             type="button"
@@ -211,14 +272,17 @@ function TicketPager({ order }: { order: OrderTicketsDto }) {
 }
 
 function Stub({ ticket }: { ticket: TicketDto }) {
+  const ref = formatRef(ticket.ref);
   return (
     <div className={styles.stubBody}>
-      {ticket.status === 'released' ? (
-        <p className={styles.released}>Released. This QR no longer works.</p>
-      ) : (
+      {ticket.status === 'revoked' ? (
+        <p className={styles.noQr}>This ticket no longer works.</p>
+      ) : ticket.qr ? (
         <div className={styles.qr}>
-          <QrCode value={ticket.qr} label={`QR code for ticket ${ticket.ref}`} />
+          <QrCode value={ticket.qr} label={`QR code for ticket ${ref}`} />
         </div>
+      ) : (
+        <div className={`${styles.qr} ${styles.qrPending}`} aria-hidden="true" />
       )}
       <dl className={styles.facts}>
         <div>
@@ -231,14 +295,12 @@ function Stub({ ticket }: { ticket: TicketDto }) {
         </div>
         <div>
           <dt>Ref</dt>
-          <dd>{ticket.ref}</dd>
+          <dd>{ref}</dd>
         </div>
       </dl>
-      {ticket.status !== 'released' && (
-        <p className={styles.note}>
-          Screen brightness goes up while this is open so the door can scan it.
-        </p>
-      )}
+      <p className={styles.note}>
+        Turn your screen brightness up at the door so it scans first time.
+      </p>
     </div>
   );
 }
@@ -262,7 +324,10 @@ function useWakeLock(active: boolean) {
         // Battery saver or a denied permission: the full-white card still helps the scan.
       }
     };
-    const onVisibility = () => void request();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void request();
+      else void lock?.release().catch(() => undefined);
+    };
     void request();
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
@@ -273,10 +338,15 @@ function useWakeLock(active: boolean) {
   }, [active]);
 }
 
-/** An .ics file for Apple Calendar, Outlook and the rest, or Google Calendar on the web. */
+/**
+ * A menu of an .ics file (Apple Calendar, Outlook) and Google Calendar: a bottom sheet on phones,
+ * a popover from 640 px. Esc or a tap outside closes it and focus goes back to the button.
+ */
 function AddToCalendar({ event }: { event: OrderTicketsDto['event'] }) {
   const [open, setOpen] = useState(false);
   const [links, setLinks] = useState<{ ics: string; google: string } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -287,31 +357,67 @@ function AddToCalendar({ event }: { event: OrderTicketsDto['event'] }) {
     return () => URL.revokeObjectURL(ics);
   }, [event]);
 
+  const close = useCallback(() => {
+    setOpen(false);
+    button.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    menu.current?.querySelector('a')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    // On click rather than pointerdown, so the focus a tap gives the page comes after, not over,
+    // the move back to the button.
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!menu.current?.contains(target) && !button.current?.contains(target)) close();
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('click', onClick);
+    };
+  }, [open, close]);
+
   return (
     <div className={styles.calendar}>
       <button
+        ref={button}
         type="button"
         className={styles.lightButton}
         aria-expanded={open}
         aria-controls="calendar-options"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? close() : setOpen(true))}
       >
         <Icon name="calendar" size={18} />
         Add to calendar
       </button>
       {open && links && (
-        <ul id="calendar-options" className={styles.calendarOptions}>
-          <li>
-            <a href={links.ics} download={`${event.slug}.ics`}>
-              Apple, Outlook and others (.ics)
-            </a>
-          </li>
-          <li>
-            <a href={links.google} target="_blank" rel="noopener noreferrer">
-              Google Calendar
-            </a>
-          </li>
-        </ul>
+        <>
+          <div className={styles.scrim} aria-hidden="true" />
+          <div ref={menu} id="calendar-options" className={styles.calendarMenu}>
+            <ul>
+              <li>
+                <a href={links.ics} download={`${event.slug}.ics`} onClick={() => setOpen(false)}>
+                  Apple Calendar or Outlook
+                </a>
+              </li>
+              <li>
+                <a
+                  href={links.google}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                >
+                  Google Calendar
+                </a>
+              </li>
+            </ul>
+          </div>
+        </>
       )}
     </div>
   );

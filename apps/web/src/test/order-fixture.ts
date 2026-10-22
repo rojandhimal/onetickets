@@ -2,11 +2,12 @@ import type { OrderTicketsDto, TicketDto } from '@/lib/tickets';
 
 const ticket = (overrides: Partial<TicketDto> = {}): TicketDto => ({
   id: '7d1b3c1e-0000-4000-8000-000000000001',
-  ref: '7K4Q-2M9X',
+  ref: 'K7Q4M2XA',
   holderName: 'Jordan Lee',
   ticketTypeName: 'General admission',
   qr: 'OT1.k1.evt_1.tkt_1.1792677665.c2lnbmF0dXJl',
   status: 'valid',
+  issuedAt: '2026-10-22T03:00:00Z',
   ...overrides,
 });
 
@@ -37,7 +38,7 @@ export function orderFixture(overrides: Partial<OrderTicketsDto> = {}): OrderTic
       ticket(),
       ticket({
         id: '7d1b3c1e-0000-4000-8000-000000000002',
-        ref: '7K4Q-5TQ3',
+        ref: 'K7Q45TQ3',
         holderName: 'Sam Lee',
         qr: 'OT1.k1.evt_1.tkt_2.1792677665.c2lnbmF0dXJl',
       }),

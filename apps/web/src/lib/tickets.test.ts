@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { qrPath } from '@/components/QrCode';
 import { orderFixture } from '@/test/order-fixture';
-import { googleCalendarUrl, icsFile, placeText, ticketKeyFromHash } from './tickets';
+import {
+  formatRef,
+  googleCalendarUrl,
+  icsFile,
+  stashConfirmedOrder,
+  takeConfirmedOrder,
+  takeTicketKey,
+  ticketKeyFromHash,
+  venueLine,
+} from './tickets';
 
 const event = orderFixture().event;
 
@@ -11,6 +20,30 @@ describe('ticket links', () => {
     expect(ticketKeyFromHash('')).toBeNull();
     expect(ticketKeyFromHash('#key=short')).toBeNull();
     expect(ticketKeyFromHash('#key=<script>alert(1)</script>')).toBeNull();
+  });
+
+  it('takes the key out of the address bar and keeps it for this tab only', () => {
+    window.history.replaceState(null, '', '/tickets/ord_1#key=abcdEFGH1234_-xyz');
+    expect(takeTicketKey('ord_1')).toBe('abcdEFGH1234_-xyz');
+    expect(window.location.href).toBe(`${window.location.origin}/tickets/ord_1`);
+    expect(window.localStorage.length).toBe(0);
+    // A reload in the same tab still has it; another order doesn't.
+    expect(takeTicketKey('ord_1')).toBe('abcdEFGH1234_-xyz');
+    expect(takeTicketKey('ord_2')).toBeNull();
+    window.sessionStorage.clear();
+  });
+
+  it('hands the created order from checkout to the page once, without its key', () => {
+    stashConfirmedOrder({ ...orderFixture(), ticketKey: 'secret-ticket-key-123' });
+    expect(window.sessionStorage.getItem('onetickets:order:ord_1')).not.toContain('secret');
+    expect(takeConfirmedOrder('ord_2')).toBeNull();
+    expect(takeConfirmedOrder('ord_1')).toEqual(orderFixture());
+    expect(takeConfirmedOrder('ord_1')).toBeNull();
+  });
+
+  it('shows refs in two halves', () => {
+    expect(formatRef('K7Q4M2XA')).toBe('K7Q4-M2XA');
+    expect(formatRef('odd-ref')).toBe('odd-ref');
   });
 });
 
@@ -34,6 +67,8 @@ describe('add to calendar', () => {
       'DTEND:20261114T020000Z',
       'SUMMARY:Screen printing\\; inks\\, aprons',
       'LOCATION:The Print Shed\\, 12 Sydenham Rd\\, Marrickville NSW 2204',
+      'DESCRIPTION:https://onetickets.example.test/e/screen-printing-k7q4\\nYour ti',
+      ' ckets are in your email from OneTickets.',
       'URL:https://onetickets.example.test/e/screen-printing-k7q4',
       'END:VEVENT',
       'END:VCALENDAR',
@@ -41,9 +76,18 @@ describe('add to calendar', () => {
     ]);
   });
 
+  it('never puts the ticket page in the calendar', () => {
+    const ics = icsFile(event, 'https://x.test');
+    expect(ics).not.toContain('/tickets/');
+    expect(googleCalendarUrl(event, 'https://x.test')).not.toContain('tickets%2F');
+  });
+
   it('folds long lines at 75 octets', () => {
     const ics = icsFile({ ...event, name: 'Ü'.repeat(60) }, 'https://x.test');
-    const summary = ics.split('\r\n').filter((l) => l.startsWith('SUMMARY') || l.startsWith(' '));
+    const lines = ics.split('\r\n');
+    const start = lines.findIndex((l) => l.startsWith('SUMMARY:'));
+    const end = lines.findIndex((l, i) => i > start && !l.startsWith(' '));
+    const summary = lines.slice(start, end);
     expect(summary.length).toBeGreaterThan(1);
     for (const line of summary)
       expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
@@ -58,10 +102,16 @@ describe('add to calendar', () => {
       text: 'Screen printing for beginners',
       dates: '20261113T230000Z/20261114T020000Z',
       location: 'The Print Shed, 12 Sydenham Rd, Marrickville NSW 2204',
-      details: 'https://x.test/e/screen-printing-k7q4',
+      details:
+        'https://x.test/e/screen-printing-k7q4\nYour tickets are in your email from OneTickets.',
       ctz: 'Australia/Sydney',
     });
-    expect(placeText({ kind: 'online' })).toBe('Online event');
+    expect(venueLine({ kind: 'online' })).toBe('Online · the link is in your email');
+    expect(
+      new URL(
+        googleCalendarUrl({ ...event, venue: { kind: 'online' } }, 'https://x.test'),
+      ).searchParams.get('location'),
+    ).toBe('Online');
   });
 });
 

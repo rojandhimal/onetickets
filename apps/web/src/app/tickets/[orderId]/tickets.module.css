@@ -1,5 +1,5 @@
 /* Attendee ticket screen, design artboard 4 (Your ticket). Indigo ground, white stub; phone first,
-   centred in a 480 px column on wider screens. */
+   centred in a 420 px column on wider screens (handoff-s2.md, S2-3). */
 
 .page {
   min-height: 100dvh;
@@ -20,7 +20,7 @@
 
 .main {
   width: 100%;
-  max-width: calc(var(--column) + 2 * var(--gutter));
+  max-width: calc(420px + 2 * var(--gutter));
   margin: 0 auto;
   padding: 18px var(--gutter) 24px;
   display: flex;
@@ -151,7 +151,11 @@
   display: block;
 }
 
-.released {
+.qrPending {
+  background: var(--paper);
+}
+
+.noQr {
   margin: 0;
   padding: 24px 12px;
   font-weight: 700;
@@ -221,9 +225,7 @@
 }
 
 .calendar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  position: relative;
 }
 
 .lightButton {
@@ -241,23 +243,131 @@
   gap: 8px;
 }
 
-.calendarOptions {
-  margin: 0;
-  padding: 4px 0;
-  list-style: none;
-  background: var(--white);
-  border-radius: var(--radius-button);
+/* Under 640 px the menu is a bottom sheet over a scrim; from 640 px a popover under the button. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgb(22 22 29 / 40%);
 }
-.calendarOptions a {
+.calendarMenu {
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgb(22 22 29 / 18%);
+}
+.calendarMenu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.calendarMenu li + li {
+  border-top: 1px solid var(--line-divider);
+}
+.calendarMenu a {
   display: flex;
   align-items: center;
-  min-height: 48px;
-  padding: 0 16px;
+  min-height: 52px;
+  padding: 0 4px;
   font-weight: 600;
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  .scrim {
+    display: none;
+  }
+  .calendarMenu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    top: calc(100% + 8px);
+    padding: 4px 16px;
+    border-radius: var(--radius-button);
+    box-shadow: 0 8px 24px rgb(22 22 29 / 24%);
+  }
+}
+
+/* "Can't load" and "link doesn't work": a white card on indigo. */
+.messageCard {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.messageCard p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.messageTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.2;
+}
+.messageCard :focus-visible {
+  outline-color: var(--ink);
+  box-shadow: 0 0 0 4px var(--white);
+}
+
+.darkButton {
+  min-height: 52px;
+  border-radius: var(--radius-button);
+  border: 0;
+  background: var(--ink);
+  color: var(--white);
+  font-weight: 700;
   font-size: 15px;
 }
-.calendarOptions li + li {
-  border-top: 1px solid var(--line-divider);
+
+/* Loading from a link: grey blocks where the text and QR go. */
+.bone {
+  display: block;
+  border-radius: 6px;
+  background: var(--line-divider);
+}
+.intro .bone {
+  background: rgb(255 255 255 / 22%);
+}
+.boneHeading {
+  width: 60%;
+  height: 34px;
+}
+.boneLede {
+  width: 85%;
+  height: 18px;
+}
+.boneShort {
+  width: 40%;
+  height: 14px;
+}
+.boneLong {
+  width: 80%;
+  height: 22px;
+}
+.boneMid {
+  width: 65%;
+  height: 16px;
+}
+.boneQr {
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  border-radius: 12px;
+}
+.skeleton {
+  user-select: none;
 }
 
 .moreLink {

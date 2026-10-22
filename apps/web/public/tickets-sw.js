@@ -25,7 +25,7 @@ self.addEventListener('activate', (event) => {
 
 const ORDER_TICKETS = /^\/api\/public\/orders\/[^/]+\/tickets$/;
 
-/** Live first, so a released ticket or a changed time shows; the saved copy only without signal. */
+/** Live first, so a revoked ticket or a changed time shows; the saved copy only without signal. */
 async function networkFirst(request) {
   try {
     return await fetch(request);
