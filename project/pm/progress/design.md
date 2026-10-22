@@ -2,6 +2,10 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 22 Oct 2026
+
+- **Blocked:** On hold at PM's request until tegs says which team runs OneTickets from here (another team ran Sprint 1 acceptance and Sprint 2 from 17 to 22 Oct). No PR reviews or new design work until PM sends it.
+
 ## 16 Oct 2026
 
 - **Done:** Design review of [PR #23](https://github.com/rojandhimal/onetickets/pull/23) (S1-3 event page), rendered at 375 and 1280 px with a mock api: changes needed. One must-fix: prices show "$53.35", not "A$53.35". Everything else matches handoff-s1 and artboards 2 and 2b.
@@ -10,6 +14,8 @@ Newest first. Format: date, Done, Next, Blocked.
 - **Done (later):** Reviewed [#35](https://github.com/rojandhimal/onetickets/pull/35) (S1-4 details): changes needed. Must fix: About as placeholder prompts, not saved starter text. The #31 follow-ups are still to land. Approved the email error and the No cancellations hint.
 - **Done (later):** Approved #35 at 468cf23 after rendering at 375 and 1280 px (About placeholders, the #31 follow-ups). Nit: the header says "Draft saved" while an invalid email isn't saved. S1-1 to S1-4 are design-approved.
 - **Done (later):** Attendee contact email, agreed with PM and Security: show the viewer's own email in the field, counted only once saved; no api fallback; publish refused without a saved email (checklist item). Copy in copy-s0-s2.md, rule in handoff-s1.md. Approved FrontendDev's two new strings (offline remove alert, "Use a whole number").
+- **Done (later):** Re-approved #35 at bda956e: the whole-number error, focus kept on a mistake, the offline remove alert, offline ticket edits.
+- **Done (later):** #35 passes at d966e09 (the save-error header, Saving… during a venue lookup) and at 16103ea (Publish sends pending edits first; the api's missing list uses the same copy).
 - **Next:** Review S1-5 (browse, artboard 1) when it opens. Check the contact email change when it's pushed.
 - **Blocked:** Nothing.
 

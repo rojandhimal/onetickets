@@ -38,6 +38,15 @@ When one provider's limit runs out, nothing is lost as long as work is pushed:
 
 Before stopping, an agent pushes its branch and adds a progress entry. That's the whole handoff.
 
+## Several tools at once
+
+Agents in different tools can also work at the same time (tegs, 22 Oct 2026). Coming back after a
+break, an agent starts from the current `main`, the board and the open pull requests, not from where
+it stopped, because another tool may have finished or started its next item. Before building, it
+checks the open pull requests and claims its card with a draft PR, so each card has one owner
+whatever the tool. The rules are in the
+[working agreement](../project/pm/working-agreement.md), section 4.
+
 ## Where shared files live
 
 Claude project threads keep a live workspace in their shared project folder. Agents outside Claude

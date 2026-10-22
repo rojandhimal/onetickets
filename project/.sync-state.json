@@ -40,48 +40,48 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "03d1c099105c49f0e51b0da5d6f86f2ad216601abbc5822ea6d9542afd5014bc",
-    "shared": "66280c45ba297b10462b3198025f321a06dc75b577377ef8f993b4033ee16b66"
+    "repo": "b04660835bb4f8eddbf7cd2c5031b0ea7163e98f6e1720aaa0e19c8a29282fe1",
+    "shared": "1455787fe1c85d5032579791dc43f9ca7d7d41dc5d3c787a541578cf6c906b8d"
   },
   "pm/owner-setup.md": {
-    "repo": "f803444f18f7804000c68f03a17b5ba1be17badb40deec74ed44df098f503fa6",
-    "shared": "dcebb27a1b316982d0ab59c6ccf71adc20f0fbe69fcc259cd6bae03f204d8907"
+    "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
+    "shared": "c7c9dbc4aa01d5c214c63fbabf4c43d9f17ab87f5082cb8692eb89ef06d06088"
   },
   "pm/progress/backend.md": {
-    "repo": "e79c9bd1db1a93c4bee088bbf928618a4d60616530354c1724a7b818b13a7aab",
-    "shared": "3220020360a2d52fae0c7bc90fece6f4038614e7cca15f9a7a7fe5285571a46f"
+    "repo": "7f562612a89a42e2bd244f762ee9f89083eeab976b442d34dfc9502d733f7e7c",
+    "shared": "7f562612a89a42e2bd244f762ee9f89083eeab976b442d34dfc9502d733f7e7c"
   },
   "pm/progress/design.md": {
-    "repo": "5969cf583713aded190b679cac2b551f9ff0b10dd08b37e1465405eca82f82a9",
-    "shared": "4a0737f6b4ab7516553225e69fd693eca9bfdb49f979722fbc6903248c81a991"
+    "repo": "db783de5d74a3ec9e14bba8dda90644644286b4d3fdea1da13e9b62c65a26cc3",
+    "shared": "d2e246d21f038474664fdceaf0074568c7b825c7ab3ce28da20290fab2531799"
   },
   "pm/progress/devops.md": {
-    "repo": "c010a428ebb772a82494635db6925cb8cd12e77bcba2005ddfadd4e33776032d",
-    "shared": "56849cc869c77c5edc37cbddc4d4e622bb8492be07d158b0726ac0c095658b60"
+    "repo": "01be30bfc5c2c9b732114080b7e8b61288a5da824c11448da1dd467cebd76b7d",
+    "shared": "01be30bfc5c2c9b732114080b7e8b61288a5da824c11448da1dd467cebd76b7d"
   },
   "pm/progress/docs.md": {
     "repo": "cd7780b485ab452b15b6d3792cce5d7deea537fcf377aa3c8e0821ef7f8d247a",
     "shared": "cb19594e57a256a11b0906a75f6ee5b58d6bfaac8eff86f27efe5396f6ed0397"
   },
   "pm/progress/frontend.md": {
-    "repo": "85f2e37bdcf853a35c0d3242c501d74ff01c285223048a19899635f82ada2370",
-    "shared": "b8a835995f8d062299c5092e4b0fa4df47a366664964cb293ee8e18ad867c3d6"
+    "repo": "cf71d7dee6d89ce2e8f7c69aee6ce4fbe9815a7a3d9e488ad92030215bd1cbb1",
+    "shared": "494e9168bede24ed44c19d64e2dca4878a8b96e9fdc0fd2005e5702e58733379"
   },
   "pm/progress/pm.md": {
-    "repo": "a7946478f92b3a0dcd47cf3a506b17188e8631df998f233d36b62cceb731b2e1",
-    "shared": "a7946478f92b3a0dcd47cf3a506b17188e8631df998f233d36b62cceb731b2e1"
+    "repo": "e234b44090c38207ec067e3dee9433f99a541080cb816d089dde377c9c1e97eb",
+    "shared": "d2e9363759a98e38c666c219990a9e3027cb90fa2087149db7ef5471571c006b"
   },
   "pm/progress/qa.md": {
-    "repo": "0b7605be9bd39d94610b4ba0e9c0b2328530cd224e88935f19cfe7be2d4758fe",
-    "shared": "221392e69bb41529ef649acf097a8a010456ef4a229ce43e17e1bc4777e89a04"
+    "repo": "7d9860b2e86fd2b8f58fa4fcacbbd3d6a36af5f8fbd533d01069af6c5f200e01",
+    "shared": "7c0ad489f77c706b1a6573abefbd6ce1a7bcb8b2f48ea0858da6bd47f7f889d4"
   },
   "pm/progress/security.md": {
-    "repo": "e58f9f8f1f2c6dd3b50db8aa8f68d94de8a529d7e6e37e5bc5416b9bc2355c54",
-    "shared": "e969a9e532941ba018e32a8f54d40f0aeed461987de12e8a9ce0ebad4916e2d9"
+    "repo": "925c11333d6802ab44c16da75e422d2b0eacc5df6b705aa2f7dba11579370bb7",
+    "shared": "925c11333d6802ab44c16da75e422d2b0eacc5df6b705aa2f7dba11579370bb7"
   },
   "pm/working-agreement.md": {
-    "repo": "32ab49805f9177da287d35f166332b3220c9619c6fb9699abdf412eea1b7e3b6",
-    "shared": "248d10023f4b123fc37f40be9a15863437bf5100120199ae522dd73e7da3b11d"
+    "repo": "d55671860e4ce2edd3fc56de638c24293fe2c217debadd406560d868304d2697",
+    "shared": "d608a16eabced95e3e7c39838c5e9adfcd720f5ffd07e14e5508c659e0f0d7c3"
   },
   "qa/sprint-0-acceptance.md": {
     "repo": "f72de63d28e16991dc6b53b45d33c69acefcbd241ce66763a88fe3dfc12fcd24",
@@ -122,5 +122,13 @@
   "social/voice-and-tone.md": {
     "repo": "84946a8409482d979dcf8c657ea4921be36c0f1d8c27da09a86d89e7b61ff481",
     "shared": "ed9dff687c8faefd96cb3078fdfde37d1013562332906c2cd41a773db8833920"
+  },
+  "qa/sprint-1-acceptance.md": {
+    "repo": "b0829e6ef7268fbfaecfb5e0d8e3080218ed948871ee256f00484b1e945cb866",
+    "shared": "b0829e6ef7268fbfaecfb5e0d8e3080218ed948871ee256f00484b1e945cb866"
+  },
+  "qa/sprint-2-checklist.md": {
+    "repo": "cdad33f120241938adb24463623401b3fab8999aabc80ac3d0668678dacde727",
+    "shared": "18f6cf5031f95304fd231e915787d3ed9226bf8f921ee5040f0693fab80888b0"
   }
 }
