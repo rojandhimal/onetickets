@@ -327,14 +327,6 @@ export class EventsRepository {
     return rows[0] ?? null;
   }
 
-  async findPublishedById(tx: pg.PoolClient, eventId: string): Promise<PublicEventRow | null> {
-    const { rows } = await tx.query<PublicEventRow>(
-      `select ${PUBLIC_EVENT_COLUMNS} from catalogue.events where id = $1 and status = 'published'`,
-      [eventId],
-    );
-    return rows[0] ?? null;
-  }
-
   /** The "from" base price by catalogue.from_price_cents(), the rule browse uses too. */
   async fromPriceCents(tx: pg.PoolClient, eventId: string, now: Date): Promise<number> {
     const { rows } = await tx.query<{ cents: number }>(

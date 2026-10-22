@@ -6,8 +6,6 @@ import { PG_POOL } from './tokens.js';
 export interface TenantScope {
   organisationId?: string;
   userId?: string;
-  /** An order whose secret link the request has already checked (buyer paths, no session). */
-  orderId?: string;
 }
 
 /**
@@ -42,8 +40,7 @@ export class UnitOfWork {
  */
 export async function setScope(tx: pg.PoolClient, scope: TenantScope): Promise<void> {
   await tx.query(
-    `select set_config('app.organisation_id', $1, true), set_config('app.user_id', $2, true),
-            set_config('app.order_id', $3, true)`,
-    [scope.organisationId ?? '', scope.userId ?? '', scope.orderId ?? ''],
+    "select set_config('app.organisation_id', $1, true), set_config('app.user_id', $2, true)",
+    [scope.organisationId ?? '', scope.userId ?? ''],
   );
 }

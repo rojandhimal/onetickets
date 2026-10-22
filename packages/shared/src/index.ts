@@ -111,10 +111,3 @@ export type {
   TicketStatus,
   TicketTokenClaims,
 } from './api/tickets.js';
-export { confirmationPath, createOrderBody, MAX_HOLDS_PER_ORDER } from './api/orders.js';
-export type {
-  CreatedOrderDto,
-  CreateOrderBody,
-  OrderEventDto,
-  OrderTicketsDto,
-} from './api/orders.js';

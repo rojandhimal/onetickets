@@ -51,7 +51,7 @@ forwarded and resold.
   is accepted at MVP and flagged after sync; rotating codes or a local gate hub can close the gap
   later.
 - Refunded, released or cancelled tickets must reach the scanner through the revocation list
-  (`ticketing.tickets.revoked_at`).
+  (a revoked status on the ticket row).
 - A leaked environment key means reissuing every live ticket in that environment, not one event's.
 - Until the signing worker exists in AWS, tickets there stay unsigned (`qr: null`).
 - Lost phones are a privacy risk, so the scanner keeps minimal attendee data and wipes it at event
