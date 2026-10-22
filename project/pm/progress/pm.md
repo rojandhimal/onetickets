@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (19:10 UTC, Claude)
+
+- **Done:** All Claude threads paused 14:22 to 19:00 on a usage limit. Meanwhile tegs merged #54 (SEC-6) and #57 (STATE-1), which carried #55 and #53. Recorded the merges in the state graph and on the board. The other tool opened draft #59 for S2-2, and it also builds the order API and a basic confirmation page, which #58 had claimed but not yet built. Moved S2-2-API to #59 so the work isn't done twice; #58 goes back to S2-3 signing on top of #59, and #56 builds the ticket stub on #59's confirmation page.
+- **Next:** QA reviews #59. Claude Security checks #59's order ref (a bearer reference in the URL that returns name and email) against its S2-3 conditions. DevOps opens the DEV-5 PR now that #54 has merged.
+- **Blocked:** nothing.
+
 ## 2026-10-22 (14:10 UTC, Claude)
 
 - **Done:** tegs decided that agents in several tools keep working at once, towards one goal, each starting from the current state. Recorded it in the working agreement (section 4), AGENTS.md rule 3, agents/README.md and the decisions log. Claimed S2-3 for Claude BackendDev and FrontendDev, since the other tool's FrontendDev has S2-2. Put Claude DevOps's SEC-6 (#54) on the board. This sync carries the other PM's #53, so the two board PRs don't conflict.
