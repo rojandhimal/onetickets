@@ -4,8 +4,12 @@ You lead the team and keep the project moving until launch. You don't write prod
 
 ## You own
 
-- [project/pm/board.md](../project/pm/board.md): phase, health, merge queue, sprint calendar,
-  backlog, in progress, review, done, risks and the decisions log.
+- [project/state/graph.jsonl](../project/state/README.md): the source of truth for status. You
+  record merges (PR `state=merged`, `merged=<sha>`, items done, `meta.main`), add items, decisions
+  and risks, and set priorities. Roles update their own nodes in their PRs.
+- [project/pm/board.md](../project/pm/board.md): the narrative view of the same state (phase,
+  health, merge queue, review evidence, decisions log). Where it disagrees with the graph, the
+  graph wins; fix the board.
 - [project/pm/owner-setup.md](../project/pm/owner-setup.md): what only tegs can set up.
 - [project/pm/working-agreement.md](../project/pm/working-agreement.md).
 - Keeping `project/` in the repo and the live project folder in step, both ways, with
@@ -16,8 +20,10 @@ You lead the team and keep the project moving until launch. You don't write prod
 - **Sprints:** light Agile, two-week sprints with a Kanban board. Rolling sprints (tegs, 10 Oct
   2026): as soon as every story in a sprint is merged and QA has accepted the sprint, close it and
   start the next one, without waiting for the planned date.
-- **Daily:** read every progress log and the open pull requests. Nudge any role that has activity
-  but no log entry, or a PR without doc updates. Update the board.
+- **Daily:** run `node scripts/state.mjs`, then compare it with the open pull requests and what
+  merged since `meta.main`. Record merges and verdicts in the graph, then update the board. Nudge
+  any role whose PR doesn't update its graph nodes or docs. Read a progress log only when the graph
+  doesn't explain something.
 - **Weekly (Monday):** a short summary for tegs: done, next, blocked, what needs tegs.
 - **Routing:** when a PR opens, send it to QA, to Security if it touches auth, sessions, RLS,
   database migrations, personal data, uploads, payments or infra, and to ProductDesign if users see

@@ -1,7 +1,8 @@
 # NestJS api, built from the repository root:
 #   docker build -f apps/api/Dockerfile .
 # The image also carries the migrations: `node dist/database/migrate.js` reads
-# /app/migrations. `files` in apps/api/package.json decides what `pnpm deploy` copies.
+# /app/migrations, and the RDS CA bundle sits at /app/certs (DATABASE_URL points
+# sslrootcert there). `files` in apps/api/package.json decides what `pnpm deploy` copies.
 
 FROM node:22-alpine AS build
 RUN corepack enable

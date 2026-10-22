@@ -123,3 +123,18 @@ test('a wrong key shows no tickets', async ({ page, context }) => {
   );
   await expectAccessible(page);
 });
+
+test('the service worker and ticket pages are never kept by a shared cache', async ({
+  request,
+}) => {
+  const worker = await request.get('/tickets-sw.js');
+  expect(worker.ok()).toBe(true);
+  expect(worker.headers()['content-type']).toMatch(/javascript/);
+  expect(worker.headers()['cache-control']).toMatch(/no-store|no-cache/);
+  // Scope stays /tickets/, as registered; nothing widens it.
+  expect(worker.headers()['service-worker-allowed']).toBeUndefined();
+
+  const page = await request.get(`/tickets/${ORDER}`);
+  expect(page.headers()['cache-control']).toContain('no-store');
+  expect(page.headers()['referrer-policy']).toBe('no-referrer');
+});

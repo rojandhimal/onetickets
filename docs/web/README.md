@@ -234,7 +234,7 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 - **Offline**: the page registers `public/tickets-sw.js` with scope `/tickets/`, then saves the
   order, its own HTML and the built files it loaded into Cache Storage. "Works offline" shows once
   all of that and every QR is in. With no signal the worker answers from that cache
-  ([ADR 0019](../adr/0019-ticket-screen-offline-with-a-scoped-service-worker.md)).
+  ([ADR 0020](../adr/0020-ticket-screen-offline-with-a-scoped-service-worker.md)).
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."
 - **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar
@@ -250,7 +250,7 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 The browser only calls `/api/*` on the web origin. `next.config.ts` rewrites those to `API_URL`, so the
 session cookie stays first-party and the api needs no CORS. Next forwards `Origin` and any incoming
 `X-Forwarded-For` unchanged. Nothing is stored in `localStorage`. The device keeps two things:
-unsynced wizard edits in IndexedDB, and the attendee's own ticket screen in Cache Storage (ADR 0019).
+unsynced wizard edits in IndexedDB, and the attendee's own ticket screen in Cache Storage (ADR 0020).
 Wizard edits are tied to the signed-in organiser. They are wiped when
 someone else opens the wizard or the organiser signs out, and they expire after 7 days (ADR 0016).
 

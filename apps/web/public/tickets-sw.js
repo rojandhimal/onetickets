@@ -1,4 +1,4 @@
-// Service worker for the attendee ticket screen (S2-3, ADR 0019). Registered with scope /tickets/,
+// Service worker for the attendee ticket screen (S2-3, ADR 0020). Registered with scope /tickets/,
 // so it only ever controls ticket pages. The page itself saves what it needs into Cache Storage
 // (lib/tickets.ts, saveForOffline); this worker only answers from that cache when the network
 // can't. Nothing else on the site is touched.

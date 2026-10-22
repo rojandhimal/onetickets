@@ -1,4 +1,4 @@
-# 0019. The ticket screen works offline through a service worker scoped to /tickets/
+# 0020. The ticket screen works offline through a service worker scoped to /tickets/
 
 - Status: Proposed
 - Date: 2026-10-22
@@ -52,10 +52,14 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
 - With no signal, an attendee who opened their tickets once can still show the QR, even in a new
   tab that no longer has the key: the saved copy is read from Cache Storage by order id. The e2e test
   cuts the page and the worker off from the network and checks this at 375 and 1280 px.
-- The holder's name, the order email and the QR token stay in Cache Storage on that device until
-  the browser clears site data or the cache name changes. That is the attendee's own device, but a
-  shared phone keeps them too. Revisit with a "remove from this device" action, or by clearing the
-  cache once the event ends, when My tickets (S2-4) lands.
+- The holder's name, the order email and the QR tokens stay in Cache Storage on that device until
+  the browser clears site data or the cache name changes. The key is never cached. That is the
+  attendee's own device, which Security accepted for MVP (22 Oct), but a shared phone keeps them too.
+  So "remove from this device", and dropping a saved order some days after its event ends, are an
+  S2-4 card that must land before public launch.
+- The worker only answers ticket pages, the one order read and built files. It never caches any
+  other api path. Its script is same-origin, never kept by a shared cache, and sends no
+  `Service-Worker-Allowed`, so its scope can't widen; e2e checks those headers.
 - Anyone holding the full link can see the tickets, as with the ticket email. The key's lifetime
   and revocation belong to the tickets api (SEC-4).
 - Playwright needs `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS` (set in `e2e/playwright.config.ts`)
