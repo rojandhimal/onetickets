@@ -56,7 +56,8 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
   the browser clears site data or the cache name changes. The key is never cached. That is the
   attendee's own device, which Security accepted for MVP (22 Oct), but a shared phone keeps them too.
   So "remove from this device", and dropping a saved order some days after its event ends, are an
-  S2-4 card that must land before public launch.
+  S2-4 card that must land before public launch. Until then, signing out or clearing site data
+  removes them.
 - The worker only answers ticket pages, the one order read and built files. It never caches any
   other api path. Its script is same-origin, never kept by a shared cache, and sends no
   `Service-Worker-Allowed`, so its scope can't widen; e2e checks those headers.

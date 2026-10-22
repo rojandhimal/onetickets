@@ -225,8 +225,11 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
   up at the door so it scans first time." With several tickets, Previous and Next round buttons and
   a sideways swipe on a touch screen move between them, and "Ticket 1 of 2" is announced politely.
   At either end the button stays focusable with `aria-disabled`. One ticket has no pager and is
-  labelled "Your ticket". A revoked ticket shows no QR. A QR still being signed shows a grey square,
-  and the page reads the order again every 2 seconds, up to 5 times, until it arrives.
+  labelled "Your ticket". A revoked ticket shows "This ticket is no longer valid." with the
+  organiser to contact, and no QR or brightness note. If every ticket is revoked, the heading is "Your
+  tickets", with no email line or Add to calendar. A QR still being signed shows "Getting your QR
+  code ready…" as a status, and the page reads the order again every 2 seconds, up to 5 times. If it
+  still hasn't arrived, the stub says it's taking longer than usual and is in the ticket email too.
 - **QR**: drawn in the browser as an inline SVG from the ticket's signed token
   (`src/components/QrCode.tsx`, using `qrcode-generator`, level M, four-module quiet zone) on a
   full-white card. While a QR shows, Screen Wake Lock keeps the screen on where the browser allows,

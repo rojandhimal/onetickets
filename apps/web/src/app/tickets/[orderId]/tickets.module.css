@@ -152,15 +152,30 @@
 }
 
 .qrPending {
+  display: grid;
+  place-items: center;
+  padding: 24px;
   background: var(--paper);
+  color: var(--slate);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.qrPending p {
+  margin: 0;
 }
 
 .noQr {
   margin: 0;
   padding: 24px 12px;
-  font-weight: 700;
   text-align: center;
   color: var(--slate);
+}
+
+.noQr strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
 }
 
 .facts {

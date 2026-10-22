@@ -5,7 +5,7 @@ import { TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
 import { orderFixture, ticketFixture } from '@/test/order-fixture';
 import { TicketScreen } from './TicketScreen';
 
-const KEY = 'tk_abcdefghijklmnop';
+const KEY = 'tk_abcdefghijklmnop'; // gitleaks:allow (fake ticket key)
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
 function api(handler: () => Response | Promise<Response>) {
@@ -105,11 +105,25 @@ describe('ticket screen', () => {
     expect(screen.queryByRole('button', { name: 'Next ticket' })).not.toBeInTheDocument();
   });
 
-  it('shows a revoked ticket without a QR', async () => {
+  it('shows a revoked ticket without a QR or the brightness note', async () => {
+    const revoked = ticketFixture({ status: 'revoked', qr: null });
+    api(() => json(orderFixture({ tickets: [revoked, ticketFixture({ ref: 'K7Q45TQ3' })] })));
+    render(<TicketScreen orderId="ord_1" />);
+    const stub = await screen.findByRole('article', { name: 'Ticket 1 of 2' });
+    expect(stub).toHaveTextContent(
+      "This ticket is no longer valid. It was released or cancelled, so there's no QR to show. Questions? Reply to your ticket email to reach Marrickville Print Club.",
+    );
+    expect(stub).not.toHaveTextContent('screen brightness');
+    expect(screen.queryByRole('img', { name: /QR code/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+  });
+
+  it('says "Your tickets" with no email line or calendar when every ticket is revoked', async () => {
     api(() => json(orderFixture({ tickets: [ticketFixture({ status: 'revoked', qr: null })] })));
     render(<TicketScreen orderId="ord_1" />);
-    expect(await screen.findByText('This ticket no longer works.')).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: /QR code/ })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your tickets' })).toBeInTheDocument();
+    expect(screen.queryByText(/We've also emailed/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add to calendar' })).not.toBeInTheDocument();
   });
 
   it('keeps the screen on while a QR shows, and lets go on leaving', async () => {
@@ -241,6 +255,7 @@ describe('ticket screen', () => {
       render(<TicketScreen orderId="ord_1" />);
       await screen.findByRole('article', { name: 'Your ticket' });
       expect(screen.queryByRole('img', { name: /QR code/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Getting your QR code ready…');
       await act(async () => vi.advanceTimersByTimeAsync(4000));
       expect(
         await screen.findByRole('img', { name: 'QR code for ticket K7Q4-M2XA' }),
@@ -265,5 +280,27 @@ describe('ticket screen', () => {
     expect(caches.match).toHaveBeenCalledWith('/api/public/orders/ord_1/tickets', {
       cacheName: TICKETS_CACHE,
     });
+  });
+
+  it('says the QR is slow, and that it is in the email, when the retries run out', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      let calls = 0;
+      api(() => {
+        calls += 1;
+        return json(orderFixture({ tickets: [ticketFixture({ qr: null })] }));
+      });
+      render(<TicketScreen orderId="ord_1" />);
+      await screen.findByRole('article', { name: 'Your ticket' });
+      await act(async () => vi.advanceTimersByTimeAsync(12000));
+      expect(
+        await screen.findByText(
+          "Your QR code is taking longer than usual. It's in your ticket email too.",
+        ),
+      ).toBeInTheDocument();
+      expect(calls).toBe(6);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

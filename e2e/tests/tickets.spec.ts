@@ -6,7 +6,7 @@ import { expectAccessible } from './a11y';
 // tickets api is still being built, so its one read is answered here from a fake order of fake
 // people; checkout (S2-2) lands on this page with the key in the fragment.
 
-const KEY = 'tk_e2e_abcdefghijklmnop';
+const KEY = 'tk_e2e_abcdefghijklmnop'; // gitleaks:allow (fake ticket key)
 const ORDER = 'ord-e2e-1';
 
 const ticket = (n: number, holderName: string) => ({

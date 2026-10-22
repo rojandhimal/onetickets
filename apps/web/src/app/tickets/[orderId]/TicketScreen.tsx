@@ -33,6 +33,7 @@ const QR_RETRIES = 5;
 export function TicketScreen({ orderId }: { orderId: string }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [offlineReady, setOfflineReady] = useState(false);
+  const [qrSlow, setQrSlow] = useState(false);
   const key = useRef<string | null>(null);
 
   useEffect(() => {
@@ -83,10 +84,13 @@ export function TicketScreen({ orderId }: { orderId: string }) {
     let tries = 0;
     const timer = window.setInterval(() => {
       tries += 1;
-      if (tries >= QR_RETRIES) window.clearInterval(timer);
+      const last = tries >= QR_RETRIES;
+      if (last) window.clearInterval(timer);
       void fetchOrderTickets(orderId, ticketKey).then((result) => {
+        if (cancelled) return;
         // A failed retry keeps the stubs on screen; only a fuller order replaces them.
-        if (!cancelled && result.ok) void show(result.order, () => cancelled);
+        if (result.ok) void show(result.order, () => cancelled);
+        if (last && (!result.ok || awaitingQr(result.order))) setQrSlow(true);
       });
     }, 2000);
     return () => {
@@ -132,6 +136,7 @@ export function TicketScreen({ orderId }: { orderId: string }) {
 
   const { order } = state;
   const many = order.tickets.length > 1;
+  const allRevoked = order.tickets.every((t) => t.status === 'revoked');
   return (
     <Shell>
       <div className={styles.topRow}>
@@ -143,13 +148,15 @@ export function TicketScreen({ orderId }: { orderId: string }) {
         )}
       </div>
       <div className={styles.intro}>
-        <h1 className={styles.heading}>You&apos;re going!</h1>
-        <p className={styles.lede}>
-          We&apos;ve also emailed your {many ? 'tickets' : 'ticket'} to {order.email}
-        </p>
+        <h1 className={styles.heading}>{allRevoked ? 'Your tickets' : "You're going!"}</h1>
+        {!allRevoked && (
+          <p className={styles.lede}>
+            We&apos;ve also emailed your {many ? 'tickets' : 'ticket'} to {order.email}
+          </p>
+        )}
       </div>
-      <TicketPager order={order} />
-      <AddToCalendar event={order.event} />
+      <TicketPager order={order} qrSlow={qrSlow} />
+      {!allRevoked && <AddToCalendar event={order.event} />}
       <a href="/" className={styles.moreLink}>
         Find more events
       </a>
@@ -195,7 +202,7 @@ function Loading() {
 }
 
 /** One stub at a time; Previous and Next, or a sideways swipe on a touch screen. */
-function TicketPager({ order }: { order: OrderTicketsDto }) {
+function TicketPager({ order, qrSlow }: { order: OrderTicketsDto; qrSlow: boolean }) {
   const [index, setIndex] = useState(0);
   const count = order.tickets.length;
   const ticket = order.tickets[Math.min(index, count - 1)];
@@ -239,7 +246,7 @@ function TicketPager({ order }: { order: OrderTicketsDto }) {
           <span className={styles.place}>{venueLine(order.event.venue)}</span>
         </div>
         <div className={styles.perforation} aria-hidden="true" />
-        <Stub ticket={ticket} />
+        <Stub ticket={ticket} organiser={order.event.organiser.name} qrSlow={qrSlow} />
       </article>
 
       {many && (
@@ -271,18 +278,36 @@ function TicketPager({ order }: { order: OrderTicketsDto }) {
   );
 }
 
-function Stub({ ticket }: { ticket: TicketDto }) {
+function Stub({
+  ticket,
+  organiser,
+  qrSlow,
+}: {
+  ticket: TicketDto;
+  organiser: string;
+  qrSlow: boolean;
+}) {
   const ref = formatRef(ticket.ref);
+  const revoked = ticket.status === 'revoked';
   return (
     <div className={styles.stubBody}>
-      {ticket.status === 'revoked' ? (
-        <p className={styles.noQr}>This ticket no longer works.</p>
+      {revoked ? (
+        <p className={styles.noQr}>
+          <strong>This ticket is no longer valid.</strong> It was released or cancelled, so
+          there&apos;s no QR to show. Questions? Reply to your ticket email to reach {organiser}.
+        </p>
       ) : ticket.qr ? (
         <div className={styles.qr}>
           <QrCode value={ticket.qr} label={`QR code for ticket ${ref}`} />
         </div>
       ) : (
-        <div className={`${styles.qr} ${styles.qrPending}`} aria-hidden="true" />
+        <div className={`${styles.qr} ${styles.qrPending}`}>
+          <p role="status">
+            {qrSlow
+              ? "Your QR code is taking longer than usual. It's in your ticket email too."
+              : 'Getting your QR code ready…'}
+          </p>
+        </div>
       )}
       <dl className={styles.facts}>
         <div>
@@ -298,9 +323,11 @@ function Stub({ ticket }: { ticket: TicketDto }) {
           <dd>{ref}</dd>
         </div>
       </dl>
-      <p className={styles.note}>
-        Turn your screen brightness up at the door so it scans first time.
-      </p>
+      {!revoked && (
+        <p className={styles.note}>
+          Turn your screen brightness up at the door so it scans first time.
+        </p>
+      )}
     </div>
   );
 }

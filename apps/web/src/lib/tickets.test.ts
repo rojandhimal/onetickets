@@ -13,22 +13,23 @@ import {
 } from './tickets';
 
 const event = orderFixture().event;
+const FAKE_KEY = 'abcdEFGH1234_-xyz'; // gitleaks:allow (fake ticket key)
 
 describe('ticket links', () => {
   it('reads the key from the fragment and ignores anything that is not one', () => {
-    expect(ticketKeyFromHash('#key=abcdEFGH1234_-xyz')).toBe('abcdEFGH1234_-xyz');
+    expect(ticketKeyFromHash(`#key=${FAKE_KEY}`)).toBe(FAKE_KEY);
     expect(ticketKeyFromHash('')).toBeNull();
     expect(ticketKeyFromHash('#key=short')).toBeNull();
     expect(ticketKeyFromHash('#key=<script>alert(1)</script>')).toBeNull();
   });
 
   it('takes the key out of the address bar and keeps it for this tab only', () => {
-    window.history.replaceState(null, '', '/tickets/ord_1#key=abcdEFGH1234_-xyz');
-    expect(takeTicketKey('ord_1')).toBe('abcdEFGH1234_-xyz');
+    window.history.replaceState(null, '', `/tickets/ord_1#key=${FAKE_KEY}`);
+    expect(takeTicketKey('ord_1')).toBe(FAKE_KEY);
     expect(window.location.href).toBe(`${window.location.origin}/tickets/ord_1`);
     expect(window.localStorage.length).toBe(0);
     // A reload in the same tab still has it; another order doesn't.
-    expect(takeTicketKey('ord_1')).toBe('abcdEFGH1234_-xyz');
+    expect(takeTicketKey('ord_1')).toBe(FAKE_KEY);
     expect(takeTicketKey('ord_2')).toBeNull();
     window.sessionStorage.clear();
   });
