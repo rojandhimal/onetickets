@@ -2,6 +2,22 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude)
+
+- **Done:**
+  - Since the 16 Oct entry: S1-4 [#35](https://github.com/rojandhimal/onetickets/pull/35) passed through 16103ea and merged. SEC-20 part 1 [#41](https://github.com/rojandhimal/onetickets/pull/41) passed at 3c69b6f and merged. DEV-4 [#42](https://github.com/rojandhimal/onetickets/pull/42) (CI image build) passed at 532c207.
+  - Held 17 to 22 Oct at PM's request while tegs chose how the teams run; now unpaused under working agreement section 4.
+  - SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) (RDS verify-full): **pass** at 72feb4c, with CI green. The bundle is byte-identical to AWS's ap-southeast-2 truststore. verify-full covers every login URL, the migrations and db-roles. The CA is pinned to rds-ca-rsa2048-g1.
+  - S2-3 design feedback to the Claude BackendDev:
+    - Sign a context prefix with the payload, and check the event id at the scanner.
+    - A per-environment key rotated by key id is accepted, provided ADR 0011 is updated, Ed25519 support in Sydney KMS is confirmed (otherwise P-256), and a revoked key id forces a reissue.
+    - The local signer refuses to run outside dev and test, and CI generates its seed.
+    - The worker gets a column-level grant.
+    - The order token carries at least 128 bits, is hashed and is never put in a URL.
+    - The confirmation response is no-store, and the tickets table gets a status column.
+- **Next:** the S2-3 tickets PR, then the confirmation screen (service worker and CSP), then any S2-2 personal-data PR that has no Security pass.
+- **Blocked:** nothing.
+
 ## 2026-10-21
 
 - **Done:**
