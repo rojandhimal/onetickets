@@ -5,9 +5,11 @@ Copilot, Aider or anything else that reads `AGENTS.md`). Humans should start wit
 [README](README.md).
 
 The project is built by a small team of AI agents, each playing one role, with **tegs** (the owner)
-reviewing and merging. Nothing here depends on one AI provider: if one provider's usage limit runs
-out, start another tool, give it a role from [`agents/`](agents/README.md), and carry on from the
-shared state graph in [`project/state/`](project/state/README.md).
+reviewing and merging. Nothing here depends on one AI provider: agents in several tools can work at
+the same time, or one can take over when another's usage limit runs out. Give each a role from
+[`agents/`](agents/README.md) and have it carry on from the current `main`, the shared state graph
+in [`project/state/`](project/state/README.md) and the open pull requests, not from where it last
+stopped.
 
 ## Start here: the state graph
 
@@ -21,8 +23,8 @@ node scripts/state.mjs show <id>        # one item or PR with its dependencies a
 ```
 
 Update it in the same PR as your work (`node scripts/state.mjs set <id> status=review prs+=55`),
-and claim an item by opening a draft PR whose title starts with its id. The protocol is in
-[project/state/README.md](project/state/README.md).
+and claim an item by opening a draft PR whose title starts with its id (working agreement section
+4). The protocol is in [project/state/README.md](project/state/README.md).
 
 ## What we're building
 
@@ -65,7 +67,9 @@ push; CI runs the same ones.
 1. **tegs merges.** Agents open pull requests and never merge to `main`, push to `main` or approve.
 2. **Nothing is applied to AWS.** Terraform and deploy workflows are written and reviewed only.
    Deploys stay off behind `DEPLOY_ENABLED`. Local development is Docker only for now.
-3. **One branch per role at a time.** Start each PR from the latest `main`. Use your tool's branch
+3. **One branch per role at a time, and one owner per card.** Start each PR from the latest `main`.
+   Before you build, check open pull requests and claim the card with a draft PR, because agents in
+   other tools may be working at the same time (working agreement, section 4). Use your tool's branch
    naming, or `<role>/<story>` (for example `backend/s1-2-ticket-types`).
 4. **Every PR documents itself.** Fill in the PR template (Before, After, How, How to test, story id),
    and update `README.md`, `docs/` or a new ADR in `docs/adr/` in the same PR. See

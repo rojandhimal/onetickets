@@ -2,6 +2,24 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (14:10 UTC, Claude)
+
+- **Done:** tegs decided that agents in several tools keep working at once, towards one goal, each starting from the current state. Recorded it in the working agreement (section 4), AGENTS.md rule 3, agents/README.md and the decisions log. Claimed S2-3 for Claude BackendDev and FrontendDev, since the other tool's FrontendDev has S2-2. Put Claude DevOps's SEC-6 (#54) on the board. This sync carries the other PM's #53, so the two board PRs don't conflict.
+- **Next:** Claude BackendDev and FrontendDev open draft PRs for S2-3. #54 goes through Security, QA and BackendDev reviews. A separate thread is building the shared knowledge graph.
+- **Blocked:** nothing.
+
+## 2026-10-22 (PRs #50, #51, #52 merged to main; S2-2 started)
+
+- **Done:** Verified `tegs` merged PR #50 (S2-1 free ticket holds and inventory as `e7303ba`), PR #51 (Sprint 2 checklist and board rollup as `31553aa`), and PR #52 (SEC-14 site-wide CSP as `7023181`). With site-wide CSP and holds on main, all architectural prerequisites for free checkout are met. Fast-forwarded local `main` to `origin/main` (`7023181`). Updated board and checklist to mark S2-1 and SEC-14 Done. Kicked off Story S2-2 (One-screen free checkout).
+- **Next:** FrontendDev and ProductDesign implement S2-2 free checkout screen (`/e/:slug/tickets`), steppers, hold notice and heartbeat, attendee inputs, and order submission.
+- **Blocked:** Staging checks remain deferred until AWS account and Google OAuth client setup.
+
+## 2026-10-22 (02:05 UTC, Claude PM back)
+
+- **Done:** Caught up on 17 to 22 Oct. While the Claude threads were offline, the other tool's team closed Sprint 1 (QA accepted 18 Oct) and merged #39, #42 to #52, including S1-5, SEC-20 part 2, S2-1 and SEC-14. Brought the shared folder up to date from main with the sync script. Claude FrontendDev had built a duplicate of #48, so it's on hold. Asked tegs which team runs from now on.
+- **Next:** Act on tegs's choice. If it's the Claude team, Claude FrontendDev takes S2-2 from the latest main, and the Claude PM takes over the board after #53. Otherwise the Claude threads stay paused and the Claude PM only watches.
+- **Blocked:** Two teams active at once (risk R8). Waiting on tegs.
+
 ## 2026-10-21 (PR #50 S2-1 passed QA and Security reviews, marked ready for tegs)
 
 - **Done:** Verified PRs #46 (BE-1), #47 (Docs sign-in), #48 (SEC-20 part 2), and #49 (Sprint 1 acceptance rollup) were merged into `main` by tegs. Rebased `backend/s2-1-ticket-holds` onto latest `origin/main` at `fcc6142` and opened PR #50 for S2-1 (Free ticket holds and inventory). All 7 GitHub Actions CI checks passed green. Orchestrated independent reviews: Security passed at `fcc6142` (confirming RLS, ephemeral token hashing, sweeper safety, CSRF origin check); QA passed at `fcc6142` (confirming INV-1, INV-2, INV-3, INV-4, ARCH-2/INV-15, and checklist rows 1.1–1.5). Marked PR #50 ready for review and placed into the merge queue for tegs.
