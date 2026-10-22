@@ -2,6 +2,23 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (S2-2 orders API & database migration)
+
+- **Done:** Implemented backend orders and free checkout infrastructure supporting **S2-2**:
+  - Created database migration `apps/api/migrations/0009_orders.sql`:
+    - Tables `orders.orders` and `orders.tickets` with enforced foreign keys to `identity.organisations`, `catalogue.events`, and `catalogue.ticket_types`.
+    - Unique index `idx_orders_idempotency` enforcing `INV-5` (idempotent re-submission returns original order without duplicating tickets or stock).
+    - Full forced RLS (`orders_tenant`, `orders_public_insert`, `orders_public_select`, `orders_worker`).
+  - Added shared API contracts in `packages/shared/src/api/orders.ts` (`createFreeOrderBody`, `OrderDto`, `OrderTicketDto`, `PublicOrderDto`) and unit tests in `orders.test.ts`.
+  - Implemented `OrdersModule` in `apps/api/src/modules/orders/`:
+    - `OrdersRepository`: creates orders, converts holds to sold tickets, handles idempotency retrieval, and finds public orders by reference.
+    - `OrdersService`: orchestrates single-unit-of-work free order completion, hold conversion, and order reference generation (`OT-XXXXXXXX`).
+    - `OrdersController`: public endpoints `POST /public/orders/free` and `GET /public/orders/:orderRef`.
+  - Added comprehensive integration tests in `apps/api/test/orders.int.test.ts` (idempotency under concurrency with 6 parallel racing submissions, hold conversion, public order lookup, validation errors).
+  - Documented in `docs/backend/orders.md` and `docs/api/orders.md`.
+- **Next:** QR ticket generation and signing (S2-3).
+- **Blocked:** None.
+
 ## 2026-10-21
 
 - **Done:** Implemented **S2-1 Free ticket holds and inventory** on `backend/s2-1-ticket-holds`:

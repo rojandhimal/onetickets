@@ -206,9 +206,11 @@ export default async function EventPage({ params }: Props) {
         <aside className={styles.bar} aria-label="Tickets">
           <div className={styles.barPrice}>
             <span className={styles.barAmount}>{price}</span>
-            <span className={styles.barSpots}>{spotsLine(event.spotsLeft)}</span>
+            <span className={styles.barSpots}>{spotsLine(event.spotsLeft, event.soldOut)}</span>
           </div>
-          {isBookingEnabled() ? (
+          {event.soldOut ? (
+            <span className={styles.soon}>Sold out</span>
+          ) : isBookingEnabled() ? (
             <a href={`/e/${encodeURIComponent(event.slug)}/tickets`} className={styles.getTickets}>
               Get tickets
             </a>

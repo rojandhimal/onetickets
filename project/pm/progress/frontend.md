@@ -2,6 +2,26 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (S2-2 one-screen free checkout)
+
+- **Done:** Implemented **Story S2-2: One-screen free checkout**:
+  - Implemented client helpers in `apps/web/src/lib/checkout.ts` (`validateCheckoutForm`, `holdNoticeText`, `checkoutButtonLabel`, `reserveHold`, `renewHold`, `releaseHold`, `submitFreeOrder`, `getPublicOrder`) with unit tests in `apps/web/src/lib/checkout.test.ts`.
+  - Built checkout screen at `/e/:slug/tickets` (`Checkout.tsx`, `checkout.module.css`, `page.tsx`):
+    - Ticket quantity steppers with +/- buttons (44 px tap targets), defaulting to 1 ticket held upon entry.
+    - Activity heartbeat: renews hold every 5 minutes while user is active on the page, with `beforeunload` cleanup releasing the hold on exit.
+    - Inline form validation matching `copy-s0-s2.md` Section 7: S0 errors on submit (empty name -> "Enter the name for the ticket", empty email -> "Enter your email address", invalid email -> "Add an @, like jordan@example.com") with error focus management.
+    - Optional marketing opt-in checkbox (default unchecked).
+    - Live alert banner (`role="alert"`) if tickets sell out or hold expires while on page ("Those tickets ran out while you were choosing. Have another go, or pick a different type.").
+    - Visual indicators for sold-out ticket types.
+  - Built ticket confirmation screen at `/tickets/:orderRef` (`page.tsx`, `confirmation.module.css`):
+    - Heading "You're going!", "We've also emailed your tickets to {email}", attendee name, event details, and links.
+  - Updated `/e/:slug` event page to link directly to `/e/:slug/tickets` ("Get tickets" button) and handle sold-out events.
+  - Implemented end-to-end Playwright and axe accessibility tests in `e2e/tests/checkout.spec.ts` covering the complete guest attendee journey at 375 px and 1280 px with 0 axe violations.
+  - Enforced site-wide nonce CSP and `Cache-Control: private, no-store`.
+  - Format, lint, typecheck, 173 web tests, 8 shared tests, 10 api unit tests, and 38 Playwright E2E tests pass 100%.
+- **Next:** Open PR for S2-2, obtain independent QA, Security, and ProductDesign reviews. Proceed to S2-3 (QR ticket generation and signing).
+- **Blocked:** None.
+
 ## 2026-10-21 (SEC-14 enforce CSP site-wide)
 
 - **Done:** Implemented SEC-14 site-wide enforced CSP ([ADR 0018](/docs/adr/0018-enforced-nonce-csp-on-event-pages.md)). Exported `strictSiteCsp` in `apps/web/src/lib/security-headers.ts` and configured `apps/web/src/proxy.ts` matcher to apply the strict nonce-based CSP and `Cache-Control: private, no-store` across all page/document routes (excluding API, static assets, and images). Verified `apps/web/src/proxy.test.ts` across page routes and exclusions. Updated ADR 0018 and security checklist in `docs/security/checklist.md`. All 24 test files (156 unit tests) pass.

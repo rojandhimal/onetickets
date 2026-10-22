@@ -93,3 +93,10 @@ export type {
   InsufficientSpotsBody,
   ReserveHoldBody,
 } from './api/inventory.js';
+export { createFreeOrderBody } from './api/orders.js';
+export type {
+  CreateFreeOrderBody,
+  OrderDto,
+  OrderTicketDto,
+  PublicOrderDto,
+} from './api/orders.js';

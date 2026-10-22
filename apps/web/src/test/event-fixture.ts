@@ -62,6 +62,7 @@ export function readyEvent(overrides: Partial<EventDraftDto> = {}): EventDraftDt
 /** A published Workshop as GET /public/events/:slug returns it. */
 export function publicEvent(overrides: Partial<PublicEventDto> = {}): PublicEventDto {
   return {
+    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     slug: 'screen-printing',
     name: 'Screen printing for beginners',
     startsAt: '2026-11-14T10:00:00+11:00',

@@ -282,6 +282,7 @@ export interface PublicTicketTypeDto {
 
 /** The public event page (S1-3). No organiser-private fields. */
 export interface PublicEventDto {
+  id: string;
   slug: string;
   name: string;
   startsAt: string;
