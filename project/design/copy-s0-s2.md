@@ -122,41 +122,48 @@ FrontendDev's current strings for all of the above are approved as they are; onl
 
 ## Sprint 2: checkout, tickets, My tickets (3, 4, 5)
 
-| Where                    | Copy                                                                                                                 |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Checkout heading         | Get your tickets                                                                                                     |
-| Hold notice              | We're holding {n} {ticket/tickets} for you while you finish. Take your time.                                         |
-| Ticket row meta          | Free · up to {n} per order · sold out row: Free · all taken + chip "Sold out"                                        |
-| Details heading / hint   | Who's the ticket for? / Both fields are required.                                                                    |
-| Email reassurance        | We'll email your tickets here. No account or password needed.                                                        |
-| Opt-in                   | Send me news about future events from {organiser} (optional)                                                         |
-| Button states            | Get {n} free {ticket/tickets} · Choose at least 1 ticket · Booking your {ticket/tickets}…                            |
-| Footnote                 | Free tickets can be released any time before the event. (Use the organiser's policy when it differs.)                |
-| Confirmation             | You're going! / We've also emailed your {ticket/tickets} to {email}                                                  |
-| Ticket pager             | Ticket {i} of {n} · Previous ticket · Next ticket                                                                    |
-| QR note                  | Screen brightness goes up while this is open so the door can scan it.                                                |
-| Offline chip             | Works offline                                                                                                        |
-| Ticket actions           | Add to calendar · Find more events                                                                                   |
-| My tickets tabs          | Upcoming · Past                                                                                                      |
-| Row status               | Show QR · Attended · Released                                                                                        |
-| My tickets help          | Bought tickets on another device? Use the link in your confirmation email and they'll show up here.                  |
-| Empty upcoming           | No upcoming tickets. · Find something on this weekend                                                                |
-| Signed out               | Find your tickets / Enter the email you booked with and we'll send you a link. No password needed. / Email me a link |
-| Signed out sent          | Check your email / If **{email}** has tickets, the link is on its way. It works for 15 minutes.                      |
-| Release ticket (confirm) | Release this ticket? / Your spot goes back on sale and the QR stops working. / Release ticket · Keep it              |
-| Event sold out bar       | All {n} taken · Sold out                                                                                             |
-| Held, not sold           | All taken right now. Check back in a few minutes.                                                                    |
+| Where                          | Copy                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Checkout heading               | Get your tickets                                                                                                     |
+| Hold notice                    | We're holding {n} {ticket/tickets} for you while you finish. Take your time.                                         |
+| Ticket row meta                | Free · up to {n} per order · sold out row: Free · all taken + chip "Sold out"                                        |
+| Details heading / hint         | Who's the ticket for? / Both fields are required.                                                                    |
+| Email reassurance              | We'll email your tickets here. No account or password needed.                                                        |
+| Opt-in                         | Send me news about future events from {organiser} (optional)                                                         |
+| Button states                  | Get {n} free {ticket/tickets} · Choose at least 1 ticket · Booking your {ticket/tickets}…                            |
+| Footnote                       | Free tickets can be released any time before the event. (Use the organiser's policy when it differs.)                |
+| Confirmation                   | You're going! / We've also emailed your {ticket/tickets} to {email}                                                  |
+| Ticket pager                   | Ticket {i} of {n} · Previous ticket · Next ticket                                                                    |
+| QR note                        | Turn your screen brightness up at the door so it scans first time. (22 Oct: a web page can't raise brightness)       |
+| Ticket stub label (one ticket) | Your ticket                                                                                                          |
+| Date line on the stub          | {Sat 14 Nov} · {10:00 am} (no "Doors" until there's a doors field)                                                   |
+| Add to calendar menu           | Apple Calendar or Outlook · Google Calendar                                                                          |
+| Calendar event description     | {public event page link} / Your tickets are in your email from OneTickets. (never the ticket page link)              |
+| Loading (screen reader only)   | Loading your tickets                                                                                                 |
+| Offline chip                   | Works offline                                                                                                        |
+| Ticket actions                 | Add to calendar · Find more events                                                                                   |
+| My tickets tabs                | Upcoming · Past                                                                                                      |
+| Row status                     | Show QR · Attended · Released                                                                                        |
+| My tickets help                | Bought tickets on another device? Use the link in your confirmation email and they'll show up here.                  |
+| Empty upcoming                 | No upcoming tickets. · Find something on this weekend                                                                |
+| Signed out                     | Find your tickets / Enter the email you booked with and we'll send you a link. No password needed. / Email me a link |
+| Signed out sent                | Check your email / If **{email}** has tickets, the link is on its way. It works for 15 minutes.                      |
+| Release ticket (confirm)       | Release this ticket? / Your spot goes back on sale and the QR stops working. / Release ticket · Keep it              |
+| Event sold out bar             | All {n} taken · Sold out                                                                                             |
+| Held, not sold                 | All taken right now. Check back in a few minutes.                                                                    |
 
 **Errors (Sprint 2)**
 
-| Case                             | Copy                                                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Name empty                       | Enter the name for the ticket                                                                                |
-| Email (same three as sign-up)    | Enter your email address · Add an @, like jordan@example.com · Add the part after the @, like gmail.com      |
-| Ran out at submit                | **Only {n} {type} {ticket was/tickets were} left.** We've changed your order to {n}. Check it and try again. |
-| Sold out at submit               | **Those tickets have just gone.** Nothing was booked. · Back to the event                                    |
-| Network failure on submit        | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                 |
-| Ticket link expired (My tickets) | That link has expired. Enter your email and we'll send a new one.                                            |
+| Case                                                 | Copy                                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Name empty                                           | Enter the name for the ticket                                                                                            |
+| Email (same three as sign-up)                        | Enter your email address · Add an @, like jordan@example.com · Add the part after the @, like gmail.com                  |
+| Ran out at submit                                    | **Only {n} {type} {ticket was/tickets were} left.** We've changed your order to {n}. Check it and try again.             |
+| Sold out at submit                                   | **Those tickets have just gone.** Nothing was booked. · Back to the event                                                |
+| Network failure on submit                            | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                             |
+| Tickets can't load (offline, not cached)             | **We couldn't load your tickets.** Check your connection and try again. Your tickets are also in your email. · Try again |
+| Ticket page link not valid (S2-3, before My tickets) | **That link doesn't work any more.** Open the latest ticket email from OneTickets and use the link in it.                |
+| Ticket link expired (My tickets)                     | That link has expired. Enter your email and we'll send a new one.                                                        |
 
 ## Emails (S0 to S2)
 

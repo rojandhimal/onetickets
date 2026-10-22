@@ -2,11 +2,28 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude)
+
+- **Done:**
+  - Since the 16 Oct entry: S1-4 [#35](https://github.com/rojandhimal/onetickets/pull/35) passed through 16103ea and merged. SEC-20 part 1 [#41](https://github.com/rojandhimal/onetickets/pull/41) passed at 3c69b6f and merged. DEV-4 [#42](https://github.com/rojandhimal/onetickets/pull/42) (CI image build) passed at 532c207.
+  - Held 17 to 22 Oct at PM's request while tegs chose how the teams run; now unpaused under working agreement section 4.
+  - SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) (RDS verify-full): **pass** at 72feb4c, with CI green. The bundle is byte-identical to AWS's ap-southeast-2 truststore. verify-full covers every login URL, the migrations and db-roles. The CA is pinned to rds-ca-rsa2048-g1.
+  - S2-3 design feedback to the Claude BackendDev:
+    - Sign a context prefix with the payload, and check the event id at the scanner.
+    - A per-environment key rotated by key id is accepted, provided ADR 0011 is updated, Ed25519 support in Sydney KMS is confirmed (otherwise P-256), and a revoked key id forces a reissue.
+    - The local signer refuses to run outside dev and test, and CI generates its seed.
+    - The worker gets a column-level grant.
+    - The order token carries at least 128 bits, is hashed and is never put in a URL.
+    - The confirmation response is no-store, and the tickets table gets a status column.
+- **Next:** the S2-3 tickets PR, then the confirmation screen (service worker and CSP), then any S2-2 personal-data PR that has no Security pass.
+- **Blocked:** nothing.
+
 ## 2026-10-21
 
 - **Done:**
   - S2-1 free ticket holds and inventory [#50](https://github.com/rojandhimal/onetickets/pull/50) reviewed at `fcc6142`: **pass** ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316300129)). Verified migration 0008 (`inventory.holds`) with enforced RLS (`holds_tenant`, `holds_public`, `holds_worker`) and `ticket_inventory_public_hold`; column-scoped updates and no DELETE grants; 256-bit crypto-random ephemeral hold tokens stored hashed (SHA-256) and never logged; RequestOriginMiddleware enforcing CSRF origin check on state-changing public endpoints; atomic conditional capacity reservation and CHECK invariants (`INV-1`, `INV-2`); 20-minute maximum hold cap; and sweeper concurrency safety (`INV-3`). All 7 CI checks green.
-- **Next:** SEC-14 (site-wide CSP) before free checkout UI ships. SEC-20 part 2 reviews when ready.
+  - SEC-14 site-wide CSP [#52](https://github.com/rojandhimal/onetickets/pull/52) reviewed at `926078a`: **pass** ([comment](https://github.com/rojandhimal/onetickets/pull/52#issuecomment-6318263745)). Fulfills ADR 0018 condition before Sprint 2 free checkout ships. CSP is enforced across all page document requests via `strictSiteCsp` in `proxy.ts`, using cryptographically random per-response nonces (`btoa(crypto.randomUUID())`), `Cache-Control: private, no-store` prevents CDN/proxy caching of nonces, `script-src 'self' 'nonce-...' 'strict-dynamic'` blocks unnonced inline scripts, `unsafe-eval` is disabled in production, baseline directives (`object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'self'`) are enforced, dynamic rendering is configured on `/auth/verify` to ensure inline scripts receive request nonces, and static/api/prefetch exclusions are safe. ADR 0018 and `docs/security/checklist.md` updated. All CI checks pass.
+- **Next:** Proceed with Sprint 2 stories (S2-2 free checkout, S2-3 QR signing, S2-4 My tickets). Shape SEC-13 (Ask the organiser form).
 - **Blocked:** nothing.
 
 ## 2026-10-18

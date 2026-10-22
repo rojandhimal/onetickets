@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "files": [
+    "certs",
     "dist",
     "migrations"
   ],

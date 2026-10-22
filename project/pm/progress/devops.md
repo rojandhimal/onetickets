@@ -2,6 +2,30 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude, later)
+
+- **Done:** Unpaused by PM. SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) is out of draft at 72feb4c, with all 12 CI checks green and BackendDev's pass; Security and QA are asked to review. Main hadn't moved, so no merge was needed.
+- **Done:** DEV-5 is claimed through PM. The infra side is built and validated, and committed locally until #54 merges (one branch per role):
+  - `banner_storage` (local or s3) sets BANNER_STORAGE and UPLOADS_BUCKET on the API.
+  - The task role is narrowed to the uploads bucket's `banners/*`.
+  - Old object versions expire after 30 days.
+  - An infra/edge Cache Rule caches `/api/public/banners/*` at Cloudflare.
+  - No CloudFront, so there's no CSP change and no new hostname.
+  - The adapter contract went to BackendDev.
+- **Next:** drive #54 through review, then open the DEV-5 PR from fresh main.
+- **Blocked:** nothing.
+
+## 2026-10-22
+
+- **Done:** SEC-6 is up as draft [#54](https://github.com/rojandhimal/onetickets/pull/54). Postgres connections in AWS now use `sslmode=verify-full`:
+  - The API image ships AWS's ap-southeast-2 RDS CA bundle at `/app/certs`.
+  - The RDS instance pins `ca_cert_identifier = rds-ca-rsa2048-g1`.
+  - The db-roles psql task verifies against the same bundle.
+  - Proved locally against a TLS Postgres: a wrong CA and a wrong hostname are refused by both psql and node-postgres.
+  - Sent to Security and BackendDev, and asked PM to route it to QA.
+- **Next:** drive #54 to green and through review, then DEV-5 (S3 banner adapter and CloudFront).
+- **Blocked:** nothing.
+
 ## 2026-10-17
 
 - **Done:** DEV-6 SEC-5 follow-ups: added Cloudflare's published IPv6 ranges (`cloudflare_ipv6_ranges`) and `aws_vpc_security_group_ingress_rule.alb_ipv6` (plus `ingress_ipv6_cidrs` when `behind_cloudflare = false`) in `infra/modules/app` and `infra/modules/environment` so a future switch of the ALB to dual-stack already enforces Cloudflare IPv6 ingress; documented in `infra/README.md` and `docs/environments.md` that Cloudflare Free combines sign-in (`/api/auth/*`, `/auth/*`) and `/csp-report` into one shared 20-requests-per-10-seconds per-IP counter (shared-NAT impact until Pro) and that both `ips-v4` and `ips-v6` must be checked before each apply. Also verified that [#39](https://github.com/rojandhimal/onetickets/pull/39) and [#42](https://github.com/rojandhimal/onetickets/pull/42) merged cleanly on `main`.
