@@ -15,7 +15,13 @@ Newest first. Format: date, Done, Next, Blocked.
     - The worker gets a column-level grant.
     - The order token carries at least 128 bits, is hashed and is never put in a URL.
     - The confirmation response is no-store, and the tickets table gets a status column.
-- **Next:** the S2-3 tickets PR, then the confirmation screen (service worker and CSP), then any S2-2 personal-data PR that has no Security pass.
+  - SEC-6 #54 merged.
+  - S2-2 [#59](https://github.com/rojandhimal/onetickets/pull/59) (the other tool's work; PM asked for a check of the order lookup): **changes needed** at 3c2ff43.
+    - The 40-bit order ref is the only credential for the attendee's name and email. It's guessable with no rate limit, and it ends up in logs, history and Referer. It needs a 128-bit hashed key, sent in a header.
+    - `orders_public_select` and `tickets_public_select` OR with the tenant policy, so any organiser context can read every published event's orders. They need dropping, with a definer lookup by id and key hash in their place.
+    - The insert policies should also check the event's organisation.
+  - #56 key handling OK'd for FrontendDev. Conditions: fragment plus replaceState, sessionStorage only, a header to the API, and no key in Cache Storage. The service worker caches only the order and `/tickets/` assets. "Remove from device" and expiry after the event are an S2-4 card due before launch.
+- **Next:** re-check #59; the S2-3 tickets PR #58; the confirmation screen #56.
 - **Blocked:** nothing.
 
 ## 2026-10-21

@@ -76,8 +76,8 @@
     "shared": "a254adb84413d39095e9fa0ea2f2a52d00c4d6a76001d00bb124837439bfe0fa"
   },
   "pm/progress/security.md": {
-    "repo": "7bccb015ac9e099aaf20e9070000c80f85e864db6a902c7ad9c00ec5aa5f5263",
-    "shared": "7bccb015ac9e099aaf20e9070000c80f85e864db6a902c7ad9c00ec5aa5f5263"
+    "repo": "75f5640e96411e1e7b3f542d179ff243385e832eb0e2d0e6b0006bff6ecf3ed0",
+    "shared": "75f5640e96411e1e7b3f542d179ff243385e832eb0e2d0e6b0006bff6ecf3ed0"
   },
   "pm/working-agreement.md": {
     "repo": "6b0805dd85066f5ebe1a8261898b47eb2a1b521f7334f59475ecbc4ad66f6a7b",
@@ -136,7 +136,7 @@
     "shared": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348"
   },
   "state/graph.jsonl": {
-    "repo": "7ed56f981d45ebc1283ec93c41ee6bbba7b10ef6eb47f6d0908b3486f1979275",
-    "shared": "7ed56f981d45ebc1283ec93c41ee6bbba7b10ef6eb47f6d0908b3486f1979275"
+    "repo": "bdd1123d1db864ce4a776ed8979f9aa81f825d6ca9f11817ca013f3ddc72fae5",
+    "shared": "bdd1123d1db864ce4a776ed8979f9aa81f825d6ca9f11817ca013f3ddc72fae5"
   }
 }
