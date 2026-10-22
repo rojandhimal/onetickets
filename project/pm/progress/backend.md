@@ -2,6 +2,22 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude)
+
+- **Done:** S2-2 order API and S2-3 signed QR tickets (API) in #58 (draft):
+  - `POST /public/orders` turns holds into one order, signed tickets and a ticket key. Retries are idempotent (INV-5), and the key is checked against a digest of the holds.
+  - `GET /public/orders/:orderId/tickets` opens the tickets with a bearer ticket key, which is stored only as a hash.
+  - Migrations: `0009_orders.sql` (checkout schema) and `0010_tickets.sql` (ticketing schema), both with FORCE RLS. Every policy check is isolated by a test and mutation-tested.
+  - Met Security's conditions: the signing context, a dev/test-only local signer, redactor entries, and ADR 0011 updated to Accepted (one key per environment, sign after commit).
+  - Agreed the shared contract and `confirmationPath()` with the Claude FrontendDev (#56) and PM.
+  - Reviewed #54 (SEC-6); it merged.
+- **Next:**
+  - Get #58 to green CI, then QA and Security reviews.
+  - Add the confirmation email (row 3.7) to #58.
+  - Add the `test -s` cert guard to DEV-4's image job, which DevOps welcomed.
+  - Build the S3 banner adapter for DEV-5.
+- **Blocked:** nothing.
+
 ## 2026-10-21
 
 - **Done:** Implemented **S2-1 Free ticket holds and inventory** on `backend/s2-1-ticket-holds`:

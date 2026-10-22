@@ -1,7 +1,7 @@
 {
   "design/copy-s0-s2.md": {
-    "repo": "08626e93db1c4aef8abfc92161d297044504aa96e11ba47ca090ba34e378302d",
-    "shared": "050987f79f4d52af071a4f92a826a38cd87d474d43aefe1e23d8dd826e5ddd2f"
+    "repo": "f6d08dfeda4583c77d30107e53f3bd98d70c142f8ed54afc4997f1f46b4e4c0a",
+    "shared": "feaf8a8fe29db8da67f9aeb9cc36773836f5dfb2a187c15b572d4072bd4f78d1"
   },
   "design/handoff-s0.md": {
     "repo": "ab15ba69db9ae13e515346bcc6aa45c12acb23de87e0b9837732292d7408ffe3",
@@ -40,16 +40,16 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "6d1171d05b911d503b829fe4c01353017d86f6857fa52afe18f69b6273ceb9e8",
-    "shared": "1873665cc85578d3a034f0760388efb7ec62990aec82f8a11eb36a6fbd80222e"
+    "repo": "3793eada36b2cf7179fa32843c1a080dc1a2378a9695a5c8f730cbb7d2606d4b",
+    "shared": "33daae039695c0996299ecb135562763dfcfc076fdeda212dc95f74cc3299d3f"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
     "shared": "c7c9dbc4aa01d5c214c63fbabf4c43d9f17ab87f5082cb8692eb89ef06d06088"
   },
   "pm/progress/backend.md": {
-    "repo": "7f562612a89a42e2bd244f762ee9f89083eeab976b442d34dfc9502d733f7e7c",
-    "shared": "7f562612a89a42e2bd244f762ee9f89083eeab976b442d34dfc9502d733f7e7c"
+    "repo": "dfb7b05b969e75058bc217f0880e6701d83b87791f046ae504be2d158e8eaf46",
+    "shared": "dfb7b05b969e75058bc217f0880e6701d83b87791f046ae504be2d158e8eaf46"
   },
   "pm/progress/design.md": {
     "repo": "67e2a73ec027159f4a3f8080cf8fda91f05e1c7d22091be47a20367fab42d60f",
@@ -136,7 +136,7 @@
     "shared": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348"
   },
   "state/graph.jsonl": {
-    "repo": "88c02a1b50f559d64520c9ee9109bb690eccdaa51861088336e43f84c668ce40",
-    "shared": "88c02a1b50f559d64520c9ee9109bb690eccdaa51861088336e43f84c668ce40"
+    "repo": "36c05653f3e3a08e5f4b5785ade1b6d14d4eb149b5f7403a3982d93a2d036ce4",
+    "shared": "36c05653f3e3a08e5f4b5785ade1b6d14d4eb149b5f7403a3982d93a2d036ce4"
   }
 }
