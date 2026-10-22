@@ -34,8 +34,23 @@ Artboard **4 Your ticket (QR)**, lever `tickets` (1 or 2).
 
 - Confirmation is the ticket screen: "You're going!", the email address the tickets went to, the ticket stub with QR, holder, type, ref.
 - Several tickets in one order: one stub at a time with Previous and Next round buttons and "Ticket 1 of 2" (`aria-live="polite"`). Swiping left and right also moves between them. Each QR is its own ticket; door staff scan each.
-- Brightness: request max brightness while the QR is on screen where the platform allows (Wake Lock plus a full-white QR card); restore on leave. The note under the QR stays.
+- Brightness: keep the screen on with Wake Lock while the QR is visible; a web page can't raise brightness, so the note asks people to. Details under S2-3 below.
 - Offline: service worker caches the ticket page and QR images on first load; "Works offline" chip shows once cached. Add to wallet ships in Sprint 8; until then hide that button. Add to calendar offers .ics plus Google Calendar.
+
+### S2-3 builds the confirmation screen on its own (added 22 Oct)
+
+S2-3 ships artboard 4 before My tickets (S2-4) exists. Fill-ins for what the artboard doesn't show:
+
+- **Back link:** the artboard's "My tickets" link at the top left is hidden until S2-4 ships. The offline chip sits on the right alone.
+- **Date line:** "{Sat 14 Nov} · {10:00 am}", the event's start in the event's time zone. There's no doors field yet, so don't show "Doors". Venue line as on the event page; online events read "Online · the link is in your email".
+- **One ticket:** no pager, no "Ticket 1 of 1"; the stub's label is "Your ticket". **Several:** as above. Every stub shows the one name given at checkout.
+- **Brightness:** a web page can't raise screen brightness. Use the Wake Lock API to keep the screen on while a QR is visible, release it on leave or when the tab is hidden, and re-request when it's visible again. The QR card stays white at full contrast. The note under the QR changes to "Turn your screen brightness up at the door so it scans first time." (copy doc updated). Show it on every stub.
+- **Offline chip:** shows only once the service worker has cached this page and every QR in the order. Never show it before then, and never a "not offline yet" state.
+- **Add to calendar:** full-width white button. Pressing it opens a small menu (a bottom sheet under 640 px, a popover above): "Apple Calendar or Outlook" downloads the .ics; "Google Calendar" opens Google's add-event link in a new tab. Esc and a tap outside close it; focus returns to the button. Calendar event: title = event name; start and end with the event's time zone; location = venue name and address (online: "Online"); description = the public event page link and "Your tickets are in your email from OneTickets." **Never put the ticket page link in the calendar event**: it opens the tickets and Google would hold it.
+- **Loading** (opening the page from a link, not straight after checkout): the indigo page with a white stub of grey blocks where the text and QR go, `aria-busy="true"`, and a visually hidden "Loading your tickets". No spinner. Straight after checkout, render from the order the api just returned, with no loading state.
+- **Can't load, offline and not cached:** a white card on indigo: "**We couldn't load your tickets.** Check your connection and try again. Your tickets are also in your email." with a "Try again" button.
+- **Link not valid or expired:** "**That link doesn't work any more.** Open the latest ticket email from OneTickets and use the link in it." Until S2-4 ships there's no "email me a link" form here.
+- **Desktop (1280):** the same column, 420 px wide, centred on the indigo page, with the actions under the stub. Swipe is touch only; the round buttons do the work everywhere.
 
 Artboard **5 My tickets**, levers `signedIn` and `noUpcoming`.
 

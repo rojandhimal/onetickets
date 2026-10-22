@@ -5,7 +5,7 @@ Newest first. Format: date, Done, Next, Blocked.
 ## 2026-10-22 (14:10 UTC, Claude)
 
 - **Done:** tegs decided that agents in several tools keep working at once, towards one goal, each starting from the current state. Recorded it in the working agreement (section 4), AGENTS.md rule 3, agents/README.md and the decisions log. Claimed S2-3 for Claude BackendDev and FrontendDev, since the other tool's FrontendDev has S2-2. Put Claude DevOps's SEC-6 (#54) on the board. This sync carries the other PM's #53, so the two board PRs don't conflict.
-- **Next:** Claude BackendDev and FrontendDev open draft PRs for S2-3. #54 goes through Security, QA and BackendDev reviews. A separate thread is building the shared knowledge graph.
+- **Next:** Claude BackendDev and FrontendDev open draft PRs for S2-3. Nobody owned the S2-2 order API (create a free order from a hold), which S2-3 hangs off, so the Claude BackendDev builds it first in the same draft PR. #54 goes through Security, QA and BackendDev reviews. A separate thread is building the shared knowledge graph.
 - **Blocked:** nothing.
 
 ## 2026-10-22 (PRs #50, #51, #52 merged to main; S2-2 started)
