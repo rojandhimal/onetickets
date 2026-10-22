@@ -23,11 +23,15 @@ data "aws_caller_identity" "current" {}
 locals {
   region = data.aws_region.current.region
 
-  # How the db-roles task (plain psql) reaches Postgres as the owner.
+  # How the db-roles task (plain psql) reaches Postgres as the owner. The
+  # stock postgres image has no RDS CA, so the task writes the bundle the API
+  # image ships (RDS_CA) to PGSSLROOTCERT before running psql.
   psql_environment = [
     { name = "PGHOST", value = var.db_address },
     { name = "PGDATABASE", value = "onetickets" },
-    { name = "PGSSLMODE", value = "require" },
+    { name = "PGSSLMODE", value = "verify-full" },
+    { name = "PGSSLROOTCERT", value = "/tmp/rds-ca.pem" },
+    { name = "RDS_CA", value = file("${path.module}/../../../apps/api/certs/rds-ap-southeast-2-bundle.pem") },
   ]
 
   internal_namespace = "onetickets.internal"
@@ -711,7 +715,7 @@ resource "aws_ecs_task_definition" "db_roles" {
     name        = "db-roles"
     image       = var.psql_image
     essential   = true
-    command     = ["sh", "-c", "echo \"$SQL\" | psql --quiet --no-psqlrc -v ON_ERROR_STOP=1 -v app_user=\"$APP_DB_USER\" -v app_password=\"$APP_DB_PASSWORD\""]
+    command     = ["sh", "-c", "printf '%s\\n' \"$RDS_CA\" > \"$PGSSLROOTCERT\" && echo \"$SQL\" | psql --quiet --no-psqlrc -v ON_ERROR_STOP=1 -v app_user=\"$APP_DB_USER\" -v app_password=\"$APP_DB_PASSWORD\""]
     environment = concat(local.psql_environment, [{ name = "SQL", value = local.db_roles_sql }])
     secrets = [
       { name = "PGUSER", valueFrom = "${var.db_owner_secret_arn}:username::" },

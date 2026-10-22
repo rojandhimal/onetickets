@@ -88,6 +88,11 @@ resource "aws_db_instance" "this" {
   publicly_accessible    = false
   multi_az               = var.multi_az
 
+  # Pinned so the server certificate stays under a root in
+  # apps/api/certs/rds-ap-southeast-2-bundle.pem. Changing it means
+  # shipping the new bundle in the API image first.
+  ca_cert_identifier = "rds-ca-rsa2048-g1"
+
   backup_retention_period  = var.backup_retention_days
   backup_window            = "15:00-16:00" # 01:00-02:00 Sydney (AEST)
   maintenance_window       = "sun:16:30-sun:17:30"
@@ -110,10 +115,10 @@ resource "aws_db_instance" "this" {
 }
 
 locals {
-  # libpq semantics for node-postgres: encrypt, without verifying the RDS CA
-  # (which Node does not trust by default). Switch to verify-full once the
-  # image ships the RDS CA bundle.
-  url_params = "sslmode=require&uselibpqcompat=true"
+  # libpq semantics for node-postgres: encrypt and verify the server against
+  # the RDS CA bundle the API image ships (apps/api/certs, copied to
+  # /app/certs) and that the name matches the instance's endpoint.
+  url_params = "sslmode=verify-full&sslrootcert=/app/certs/rds-ap-southeast-2-bundle.pem&uselibpqcompat=true"
 
   logins = {
     owner = { username = "onetickets_owner", password = random_password.owner.result }
