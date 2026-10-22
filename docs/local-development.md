@@ -146,14 +146,15 @@ session cookie stays first-party.
 
 ### Environment variables
 
-| Variable                 | Used by     | Local value                                                              |
-| ------------------------ | ----------- | ------------------------------------------------------------------------ |
-| `DATABASE_URL`           | api         | `postgres://onetickets_app:onetickets_app@localhost:5432/onetickets`     |
-| `MIGRATION_DATABASE_URL` | api migrate | `postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets` |
-| `PORT`                   | api         | `3001`                                                                   |
-| `MFA_ENCRYPTION_KEY`     | api         | your own `openssl rand -base64 32`; the api won't start without it       |
-| `API_URL`                | web         | `http://localhost:3001`                                                  |
-| `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard               |
+| Variable                 | Used by     | Local value                                                                             |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | api         | `postgres://onetickets_app:onetickets_app@localhost:5432/onetickets`                    |
+| `MIGRATION_DATABASE_URL` | api migrate | `postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets`                |
+| `PORT`                   | api         | `3001`                                                                                  |
+| `MFA_ENCRYPTION_KEY`     | api         | your own `openssl rand -base64 32`; the api won't start without it                      |
+| `TICKET_SIGNING_KEY`     | api         | your own `openssl rand -base64 32`, so tickets get QR codes; unset leaves them unsigned |
+| `API_URL`                | web         | `http://localhost:3001`                                                                 |
+| `FEATURE_EVENT_WIZARD`   | web         | unset (off). Set to `true` to show the create-event wizard                              |
 
 The api's full list, including the sign-in settings, is in
 [docs/backend/environment.md](backend/environment.md).

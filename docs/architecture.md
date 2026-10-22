@@ -43,7 +43,7 @@ The api is one deployable split into modules that match the business areas:
 | Identity      | Users, organisations, memberships, roles, audit events, sign-in | Built           |
 | Catalogue     | Events and ticket types                                         | Sprint 1        |
 | Inventory     | Capacity, holds, sold counts                                    | Sprints 1 and 2 |
-| Checkout      | Orders, idempotent checkout                                     | Sprint 2        |
+| Checkout      | Orders, idempotent checkout, buyers' ticket keys                | Sprint 2        |
 | Ticketing     | Signed QR tickets, "My tickets"                                 | Sprint 2        |
 | Scanning      | Check-in, offline sync                                          | Sprint 3        |
 | Payments      | Stripe Connect, webhooks, refunds, payouts                      | Sprints 4, 5, 7 |

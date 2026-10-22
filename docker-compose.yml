@@ -88,6 +88,9 @@ services:
       # 32 zero bytes: a placeholder for local data only. Real environments generate their own
       # in Secrets Manager.
       MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      # Signs QR tickets (ADR 0011). No key is committed: export your own
+      # (openssl rand -base64 32) before `docker compose up`, or tickets have no QR.
+      TICKET_SIGNING_KEY: ${TICKET_SIGNING_KEY:-}
       # GOOGLE_CLIENT_ID is left unset, so Google sign-in stays off.
       # Uploaded event banners are kept in the banners volume, so they survive rebuilds.
       # After a publish the api tells the web app to drop its cached public pages, with a

@@ -24,7 +24,7 @@ Rules:
 | [0008](0008-postgres-job-queue.md)                                 | Postgres-backed job queue; no Redis or SQS for the MVP                       | Accepted | Architecture |
 | [0009](0009-money-in-integer-cents.md)                             | Money in integer cents, one pricing function, double-entry ledger            | Accepted | Architecture |
 | [0010](0010-stripe-connect-organiser-is-seller.md)                 | Stripe Connect destination charges with `on_behalf_of`                       | Accepted | Architecture |
-| [0011](0011-signed-offline-qr-tickets.md)                          | Signed QR tickets checked offline at the door                                | Proposed | Security     |
+| [0011](0011-signed-offline-qr-tickets.md)                          | Signed QR tickets checked offline at the door                                | Accepted | Security     |
 | [0012](0012-free-tickets-before-paid.md)                           | Free tickets first, with one fulfilment path                                 | Accepted | PM           |
 | [0013](0013-aws-sydney-ecs-terraform.md)                           | AWS Sydney on ECS Fargate and RDS, managed by Terraform                      | Accepted | DevOps       |
 | [0014](0014-local-docker-staging-later.md)                         | Local development with Docker; staging later; no LocalStack                  | Accepted | DevOps       |
