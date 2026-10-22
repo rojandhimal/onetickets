@@ -1,0 +1,147 @@
+.page {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  padding: 2rem 1rem 4rem;
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ticketCard {
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-card);
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.eventTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--ink);
+}
+
+.ticketDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-top: 1px dashed var(--line-divider);
+  border-bottom: 1px dashed var(--line-divider);
+  margin-bottom: 1.5rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.detailLabel {
+  color: var(--slate);
+}
+
+.detailValue {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.qrPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-control);
+  margin-bottom: 1rem;
+}
+
+.qrCode {
+  width: 160px;
+  height: 160px;
+}
+
+.qrNote {
+  font-size: 0.8125rem;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.primaryAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  background: var(--indigo);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-button);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.primaryAction:hover {
+  background: var(--indigo-hover);
+}
+
+.secondaryAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  background: transparent;
+  color: var(--indigo);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-button);
+  text-decoration: none;
+  border: 1px solid var(--line-button);
+  transition: all 0.15s ease;
+}
+
+.secondaryAction:hover {
+  background: var(--white);
+  border-color: var(--indigo);
+}

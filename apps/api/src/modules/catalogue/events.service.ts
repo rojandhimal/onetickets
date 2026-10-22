@@ -44,6 +44,7 @@ export interface Actor {
 export interface TicketTypeSummary {
   id: string;
   eventId: string;
+  eventName: string;
   organisationId: string;
   name: string;
   capacity: number;
@@ -407,6 +408,7 @@ export class EventsService {
     return {
       id: row.id,
       eventId: row.event_id,
+      eventName: row.event_name ?? '',
       organisationId: row.organisation_id,
       name: row.name,
       capacity: row.capacity,
@@ -598,6 +600,7 @@ export class EventsService {
         ? onSaleTypes.every((t) => t.soldOut)
         : ticketTypes.length > 0 && ticketTypes.every((t) => t.soldOut);
     return {
+      id: row.id,
       slug: row.slug,
       name: row.name,
       startsAt: row.starts_at.toISOString(),

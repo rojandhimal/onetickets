@@ -145,6 +145,7 @@ export interface TicketTypeSummaryRow {
   sales_start: SalesStart;
   sales_end: SalesEnd;
   event_status: EventStatus;
+  event_name: string | null;
   event_starts_at: Date | null;
   event_ends_at: Date | null;
   event_published_at: Date | null;
@@ -418,7 +419,7 @@ export class EventsRepository {
   ): Promise<TicketTypeSummaryRow | null> {
     const { rows } = await tx.query<TicketTypeSummaryRow>(
       `select t.id, t.event_id, t.organisation_id, t.name, t.capacity, t.max_per_order, t.price_cents,
-              t.sales_start, t.sales_end, e.status as event_status, e.starts_at as event_starts_at,
+              t.sales_start, t.sales_end, e.name as event_name, e.status as event_status, e.starts_at as event_starts_at,
               e.ends_at as event_ends_at, e.published_at as event_published_at, e.time_zone as event_time_zone
        from catalogue.ticket_types t
        join catalogue.events e on e.id = t.event_id

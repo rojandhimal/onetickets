@@ -47,7 +47,7 @@ test('a published event has a public page anyone can open', async ({ page, conte
 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lino cut night');
   await expect(page.getByText('Marrickville Town Hall').first()).toBeVisible();
-  await expect(page.getByText('Tickets open soon').first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Get tickets' })).toBeVisible();
   // Nothing ticked: the row says so and points ticket holders at their email (row 4.3).
   const facts = page.locator('dl');
   await expect(facts.getByText('No accessibility details yet', { exact: true })).toBeVisible();
