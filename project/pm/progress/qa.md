@@ -9,6 +9,12 @@ Newest first. Format: date, Done, Next, Blocked.
   - [#54](https://github.com/rojandhimal/onetickets/pull/54#issuecomment-6342929516) SEC-6 passes at 72feb4c. The bundle is byte-identical to AWS's ap-southeast-2 file and ships at /app/certs. The deployed node-postgres refuses a wrong CA and a wrong hostname under verify-full. Optional note: add a CI guard on url_params.
   - #55 re-checked at 8d001c9: still a pass.
   - [#57](https://github.com/rojandhimal/onetickets/pull/57) STATE-1 passes at 60eb483. The brief works, check and lint fail on 6 kinds of graph breakage, the sync round-trips, and the nodes match main and GitHub. Note: record the graph in .sync-state.json, otherwise the first both-sides change conflicts on the whole file.
+  - #55 re-checked at cf466f6: still a pass.
+  - [#60](https://github.com/rojandhimal/onetickets/pull/60#issuecomment-6348982153) passes. Nit: `#55.head` in the graph is stale.
+  - [#59](https://github.com/rojandhimal/onetickets/pull/59#issuecomment-6349089186) S2-2 free checkout **fails** at 3c2ff43. Checks are green and INV-5 holds: 10 parallel posts with one key made 1 order, and 4 keys racing one hold made 1 order plus three 410s. Two blockers:
+    - An anonymous `GET /public/orders/:ref` returns the buyer's email and name. The ref is a 40-bit value in the URL with no rate limit (P.3).
+    - The permissive `orders_public_select` and `tickets_public_select` policies let org B, or a session with no organisation, read org A's orders and emails.
+    - The probe is in qa/scripts/qa59.int.test.ts.
 - **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 

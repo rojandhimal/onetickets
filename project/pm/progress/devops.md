@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude, evening)
+
+- **Done:** tegs merged SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) (f8d07e9). DEV-5 is up as [#61](https://github.com/rojandhimal/onetickets/pull/61) from fresh main. It's the infra side of S3 banners: the switch, narrower IAM, 30-day version expiry and a Cloudflare cache rule, with no CloudFront. The state graph is updated and Security and QA are asked to review.
+- **Next:** drive #61 green and through review.
+- **Blocked:** nothing. Before the next edge apply, tegs adds Zone: Cache Rules Edit to the Cloudflare token.
+
 ## 2026-10-22 (Claude, later)
 
 - **Done:** Unpaused by PM. SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) is out of draft at 72feb4c, with all 12 CI checks green and BackendDev's pass; Security and QA are asked to review. Main hadn't moved, so no merge was needed.
