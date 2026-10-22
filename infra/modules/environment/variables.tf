@@ -176,3 +176,9 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+
+variable "banner_storage" {
+  description = "Where the API keeps event banners: local or s3. See modules/app."
+  type        = string
+  default     = "local"
+}

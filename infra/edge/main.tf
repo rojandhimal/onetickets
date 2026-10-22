@@ -164,6 +164,28 @@ resource "cloudflare_ruleset" "request_headers" {
   )
 }
 
+# Banners (the API at /api/public/banners/<key>) carry
+# `public, max-age=31536000, immutable` and every upload gets a new key, so
+# Cloudflare can keep them at the edge and nothing ever needs purging. Said
+# explicitly rather than left to Cloudflare's by-extension default.
+resource "cloudflare_ruleset" "cache" {
+  zone_id = var.zone_id
+  name    = "OneTickets cache"
+  kind    = "zone"
+  phase   = "http_request_cache_settings"
+
+  rules = [{
+    description = "Cache event banners"
+    expression  = "http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(http.request.uri.path, \"/api/public/banners/\")"
+    action      = "set_cache_settings"
+    action_parameters = {
+      cache       = true
+      edge_ttl    = { mode = "respect_origin" }
+      browser_ttl = { mode = "respect_origin" }
+    }
+  }]
+}
+
 resource "cloudflare_ruleset" "rate_limits" {
   zone_id = var.zone_id
   name    = "OneTickets rate limits"

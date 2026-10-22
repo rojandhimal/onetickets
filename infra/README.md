@@ -6,21 +6,21 @@ Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`).
 
 ## Layout
 
-| Path                          | What it is                                                                                                                                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `organization/`               | Run once in the AWS Organizations management account. Creates the staging and production accounts, the Terraform state bucket, an organization-wide CloudTrail and a monthly budget alert.    |
-| `envs/{staging,production}/`  | One stack per environment. Each applies `modules/environment` into its own account, choosing sizes and hostnames.                                                                             |
-| `edge/`                       | Cloudflare in front of both environments: proxied DNS for the web and API hostnames, Full (strict) TLS, the origin header, trace-header stripping and the sign-in and CSP-report rate limits. |
-| `modules/environment/`        | One complete environment: KMS key, network, database, app, deploy role, alarms.                                                                                                               |
-| `modules/network/`            | VPC over two availability zones, public and private subnets, NAT, S3 endpoint, rejected-traffic flow logs.                                                                                    |
-| `modules/database/`           | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                        |
-| `modules/app/`                | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                        |
-| `modules/email/`              | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                      |
-| `modules/github-deploy-role/` | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                         |
-| `modules/alarms/`             | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage, and the sign-in email cap being reached.                                                 |
-| `modules/schedule/`           | Staging's out-of-hours schedule: stops the database and scales the services to zero overnight and at weekends.                                                                                |
-| `scripts/deploy.sh`           | Runs migrations and `db-roles`, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                              |
-| `scripts/power.sh`            | Wakes staging up (or puts it to sleep) outside the schedule. Used by the Staging power workflow and by `deploy.sh` when staging is asleep.                                                    |
+| Path                          | What it is                                                                                                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `organization/`               | Run once in the AWS Organizations management account. Creates the staging and production accounts, the Terraform state bucket, an organization-wide CloudTrail and a monthly budget alert.                    |
+| `envs/{staging,production}/`  | One stack per environment. Each applies `modules/environment` into its own account, choosing sizes and hostnames.                                                                                             |
+| `edge/`                       | Cloudflare in front of both environments: proxied DNS for the web and API hostnames, Full (strict) TLS, the origin header, trace-header stripping, banner caching and the sign-in and CSP-report rate limits. |
+| `modules/environment/`        | One complete environment: KMS key, network, database, app, deploy role, alarms.                                                                                                                               |
+| `modules/network/`            | VPC over two availability zones, public and private subnets, NAT, S3 endpoint, rejected-traffic flow logs.                                                                                                    |
+| `modules/database/`           | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                                        |
+| `modules/app/`                | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                                        |
+| `modules/email/`              | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                                      |
+| `modules/github-deploy-role/` | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                                         |
+| `modules/alarms/`             | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage, and the sign-in email cap being reached.                                                                 |
+| `modules/schedule/`           | Staging's out-of-hours schedule: stops the database and scales the services to zero overnight and at weekends.                                                                                                |
+| `scripts/deploy.sh`           | Runs migrations and `db-roles`, then rolls the services onto new images. Used by `.github/workflows/deploy.yml`.                                                                                              |
+| `scripts/power.sh`            | Wakes staging up (or puts it to sleep) outside the schedule. Used by the Staging power workflow and by `deploy.sh` when staging is asleep.                                                                    |
 
 What differs between environments:
 
@@ -66,7 +66,7 @@ These need a person with a credit card and access to the company domain. Nothing
 1. **AWS management account.** Create one AWS account to be the management account (it will run no apps). Turn on MFA for the root user, then create an admin user in IAM Identity Center and stop using root.
 2. **Two email addresses** for the staging and production accounts' root users. They must be unique; plus-addressing works (`aws+staging@yourdomain`).
 3. **An alerts email address** for budget and CloudWatch alarms.
-4. **The domain**, with its DNS hosted in Cloudflare (free plan is fine; see "Cloudflare in front" for what Pro adds). Create a Cloudflare API token for `infra/edge` (My Profile > API Tokens > Create custom token) limited to this zone, with Zone: DNS Edit, Zone: Config Rules Edit, Zone: Transform Rules Edit and Zone: Zone WAF Edit. Keep it in a password manager and export it as `CLOUDFLARE_API_TOKEN` only when applying. After each environment's apply, add the records Terraform prints, all as "DNS only" (not proxied):
+4. **The domain**, with its DNS hosted in Cloudflare (free plan is fine; see "Cloudflare in front" for what Pro adds). Create a Cloudflare API token for `infra/edge` (My Profile > API Tokens > Create custom token) limited to this zone, with Zone: DNS Edit, Zone: Config Rules Edit, Zone: Cache Rules Edit, Zone: Transform Rules Edit and Zone: Zone WAF Edit. Keep it in a password manager and export it as `CLOUDFLARE_API_TOKEN` only when applying. After each environment's apply, add the records Terraform prints, all as "DNS only" (not proxied):
    - `certificate_validation_records`: CNAMEs that let AWS issue the HTTPS certificate.
    - Not the web and API hostnames: `infra/edge` creates those, proxied. If you created them by hand earlier, delete them before applying `infra/edge`.
    - `email_dns_records`: three DKIM CNAMEs, an MX and an SPF TXT on `bounce.<sending domain>`, and a DMARC TXT on `_dmarc.<sending domain>`. Production sends from the domain itself, so if the domain already sends other email (Google Workspace, for example), set up that provider's SPF and DKIM first, because the DMARC policy is `p=quarantine`.
@@ -99,10 +99,17 @@ These need a person with a credit card and access to the company domain. Nothing
 
 Work the app needs from AWS that isn't built yet. Each item lands with the feature that needs it.
 
-- **Uploaded images (S1 event banners).** Locally they are files in a Docker volume (`BANNER_STORAGE=local`, `BANNER_DIR`). Container disk is lost on every deploy, so in AWS they go to the existing private `uploads` bucket through BackendDev's S3 adapter. Uploads pass through the API, which re-encodes them and strips metadata, so the bucket needs no CORS. Still to do:
-  - set `BANNER_STORAGE=s3` and `UPLOADS_BUCKET=<bucket name>` on the API
-  - narrow the task role to put, get and delete on the bucket's `banners/` prefix
-  - serve banners through CloudFront with origin access control and long caching (every upload gets a new key, so no invalidations), and pass its base as `BANNER_PUBLIC_BASE_URL`, for example `https://cdn.<domain>/banners`
+- **Uploaded images (S1 event banners).** Locally they are files in a Docker volume (`BANNER_STORAGE=local`, `BANNER_DIR`). Container disk is lost on every deploy, so in AWS they go to the private `uploads` bucket under `banners/`. Uploads pass through the API, which re-encodes them and strips metadata, so the bucket needs no CORS. Browsers still fetch them from the API at `WEB_URL/api/public/banners/<key>` (the default `BANNER_PUBLIC_BASE_URL`), and Cloudflare caches them at the edge (the "Cache event banners" rule in `infra/edge`). The API sends `public, max-age=31536000, immutable` and every upload gets a new key, so nothing ever needs purging, and the sitewide CSP's `img-src 'self'` needs no change. There's no CloudFront: it would add a second hostname, a certificate in us-east-1 and a CSP change for traffic Cloudflare already caches for free. Built so far:
+  - `banner_storage` in `modules/environment` (default `local`). Setting it to `s3` gives the API `BANNER_STORAGE=s3` and `UPLOADS_BUCKET=<bucket name>`; the region comes from Fargate's own `AWS_REGION`.
+  - The task role can get, put and delete only under `banners/` (no list, so a missing key reads as AccessDenied, not NoSuchKey).
+  - Replaced and deleted objects are kept as old versions for 30 days, then removed.
+
+  Still to do, then set `banner_storage = "s3"` in both environments: BackendDev's S3 adapter for `BannerStorage` in `apps/api/src/modules/catalogue/banner-storage.ts`. Contract:
+  - Key `banners/<key>`, with the same `BANNER_KEY` check as the local store.
+  - `put` sets `ContentType` (`image/webp`, or `image/jpeg` for `-og.jpg`). The bucket encrypts with the environment's KMS key, which the task role can use.
+  - `read` returns the bytes and treats NoSuchKey and AccessDenied as `null`, so the API's banner route still answers 404.
+  - `remove` deletes the object.
+  - `publicUrl` is unchanged.
 
 ## Applying, in order
 
@@ -155,6 +162,7 @@ Security's SEC-5 conditions, which ship together:
 - **Rate limits at the edge**, per client IP, in front of the API's own per-IP and per-email limits. They cover the sign-in email, magic-link check and MFA check requests (`/api/auth/*` and `/auth/*`), and `/csp-report`, in any letter case and with or without a trailing slash, as the API accepts both:
   - Free plan (the default, `cloudflare_plan = "free"`): one custom rate-limiting rule combines the sign-in endpoints and `/csp-report` into a single shared 20-requests-per-10-seconds per-IP counter, then blocks for 10 s. That is all the free plan allows (one rule, path only, 10 s windows), which means a burst of CSP reports from browsers behind a shared NAT (an office, university, mobile carrier or venue Wi-Fi) can spend that IP's sign-in budget for 10 seconds. Splitting sign-in and CSP reports into separate counters requires the second rule on Pro.
   - Pro plan (`cloudflare_plan = "pro"`, after upgrading the zone): sign-in at 10 a minute, then blocked for 10 minutes; CSP reports at 30 a minute, then blocked for a minute.
+- **Banners cached at the edge.** A cache rule on the web hostnames keeps `/api/public/banners/*` at Cloudflare for as long as the API's `Cache-Control` allows (a year, immutable). Cache Rules are on the free plan.
 - **TLS all the way.** Full (strict) for our hostnames only, so Cloudflare checks the load balancer's certificate. Cloudflare's free edge certificate covers one level below the domain, which is why staging's API is `api-staging.<domain>`.
 
 To turn Cloudflare off for an environment (for example to debug the load balancer directly), set `behind_cloudflare = false` on its environment module: that opens the load balancer to `ingress_cidrs` (and `ingress_ipv6_cidrs` if dual-stack), drops the header check and sets `TRUST_PROXY_HOPS=1` in one apply. Then run the Deploy workflow so the tasks get the new count.
