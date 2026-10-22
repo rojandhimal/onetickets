@@ -93,3 +93,14 @@ export type {
   InsufficientSpotsBody,
   ReserveHoldBody,
 } from './api/inventory.js';
+export {
+  decodeTicketToken,
+  encodeTicketPayload,
+  encodeTicketToken,
+  TICKET_KEY_ID_BYTES,
+  TICKET_PAYLOAD_BYTES,
+  TICKET_SIGNATURE_BYTES,
+  TICKET_TOKEN_BYTES,
+  TICKET_TOKEN_VERSION,
+} from './api/tickets.js';
+export type { DecodedTicketToken, TicketDto, TicketTokenClaims } from './api/tickets.js';
