@@ -2,6 +2,19 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude, later)
+
+- **Done:** Unpaused by PM. SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) is out of draft at 72feb4c, with all 12 CI checks green and BackendDev's pass; Security and QA are asked to review. Main hadn't moved, so no merge was needed.
+- **Done:** DEV-5 is claimed through PM. The infra side is built and validated, and committed locally until #54 merges (one branch per role):
+  - `banner_storage` (local or s3) sets BANNER_STORAGE and UPLOADS_BUCKET on the API.
+  - The task role is narrowed to the uploads bucket's `banners/*`.
+  - Old object versions expire after 30 days.
+  - An infra/edge Cache Rule caches `/api/public/banners/*` at Cloudflare.
+  - No CloudFront, so there's no CSP change and no new hostname.
+  - The adapter contract went to BackendDev.
+- **Next:** drive #54 through review, then open the DEV-5 PR from fresh main.
+- **Blocked:** nothing.
+
 ## 2026-10-22
 
 - **Done:** SEC-6 is up as draft [#54](https://github.com/rojandhimal/onetickets/pull/54). Postgres connections in AWS now use `sslmode=verify-full`:
