@@ -166,8 +166,10 @@ resource "cloudflare_ruleset" "request_headers" {
 
 # Banners (the API at /api/public/banners/<key>) carry
 # `public, max-age=31536000, immutable` and every upload gets a new key, so
-# Cloudflare can keep them at the edge and nothing ever needs purging. Said
-# explicitly rather than left to Cloudflare's by-extension default.
+# nothing ever needs purging. The edge keeps them for 30 days, not the year
+# the origin allows, so a removed banner is gone from Cloudflare within the
+# same 30 days the uploads bucket keeps old versions. Said explicitly rather
+# than left to Cloudflare's by-extension default.
 resource "cloudflare_ruleset" "cache" {
   zone_id = var.zone_id
   name    = "OneTickets cache"
@@ -176,11 +178,11 @@ resource "cloudflare_ruleset" "cache" {
 
   rules = [{
     description = "Cache event banners"
-    expression  = "http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(http.request.uri.path, \"/api/public/banners/\")"
+    expression  = "http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(lower(http.request.uri.path), \"/api/public/banners/\")"
     action      = "set_cache_settings"
     action_parameters = {
       cache       = true
-      edge_ttl    = { mode = "respect_origin" }
+      edge_ttl    = { mode = "override_origin", default = 2592000 } # 30 days
       browser_ttl = { mode = "respect_origin" }
     }
   }]
