@@ -15,6 +15,11 @@ Newest first. Format: date, Done, Next, Blocked.
     - An anonymous `GET /public/orders/:ref` returns the buyer's email and name. The ref is a 40-bit value in the URL with no rate limit (P.3).
     - The permissive `orders_public_select` and `tickets_public_select` policies let org B, or a session with no organisation, read org A's orders and emails.
     - The probe is in qa/scripts/qa59.int.test.ts.
+  - [#61](https://github.com/rojandhimal/onetickets/pull/61#issuecomment-6349201447) DEV-5 banner storage (infra) passes at 3f8f2d9.
+    - The switch defaults to local, the narrower IAM breaks nothing, and the lifecycle only affects banners/.
+    - The Next rewrite passes the API's immutable Cache-Control through with no Set-Cookie, so Cloudflare can cache banners.
+    - Notes: the edge TTL of a year outlives the 30-day retention of deleted banners, and the cache rule is case-sensitive.
+    - The dependency audit is red on main too, from the next@16.4.0 advisories.
 - **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 
