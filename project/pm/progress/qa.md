@@ -2,17 +2,28 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude)
+
+- **Done:** Reviewed [#55](https://github.com/rojandhimal/onetickets/pull/55) (board sync, working agreement section 4) at 012b235: pass. The rules are consistent across AGENTS.md, agents/README and the working agreement, the board matches main, and there's no personal data or secrets.
+  - #55 re-checked at 4243eec: still a pass.
+  - [#54](https://github.com/rojandhimal/onetickets/pull/54#issuecomment-6342929516) SEC-6 passes at 72feb4c. The bundle is byte-identical to AWS's ap-southeast-2 file and ships at /app/certs. The deployed node-postgres refuses a wrong CA and a wrong hostname under verify-full. Optional note: add a CI guard on url_params.
+  - #55 re-checked at 8d001c9: still a pass.
+  - [#57](https://github.com/rojandhimal/onetickets/pull/57) STATE-1 passes at 60eb483. The brief works, check and lint fail on 6 kinds of graph breakage, the sync round-trips, and the nodes match main and GitHub. Note: record the graph in .sync-state.json, otherwise the first both-sides change conflicts on the whole file.
+- **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 21 Oct 2026
 
 - **Done:**
-  - Reviewed PR #50 (S2-1: free ticket holds and inventory) at fcc6142: pass.
+  - Reviewed PR #50 (S2-1: free ticket holds and inventory) at fcc6142: pass ([comment](https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316316199)).
     - Verified INV-1 and INV-2 atomic conditional hold reservations on `inventory.ticket_inventory` (`WHERE sold + held + :qty <= capacity`) and concurrent buyer stress test (50 concurrent buyers racing for 10 spots: 10 succeed, 40 fail). Mutation test caught by 4 integration tests.
     - Verified INV-3 sweeper concurrency (2 sweepers across 100 expired holds release exactly 100 with no underflow) and 20-minute maximum hold lifetime cap.
     - Verified INV-15 / ARCH-2 separation between `sold_out` (`sold >= capacity`) and `all_taken` (`sold + held >= capacity` while `sold < capacity`).
     - Verified INV-4 per-order limit guard (`422 invalid_quantity`).
     - Verified forced RLS on `inventory.holds` (`holds_tenant`, `holds_public`, `holds_worker`).
     - Updated rows 1.1 to 1.5 in [project/qa/sprint-2-checklist.md](/project/qa/sprint-2-checklist.md) to ✅.
-    - Posted QA pass verdict comment on PR #50: https://github.com/rojandhimal/onetickets/pull/50#issuecomment-6316316199.
+  - Reviewed PR #52 (SEC-14: enforce CSP site-wide with per-request nonce) at c4373a9: failed due to static prerendering of `/auth/verify` omitting nonces from Next bootstrap scripts under `strict-dynamic` CSP, causing 22 Playwright E2E timeouts.
+  - Re-reviewed PR #52 diff `c4373a9..926078a`: pass at 926078a ([comment](https://github.com/rojandhimal/onetickets/pull/52#issuecomment-6318266431)). Verified `export const dynamic = 'force-dynamic'` added to `apps/web/src/app/auth/verify/page.tsx`, ensuring per-request nonces attach to all script tags. All 7 CI checks green, including 36 Playwright E2E/axe tests with 0 CSP violations. Marked Row P.1 in [project/qa/sprint-2-checklist.md](/project/qa/sprint-2-checklist.md) as ✅.
 - **Next:** Review S2-2 (one-screen free checkout frontend) and S2-3 (signed QR tickets) PRs when opened.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 

@@ -7,12 +7,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "lint": "eslint . && pnpm lint:boundaries && ./scripts/check-boundary-rule.sh",
+    "lint": "eslint . && pnpm lint:boundaries && ./scripts/check-boundary-rule.sh && node scripts/state.mjs check",
     "lint:boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm --filter @onetickets/shared build && pnpm -r --parallel typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node --test scripts/*.test.mjs",
+    "state": "node scripts/state.mjs",
     "test:integration": "pnpm -r test:integration",
     "build": "pnpm -r build",
     "e2e": "pnpm --filter @onetickets/e2e e2e"

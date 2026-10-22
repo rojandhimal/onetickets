@@ -10,6 +10,8 @@
 //     both sides' entries); a real conflict is reported, both copies stay as they are, and the
 //     script exits 1 so PM merges that file by hand
 // Links to the shared folder are written as repo-root links (/project/...) and back.
+// The state graph (state/*.jsonl, one JSON node per line) syncs the same way: it is copied as is,
+// a both-sides change merges line by line, and a merge that breaks the graph counts as a conflict.
 //
 // Usage, from the repo root: node scripts/sync-project-files.mjs [--prefer-repo] [shared folder]
 // (default /mnt/project-files). --prefer-repo settles files changed on both sides by taking
@@ -33,9 +35,10 @@ const args = process.argv.slice(2);
 const preferRepo = args.includes('--prefer-repo');
 const src = (args.find((arg) => !arg.startsWith('--')) ?? '/mnt/project-files').replace(/\/$/, '');
 const dest = 'project';
-const dirs = ['pm', 'design', 'qa', 'research', 'social'];
+const dirs = ['pm', 'design', 'qa', 'research', 'social', 'state'];
 const stateFile = join(dest, '.sync-state.json');
 
+const isGraph = (path) => path.endsWith('.jsonl');
 const toRepo = (text) =>
   text.replaceAll(`${src}/security/`, '/docs/security/').replaceAll(`${src}/`, '/project/');
 const toShared = (text) =>
@@ -51,6 +54,7 @@ const write = (path, text) => {
 // Loaded after the shared-folder check, so tools without node_modules can still run the script.
 let prettier;
 const format = async (path, text) => {
+  if (isGraph(path)) return text;
   prettier ??= await import('prettier');
   return prettier.format(text, { ...(await prettier.resolveConfig(path)), filepath: path });
 };
@@ -62,7 +66,7 @@ function markdownFiles(root) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
       if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.md')) found.push(relative(root, path));
+      else if (entry.name.endsWith('.md') || isGraph(entry.name)) found.push(relative(root, path));
     }
   };
   for (const dir of dirs) walk(join(root, dir));
@@ -99,6 +103,12 @@ function mergeThreeWay(ours, base, theirs, union) {
   }
 }
 
+async function graphIsValid(text) {
+  const { parse, validate } = await import('./state.mjs');
+  const { nodes, errors } = parse(text);
+  return errors.length === 0 && validate(nodes).length === 0;
+}
+
 if (!existsSync(src)) {
   console.log(`No shared folder at ${src}; nothing to sync.`);
   process.exit(0);
@@ -113,7 +123,9 @@ for (const rel of files) {
   const sharedPath = join(src, rel);
   const repo = read(repoPath);
   const shared = read(sharedPath);
-  const fromShared = shared === null ? null : await format(repoPath, toRepo(shared));
+  const fromShared =
+    shared === null ? null : await format(repoPath, isGraph(rel) ? shared : toRepo(shared));
+  const back = (text) => (isGraph(rel) ? text : toShared(text));
   const last = state[rel];
   const repoChanged = repo !== null && hash(repo) !== last?.repo;
   const sharedChanged = shared !== null && hash(shared) !== last?.shared;
@@ -126,19 +138,19 @@ for (const rel of files) {
     write(repoPath, next);
     log.toRepo.push(rel);
   } else if (shared === null || preferRepo || (repoChanged && !sharedChanged)) {
-    write(sharedPath, toShared(repo));
+    write(sharedPath, back(repo));
     log.toShared.push(rel);
   } else {
     const base = baseAtLastSync(rel) ?? '';
     const union = rel.startsWith('pm/progress/');
     const { text, clean } = mergeThreeWay(repo, base, fromShared, union);
-    if (!clean) {
+    if (!clean || (isGraph(rel) && !(await graphIsValid(text)))) {
       log.conflicts.push(rel);
       continue;
     }
     next = await format(repoPath, text);
     write(repoPath, next);
-    write(sharedPath, toShared(next));
+    write(sharedPath, back(next));
     log.merged.push(rel);
   }
   state[rel] = { repo: hash(next), shared: hash(read(sharedPath)) };
