@@ -18,6 +18,10 @@ const SENSITIVE_PARTS = [
   'recovery',
   'session',
   'email',
+  // Ticket keys open a buyer's tickets; the signing key makes them.
+  'ticketkey',
+  'signingkey',
+  'privatekey',
 ];
 
 // Too short to match as substrings ("slotPosition" contains "otp"), so these must be a whole word
@@ -68,7 +72,7 @@ const PATTERNS: Array<[RegExp, string]> = [
   // Bearer and basic credentials.
   [/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, `$1 ${REDACTED}`],
   // Tokens in query strings or fragments, e.g. #token=abc or ?code=xyz&state=...
-  [/([?#&](?:token|code|state|access_token|id_token)=)[^&#\s"']+/gi, `$1${REDACTED}`],
+  [/([?#&](?:token|key|code|state|access_token|id_token)=)[^&#\s"']+/gi, `$1${REDACTED}`],
   // Stripe secret, restricted and client secrets.
   [/\b(sk|rk)_(live|test)_[A-Za-z0-9]+/g, REDACTED],
   [/\bpi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+/g, REDACTED],

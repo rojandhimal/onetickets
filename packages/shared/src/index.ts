@@ -100,7 +100,21 @@ export {
   TICKET_KEY_ID_BYTES,
   TICKET_PAYLOAD_BYTES,
   TICKET_SIGNATURE_BYTES,
+  TICKET_SIGNING_CONTEXT,
   TICKET_TOKEN_BYTES,
   TICKET_TOKEN_VERSION,
+  ticketSigningInput,
 } from './api/tickets.js';
-export type { DecodedTicketToken, TicketDto, TicketTokenClaims } from './api/tickets.js';
+export type {
+  DecodedTicketToken,
+  TicketDto,
+  TicketStatus,
+  TicketTokenClaims,
+} from './api/tickets.js';
+export { confirmationPath, createOrderBody, MAX_HOLDS_PER_ORDER } from './api/orders.js';
+export type {
+  CreatedOrderDto,
+  CreateOrderBody,
+  OrderEventDto,
+  OrderTicketsDto,
+} from './api/orders.js';

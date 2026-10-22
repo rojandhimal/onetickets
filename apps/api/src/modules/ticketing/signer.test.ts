@@ -1,13 +1,18 @@
 import { createPublicKey, generateKeyPairSync, randomBytes, verify } from 'node:crypto';
-import { decodeTicketToken, encodeTicketPayload, encodeTicketToken } from '@onetickets/shared';
+import {
+  decodeTicketToken,
+  encodeTicketPayload,
+  encodeTicketToken,
+  ticketSigningInput,
+} from '@onetickets/shared';
 import { describe, expect, it } from 'vitest';
 import { LocalEd25519Signer, ticketKeyId, ticketSignerFromEnv } from './signer.js';
 
-/** The verifier the scanner will run: raw public key, payload, signature. */
+/** The verifier the scanner will run: raw public key, payload under the context, signature. */
 function verifies(rawPublicKey: Uint8Array, payload: Uint8Array, signature: Uint8Array): boolean {
   const spki = Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), rawPublicKey]);
   const key = createPublicKey({ key: spki, format: 'der', type: 'spki' });
-  return verify(null, payload, key, signature);
+  return verify(null, ticketSigningInput(payload), key, signature);
 }
 
 const claims = (keyId: string) => ({
@@ -22,7 +27,7 @@ describe('LocalEd25519Signer', () => {
     const signer = new LocalEd25519Signer(randomBytes(32));
     const publicKey = await signer.publicKey();
     const payload = encodeTicketPayload(claims(signer.keyId));
-    const token = encodeTicketToken(payload, await signer.sign(payload));
+    const token = encodeTicketToken(payload, await signer.signTicket(payload));
 
     const decoded = decodeTicketToken(token)!;
     expect(decoded.keyId).toBe(signer.keyId);
@@ -34,6 +39,20 @@ describe('LocalEd25519Signer', () => {
 
     const other = new LocalEd25519Signer(randomBytes(32));
     expect(verifies(await other.publicKey(), decoded.payload, decoded.signature)).toBe(false);
+
+    // Signed under the context: the bare payload's signature check fails.
+    const key = createPublicKey({
+      key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), publicKey]),
+      format: 'der',
+      type: 'spki',
+    });
+    expect(verify(null, decoded.payload, key, decoded.signature)).toBe(false);
+  });
+
+  it('refuses to exist outside development and test', () => {
+    expect(() => new LocalEd25519Signer(randomBytes(32), 'production')).toThrow(/KMS/);
+    expect(() => new LocalEd25519Signer(randomBytes(32), '')).toThrow(/KMS/);
+    expect(new LocalEd25519Signer(randomBytes(32), 'development').keyId).toMatch(/^[0-9a-f]{16}$/);
   });
 
   it('derives the same public key and key id as Node does from the seed', async () => {
@@ -59,11 +78,15 @@ describe('ticketSignerFromEnv', () => {
   });
 
   it('reads a 32-byte base64 seed', () => {
-    expect(ticketSignerFromEnv({ TICKET_SIGNING_KEY: key })).toBeInstanceOf(LocalEd25519Signer);
+    expect(ticketSignerFromEnv({ TICKET_SIGNING_KEY: key, NODE_ENV: 'test' })).toBeInstanceOf(
+      LocalEd25519Signer,
+    );
   });
 
   it('refuses a short key', () => {
-    expect(() => ticketSignerFromEnv({ TICKET_SIGNING_KEY: 'c2hvcnQ=' })).toThrow(/32 bytes/);
+    expect(() => ticketSignerFromEnv({ TICKET_SIGNING_KEY: 'c2hvcnQ=', NODE_ENV: 'test' })).toThrow(
+      /32 bytes/,
+    );
   });
 
   it('never takes a key from the environment in production', () => {

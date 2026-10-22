@@ -1,6 +1,6 @@
 // Signed QR tickets (S2-3, ADR 0011). The QR code holds a compact token with no personal data:
-// version, key id, event id, a random ticket id and issued-at, followed by an Ed25519 signature
-// over those bytes. The scanner verifies it offline with the public key for the key id.
+// version, key id, event id, a random ticket id and issued-at, followed by an Ed25519 signature.
+// The scanner verifies it offline with the public key for the key id.
 //
 // Layout (109 bytes, base64url without padding, 146 characters):
 //   0       version (1)
@@ -8,13 +8,26 @@
 //   9..24   event id (UUID, 16 bytes)
 //   25..40  ticket id (random UUID v4, 16 bytes)
 //   41..44  issued-at (seconds since the Unix epoch, unsigned 32-bit big-endian)
-//   45..108 Ed25519 signature over bytes 0..44
+//   45..108 Ed25519 signature over TICKET_SIGNING_CONTEXT followed by bytes 0..44
+//
+// The context is signed but not sent, so a signature the key made over any other kind of message
+// can never pass as a ticket.
 
 export const TICKET_TOKEN_VERSION = 1;
 export const TICKET_KEY_ID_BYTES = 8;
 export const TICKET_PAYLOAD_BYTES = 45;
 export const TICKET_SIGNATURE_BYTES = 64;
 export const TICKET_TOKEN_BYTES = TICKET_PAYLOAD_BYTES + TICKET_SIGNATURE_BYTES;
+export const TICKET_SIGNING_CONTEXT = 'onetickets/ticket/v1';
+
+/** The exact bytes signed and verified for a ticket payload: the context, then the payload. */
+export function ticketSigningInput(payload: Uint8Array): Uint8Array {
+  const context = Uint8Array.from(TICKET_SIGNING_CONTEXT, (c) => c.charCodeAt(0));
+  const input = new Uint8Array(context.length + payload.length);
+  input.set(context);
+  input.set(payload, context.length);
+  return input;
+}
 
 export interface TicketTokenClaims {
   /** Hex, 16 characters. */
@@ -75,15 +88,23 @@ export function decodeTicketToken(token: string): DecodedTicketToken | null {
   };
 }
 
+export type TicketStatus = 'valid' | 'revoked';
+
 /** One ticket as the buyer sees it on the confirmation screen. */
 export interface TicketDto {
   id: string;
-  /** Short code printed on the stub, for door staff to look up by hand. */
+  /** Short code printed on the stub (8 Crockford base32 characters), for door staff to type. */
   ref: string;
+  /** The one name given at checkout; every ticket in the order shows it. */
+  holderName: string;
   ticketTypeId: string;
   ticketTypeName: string;
-  /** The signed token to draw as a QR code. Null for the moment between issuing and signing. */
+  /**
+   * The signed token to draw as a QR code. Null for the moment between issuing and signing, and
+   * for a revoked ticket.
+   */
   qr: string | null;
+  status: TicketStatus;
   issuedAt: string;
 }
 

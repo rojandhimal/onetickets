@@ -1,4 +1,5 @@
 import { createHash, createPrivateKey, createPublicKey, sign, type KeyObject } from 'node:crypto';
+import { ticketSigningInput } from '@onetickets/shared';
 
 /**
  * Signs QR ticket payloads (ADR 0011). In AWS the key will live in KMS and only a signing worker's
@@ -10,17 +11,33 @@ export abstract class TicketSigner {
   abstract readonly keyId: string;
   /** The raw 32-byte Ed25519 public key the scanner verifies with. */
   abstract publicKey(): Promise<Uint8Array>;
-  abstract sign(payload: Uint8Array): Promise<Uint8Array>;
+
+  /** Signs a ticket payload under the ticket context, so the key never signs anything else. */
+  signTicket(payload: Uint8Array): Promise<Uint8Array> {
+    return this.signBytes(ticketSigningInput(payload));
+  }
+
+  protected abstract signBytes(input: Uint8Array): Promise<Uint8Array>;
 }
 
-/** An Ed25519 key held in process memory, from a 32-byte seed. For dev and CI only. */
+/** Where a key from the environment may be used. Anywhere else must sign in KMS. */
+const LOCAL_KEY_ENVIRONMENTS = new Set(['development', 'test']);
+
+/**
+ * An Ed25519 key held in process memory, from a 32-byte seed. For dev and CI only: it refuses to
+ * exist unless NODE_ENV is development or test, so a seed set by mistake in AWS stops the api
+ * starting rather than signing tickets with a key outside KMS.
+ */
 export class LocalEd25519Signer extends TicketSigner {
   readonly keyId: string;
   private readonly privateKey: KeyObject;
   private readonly rawPublicKey: Uint8Array;
 
-  constructor(seed: Uint8Array) {
+  constructor(seed: Uint8Array, nodeEnv = process.env.NODE_ENV) {
     super();
+    if (!LOCAL_KEY_ENVIRONMENTS.has(nodeEnv ?? '')) {
+      throw new Error('A local ticket signing key is for development and CI only. Sign in KMS.');
+    }
     if (seed.length !== 32) throw new Error('An Ed25519 seed is 32 bytes.');
     // PKCS#8 wrapping of a raw Ed25519 seed: a fixed 16-byte prefix, then the seed.
     const der = Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]);
@@ -34,8 +51,8 @@ export class LocalEd25519Signer extends TicketSigner {
     return this.rawPublicKey;
   }
 
-  async sign(payload: Uint8Array): Promise<Uint8Array> {
-    return new Uint8Array(sign(null, payload, this.privateKey));
+  protected async signBytes(input: Uint8Array): Promise<Uint8Array> {
+    return new Uint8Array(sign(null, input, this.privateKey));
   }
 }
 
@@ -46,18 +63,15 @@ export function ticketKeyId(rawPublicKey: Uint8Array): string {
 
 /**
  * The signer for this process, or null when `TICKET_SIGNING_KEY` is unset: tickets are then
- * issued but stay unsigned until a signer runs. Production never reads a key from the
- * environment; it will use KMS from a signing worker.
+ * issued but stay unsigned until a signer runs. Outside development and test a key here stops
+ * the api starting; production will sign in KMS from a signing worker. Never log the value.
  */
 export function ticketSignerFromEnv(env: NodeJS.ProcessEnv = process.env): TicketSigner | null {
   const value = env.TICKET_SIGNING_KEY;
   if (!value) return null;
-  if (env.NODE_ENV === 'production') {
-    throw new Error('TICKET_SIGNING_KEY is for development and CI only. Production signs in KMS.');
-  }
   const seed = Buffer.from(value, 'base64');
   if (seed.length !== 32) {
     throw new Error('TICKET_SIGNING_KEY must be 32 bytes, base64 (openssl rand -base64 32).');
   }
-  return new LocalEd25519Signer(seed);
+  return new LocalEd25519Signer(seed, env.NODE_ENV);
 }

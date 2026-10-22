@@ -5,9 +5,11 @@ import { LoggerModule } from 'nestjs-pino';
 import { DatabaseModule } from './database/database.module.js';
 import { noStoreByDefault } from './http.js';
 import { CatalogueModule } from './modules/catalogue/index.js';
+import { CheckoutModule } from './modules/checkout/index.js';
 import { HealthModule } from './modules/health/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { InventoryModule } from './modules/inventory/index.js';
+import { TicketingModule } from './modules/ticketing/index.js';
 import { loggerParams } from './observability/logging.js';
 
 @Module({
@@ -20,6 +22,8 @@ import { loggerParams } from './observability/logging.js';
     IdentityModule,
     CatalogueModule,
     InventoryModule,
+    TicketingModule,
+    CheckoutModule,
   ],
   // Reports unexpected errors to Sentry; ApiError and other HttpExceptions are expected and skipped.
   providers: [{ provide: APP_FILTER, useClass: SentryGlobalFilter }],
