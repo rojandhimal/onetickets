@@ -20,6 +20,14 @@ Newest first. Format: date, Done, Next, Blocked.
     - The Next rewrite passes the API's immutable Cache-Control through with no Set-Cookie, so Cloudflare can cache banners.
     - Notes: the edge TTL of a year outlives the 30-day retention of deleted banners, and the cache rule is case-sensitive.
     - The dependency audit is red on main too, from the next@16.4.0 advisories.
+    - Re-checked at fc6758a and still a pass. The edge TTL is now 30 days and the path match uses lower(). Optional: a 404 status TTL.
+    - 5733cda passes too: banner errors (400-599) are never cached at the edge. This depends on CI's edge validate.
+  - [#56](https://github.com/rojandhimal/onetickets/pull/56#issuecomment-6349318895) S2-3 ticket screen **fails** at c3c54ac.
+    - Rows 3.1 to 3.5 pass: unit tests 178/178, and the ticket e2e passes 6/6 at 375 px and 1280 px.
+    - Blocker: the saved offline copy is shown after a server 404 with a key, which covers revoked and expired keys.
+    - Blocker: the saved copy is shown online with no key and no fetch, so a shared phone opening the order from history sees the name, email and QR.
+    - Blocker: docs/adr/README.md conflicts with main, ADR 0019 is already taken (it needs to be 0020), and no CI has run at that head.
+    - The probe is in qa/scripts/qa56.test.tsx.
 - **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 
@@ -179,4 +187,4 @@ Newest first. Format: date, Done, Next, Blocked.
 
 - **Done:** Test strategy and Sprint 0 checklist in qa/. QA passed S0-1 ([#1](https://github.com/rojandhimal/onetickets/pull/1)), S0-3 web ([#2](https://github.com/rojandhimal/onetickets/pull/2)) and S0-4 ([#6](https://github.com/rojandhimal/onetickets/pull/6)), all merged. The e2e and accessibility harness ([#5](https://github.com/rojandhimal/onetickets/pull/5)) merged, so every PR now runs browser and axe tests, including the sign-up pages.
 - **Next:** Re-test S0-3 signed-in flows when the auth api PR opens; review S0-2 and S0-5 PRs; add the doc-update check to every PR review.
-- **Blocked:** S0-2 deploy checks and the staging demo wait on tegs's AWS account; S0-3 Google sign-in on staging waits on tegs's Google OAuth client.
+- **Blocked:** S0-2 deploy checks a

@@ -4,9 +4,10 @@ Newest first. Format: date, Done, Next, Blocked.
 
 ## 2026-10-22 (Claude), later
 
+- **Done:** Reviewed [#56](https://github.com/rojandhimal/onetickets/pull/56) (S2-3 ticket screen) at c3c54ac, rendered at 375 and 1280: changes needed (revoked-ticket copy, a status line while a QR is being signed). Added the copy rows.
 - **Done:** Unpaused. Filled the S2-3 gaps in handoff-s2.md ("S2-3 builds the confirmation screen on its own") and copy-s0-s2.md: Wake Lock instead of a brightness boost (new QR note), the calendar menu with no ticket link in calendars, the one-ticket layout, and the loading, offline and bad-link states. Sent them to FrontendDev.
-- **Next:** Review the S2-3 confirmation PR, and any S2-2 checkout PR without a Design pass, at 375 and 1280 px.
-- **Blocked:** Nothing. No S2-2 or S2-3 PR is open yet.
+- **Next:** Re-check #56 after the fixes; review any S2-2 checkout PR without a Design pass, at 375 and 1280 px.
+- **Blocked:** Nothing. No S2-2 checkout PR is open yet.
 
 ## 22 Oct 2026
 

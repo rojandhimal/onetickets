@@ -162,6 +162,8 @@ FrontendDev's current strings for all of the above are approved as they are; onl
 | Sold out at submit                                   | **Those tickets have just gone.** Nothing was booked. · Back to the event                                                                               |
 | Network failure on submit                            | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                                                            |
 | Tickets can't load (offline, not cached)             | **We couldn't load your tickets.** Check your connection and try again. Your tickets are also in your email. · Try again                                |
+| QR still being signed (in the QR box, role=status)   | Getting your QR code ready… · after the retries run out: Your QR code is taking longer than usual. It's in your ticket email too.                       |
+| Every ticket in the order released or cancelled      | Heading: Your tickets (not "You're going!"); no emailed line; hide Add to calendar                                                                      |
 | Ticket released or cancelled (stub, no QR)           | **This ticket is no longer valid.** It was released or cancelled, so there's no QR to show. Questions? Reply to your ticket email to reach {organiser}. |
 | Ticket page link not valid (S2-3, before My tickets) | **That link doesn't work any more.** Open the latest ticket email from OneTickets and use the link in it.                                               |
 | Ticket link expired (My tickets)                     | That link has expired. Enter your email and we'll send a new one.                                                                                       |

@@ -1,7 +1,7 @@
 {
   "design/copy-s0-s2.md": {
-    "repo": "f6d08dfeda4583c77d30107e53f3bd98d70c142f8ed54afc4997f1f46b4e4c0a",
-    "shared": "feaf8a8fe29db8da67f9aeb9cc36773836f5dfb2a187c15b572d4072bd4f78d1"
+    "repo": "c886968d12cdbd4b2c4f1f990d77f43b3dd2d7024307fc30f5b1f114c3a72ab4",
+    "shared": "a83381a7b051fd97e3d35308df4120f3eec93b30f42d1b1b92d97ee9695a11cf"
   },
   "design/handoff-s0.md": {
     "repo": "ab15ba69db9ae13e515346bcc6aa45c12acb23de87e0b9837732292d7408ffe3",
@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "1ca1d33c9b3646d51f1c22ac91e8837a6ccfbd8f08ded928c615d3d04748fa72",
-    "shared": "f913f476b791366faa6cea55403366ceea1d205b0466ba383c23f86aaedbe2a3"
+    "repo": "b6a342c76ff806ae3ef2d0d02028a81af71036c8330173c557bc3c8723a02e09",
+    "shared": "3b349b056b9e6a56b10750d8b98ab622461a21517140529d6e2353642107c184"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -52,8 +52,8 @@
     "shared": "d2511c2cf4611a59d351af011dbe4da22ad7d9fd941ef56404fa0529d3f54176"
   },
   "pm/progress/design.md": {
-    "repo": "67e2a73ec027159f4a3f8080cf8fda91f05e1c7d22091be47a20367fab42d60f",
-    "shared": "a88990001437d92f8551649a734150be8725f6dfb09651d4fea3fb425da1a1dd"
+    "repo": "f47dbf10ff588ef6eb4ae4be0ecc155a3d5191a45a507c61148b1d4fad908de6",
+    "shared": "71ced3a19e1fe2556597261e77d4ad5eb355b77ba0da7429fd23f623991f64a2"
   },
   "pm/progress/devops.md": {
     "repo": "d258e1eaf750a28bcdcf81ec391a40e5aed8b5bd00c49fa99f13f97704e382f7",
@@ -72,12 +72,12 @@
     "shared": "fbaa87467ec984adeb941fb75815be461b51df5f37cc5286e0aca21a73581fcc"
   },
   "pm/progress/qa.md": {
-    "repo": "65b31acfd8a7a0549519737aa0417cd6e37b679874310376c3a2a520c6ae9285",
-    "shared": "03f8dfe0231e0d9bb2cdcea9c4a513dbd40a8a01a74c8ff5c4150adbda2d673f"
+    "repo": "9ca64f788bbd23fe7c7015a5411a96128f45b186740838c7683c53742b592f7f",
+    "shared": "dc212536d8dd34c0e6949ac11c6aa6cad63c1acb79a06b31a9689e6f8665462b"
   },
   "pm/progress/security.md": {
-    "repo": "75f5640e96411e1e7b3f542d179ff243385e832eb0e2d0e6b0006bff6ecf3ed0",
-    "shared": "75f5640e96411e1e7b3f542d179ff243385e832eb0e2d0e6b0006bff6ecf3ed0"
+    "repo": "6f4c0a2ded209795b111033b3fe8742db3182da7deccaa92f404b062112aec5a",
+    "shared": "6f4c0a2ded209795b111033b3fe8742db3182da7deccaa92f404b062112aec5a"
   },
   "pm/working-agreement.md": {
     "repo": "6b0805dd85066f5ebe1a8261898b47eb2a1b521f7334f59475ecbc4ad66f6a7b",
@@ -136,7 +136,7 @@
     "shared": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348"
   },
   "state/graph.jsonl": {
-    "repo": "935d323859b9083bc0063d961c3adb10ce56548c72e19cfcc2169801d1d82573",
-    "shared": "935d323859b9083bc0063d961c3adb10ce56548c72e19cfcc2169801d1d82573"
+    "repo": "cee654cdd1daf324d6ea5ddc55b228ff2a0b148edd34e1dae4583c6c1fb2aae6",
+    "shared": "cee654cdd1daf324d6ea5ddc55b228ff2a0b148edd34e1dae4583c6c1fb2aae6"
   }
 }

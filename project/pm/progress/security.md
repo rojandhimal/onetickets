@@ -21,7 +21,9 @@ Newest first. Format: date, Done, Next, Blocked.
     - `orders_public_select` and `tickets_public_select` OR with the tenant policy, so any organiser context can read every published event's orders. They need dropping, with a definer lookup by id and key hash in their place.
     - The insert policies should also check the event's organisation.
   - #56 key handling OK'd for FrontendDev. Conditions: fragment plus replaceState, sessionStorage only, a header to the API, and no key in Cache Storage. The service worker caches only the order and `/tickets/` assets. "Remove from device" and expiry after the event are an S2-4 card due before launch.
-- **Next:** re-check #59; the S2-3 tickets PR #58; the confirmation screen #56.
+  - DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) (banners in S3, infra): **pass** at 3f8f2d9. The task role is limited to banners/* with no list, and the bucket stays private. The edge cache respects origin headers on the web hostnames, and old versions expire after 30 days.
+  - S2-3 confirmation screen [#56](https://github.com/rojandhimal/onetickets/pull/56): **pass** at c3c54ac and ac05895, which includes the Next 16.4.2 bump (lockfile integrity matches npm; fixes 3 GHSAs). One condition: gitleaks is red on three fake test keys, which need allow comments and .gitleaksignore fingerprints. ADR 0020 now commits to remove-from-device and expiry before launch.
+- **Next:** confirm gitleaks is green on #56; re-check #59; the S2-3 tickets PR #58.
 - **Blocked:** nothing.
 
 ## 2026-10-21
