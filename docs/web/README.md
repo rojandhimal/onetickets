@@ -22,6 +22,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 | `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404. |
 | `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages and browse cards show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                      |
 | `FEATURE_BOOKING`                                   | server, at request time | `true` turns "Tickets open soon" on event pages into a Get tickets link. Off until booking ships in Sprint 2.                                                          |
+| `FEATURE_TICKETS`                                   | server, at request time | `true` turns on the ticket screen at `/tickets/{orderId}` (S2-3). Anything else returns 404 there.                                                                     |
 | `WEB_URL`                                           | server, at request time | Public address of the site, used for absolute share-image links in event link previews.                                                                                |
 | `REVALIDATE_SECRET`                                 | server, at request time | Bearer secret the api sends to `POST /internal/revalidate`. Unset turns the route off (404).                                                                           |
 | `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                                                                         |
@@ -42,6 +43,7 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 | `/organiser`                                                    | Organiser home. Signed out goes to `/signin`; no organisation goes to `/organiser/setup`. With the wizard on, `?view=upcoming` or `?view=drafts` picks the events segment. |
 | `/organiser/events/new`                                         | Creates a draft from `?template=` (workshop, gig, school-night, meetup; none means blank) and opens the wizard. Behind `FEATURE_EVENT_WIZARD`.                             |
 | `/organiser/events/new/{basics,tickets,details,review}?draft=…` | The create-event wizard. Steps switch without a page load; reopening a draft resumes on its last step.                                                                     |
+| `/tickets/{orderId}#key=…`                                      | The confirmation after booking and the attendee's ticket stubs, which work offline after the first visit (S2-3, artboard 4). Behind `FEATURE_TICKETS`.                     |
 | `/csp-report`                                                   | Receives CSP violation reports, scrubs them and forwards them to Sentry.                                                                                                   |
 | `/healthz`                                                      | Returns `{"status":"ok"}` for the container health check.                                                                                                                  |
 
@@ -201,12 +203,41 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
   event page's enforced nonce CSP ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md)).
 - **Empty state**: when no events match, the page shows `Nothing on for that yet. Try Next 7 days.`
 
+## Ticket screen (S2-3)
+
+`/tickets/{orderId}` is where checkout (S2-2) lands and where the ticket email will link
+(`src/app/tickets/[orderId]/TicketScreen.tsx`, design artboard 4). The order is read in the browser
+with the key from the fragment (`#key=…`), sent as `Authorization: Bearer` to
+`GET /api/public/orders/{orderId}/tickets`. The server never sees the key. A missing or wrong key
+shows "We couldn't find these tickets".
+
+- **Confirmation**: "You're going!" and "We've also emailed your tickets to {email}".
+- **Stubs**: one ticket at a time, showing the date eyebrow, event, venue, a QR, name, type and
+  ref. With several tickets, Previous and Next round buttons and a sideways swipe move between
+  them, and "Ticket 1 of 2" is announced politely. At either end the button stays focusable with
+  `aria-disabled`. A released ticket shows no QR.
+- **QR**: drawn in the browser as an inline SVG from the ticket's signed token
+  (`src/components/QrCode.tsx`, using `qrcode-generator`, level M, four-module quiet zone) on a
+  full-white card. While a QR shows, Screen Wake Lock keeps the screen on where the browser allows,
+  and the lock is asked for again when the tab comes back. Web pages can't set brightness, so the
+  note under the QR stays.
+- **Offline**: the page registers `public/tickets-sw.js` with scope `/tickets/`, then saves the
+  order, its own HTML and the built files it loaded into Cache Storage. "Works offline" shows once
+  that's done. With no signal the worker answers from that cache
+  ([ADR 0019](../adr/0019-ticket-screen-offline-with-a-scoped-service-worker.md)).
+- **Add to calendar**: opens two links, an `.ics` download (Apple, Outlook and others) and Google
+  Calendar. The wallet button is hidden until Sprint 8.
+- **Contract**: the order types live in `src/lib/tickets.ts` as a typed stub of the tickets api the
+  BackendDev is building. They move to `@onetickets/shared` when that lands. Until then, e2e
+  answers the one read from a fake order (`e2e/tests/tickets.spec.ts`).
+
 ## How the browser reaches the api
 
 The browser only calls `/api/*` on the web origin. `next.config.ts` rewrites those to `API_URL`, so the
 session cookie stays first-party and the api needs no CORS. Next forwards `Origin` and any incoming
-`X-Forwarded-For` unchanged. Nothing is stored in `localStorage`; the only thing kept on the device is
-unsynced wizard edits in IndexedDB. Those are tied to the signed-in organiser. They are wiped when
+`X-Forwarded-For` unchanged. Nothing is stored in `localStorage`. The device keeps two things:
+unsynced wizard edits in IndexedDB, and the attendee's own ticket screen in Cache Storage (ADR 0019).
+Wizard edits are tied to the signed-in organiser. They are wiped when
 someone else opens the wizard or the organiser signs out, and they expire after 7 days (ADR 0016).
 
 ## Security headers
@@ -217,7 +248,8 @@ someone else opens the wizard or the organiser signs out, and they expire after 
 - On `/e/{slug}` only, an enforced `Content-Security-Policy` with a per-request script nonce
   ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
 - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, HSTS, `Permissions-Policy`
-- `Referrer-Policy: strict-origin-when-cross-origin`, and `no-referrer` on `/auth/verify`
+- `Referrer-Policy: strict-origin-when-cross-origin`, and `no-referrer` on `/auth/verify` and
+  `/tickets/*`
 
 ## Error tracking (Sentry)
 

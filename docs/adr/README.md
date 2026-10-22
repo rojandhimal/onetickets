@@ -32,5 +32,6 @@ Rules:
 | [0016](0016-wizard-autosave-with-versions-and-on-device-drafts.md) | Autosave event drafts with a version check; offline edits kept on the device | Proposed | FrontendDev  |
 | [0017](0017-public-event-reads-and-plain-text-descriptions.md)     | Public event reads through an RLS policy, with plain-text descriptions       | Proposed | BackendDev   |
 | [0018](0018-enforced-nonce-csp-on-event-pages.md)                  | Enforce a nonce-based CSP on public event pages first                        | Proposed | FrontendDev  |
+| [0019](0019-ticket-screen-offline-with-a-scoped-service-worker.md) | The ticket screen works offline through a service worker scoped to /tickets/ | Proposed | FrontendDev  |
 
-The next free number is 0019.
+The next free number is 0020.

@@ -80,6 +80,7 @@ How to use it: every story ticks **Always**. A story that touches an area below 
 - [x] Site-wide CSP enforced with per-request nonce (SEC-14, [ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
 - [x] No checkout or payment page ships until the CSP is enforced site-wide (SEC-14, [ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
 - [ ] Pages that depend on the session or set cookies are `no-store`; shared-cache headers only on public, cookie-free responses
+- [ ] A service worker is scoped to the routes that need it, caches only what that page saves for its own visitor, and is network first for personal data ([ADR 0019](../adr/0019-ticket-screen-offline-with-a-scoped-service-worker.md))
 
 ## CI and infrastructure (S0-1, S0-2)
 
