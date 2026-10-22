@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-22 (Claude)
+
+- **Done:** Reviewed [#55](https://github.com/rojandhimal/onetickets/pull/55) (board sync, working agreement section 4) at 012b235: pass. The rules are consistent across AGENTS.md, agents/README and the working agreement, the board matches main, and there's no personal data or secrets.
+- **Next:** #54 SEC-6 once it leaves draft. The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 21 Oct 2026
 
 - **Done:**
