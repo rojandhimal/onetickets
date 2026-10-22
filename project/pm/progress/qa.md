@@ -5,7 +5,11 @@ Newest first. Format: date, Done, Next, Blocked.
 ## 2026-10-22 (Claude)
 
 - **Done:** Reviewed [#55](https://github.com/rojandhimal/onetickets/pull/55) (board sync, working agreement section 4) at 012b235: pass. The rules are consistent across AGENTS.md, agents/README and the working agreement, the board matches main, and there's no personal data or secrets.
-- **Next:** #54 SEC-6 once it leaves draft. The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md.
+  - #55 re-checked at 4243eec: still a pass.
+  - [#54](https://github.com/rojandhimal/onetickets/pull/54#issuecomment-6342929516) SEC-6 passes at 72feb4c. The bundle is byte-identical to AWS's ap-southeast-2 file and ships at /app/certs. The deployed node-postgres refuses a wrong CA and a wrong hostname under verify-full. Optional note: add a CI guard on url_params.
+  - #55 re-checked at 8d001c9: still a pass.
+  - [#57](https://github.com/rojandhimal/onetickets/pull/57) STATE-1 passes at 60eb483. The brief works, check and lint fail on 6 kinds of graph breakage, the sync round-trips, and the nodes match main and GitHub. Note: record the graph in .sync-state.json, otherwise the first both-sides change conflicts on the whole file.
+- **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 
 ## 21 Oct 2026

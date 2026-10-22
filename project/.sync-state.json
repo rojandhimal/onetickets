@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "a560416fc8a9b3a42e457aecd2c8a0df409b132c7a4c13b5d2c649034003b69e",
-    "shared": "4806ce2083e0cfa76e1b3274086f93171bdf065ac0f7d2ff5c2f06b71618ed42"
+    "repo": "38e7577f89ffffbcaa02b046a5b90b9d1ea8bd735094ed0a571ab59b6256f381",
+    "shared": "157c93585f86aa22ac5e89312c5ba64b763223db1da8c86dfa88dc487f555eb9"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -56,8 +56,8 @@
     "shared": "a88990001437d92f8551649a734150be8725f6dfb09651d4fea3fb425da1a1dd"
   },
   "pm/progress/devops.md": {
-    "repo": "01be30bfc5c2c9b732114080b7e8b61288a5da824c11448da1dd467cebd76b7d",
-    "shared": "01be30bfc5c2c9b732114080b7e8b61288a5da824c11448da1dd467cebd76b7d"
+    "repo": "6c24d66026c7d9e7a68cff8aafa19d409877f1aba34ac67f0593fd49ab018108",
+    "shared": "6c24d66026c7d9e7a68cff8aafa19d409877f1aba34ac67f0593fd49ab018108"
   },
   "pm/progress/docs.md": {
     "repo": "cd7780b485ab452b15b6d3792cce5d7deea537fcf377aa3c8e0821ef7f8d247a",
@@ -72,8 +72,8 @@
     "shared": "2c37ee52a8e1a4c06187a0fb670154bf0c2e4f5007459234db6b069a01d21a93"
   },
   "pm/progress/qa.md": {
-    "repo": "dda18a0a8b6271b69c0b1ea891e3be7cb3874bfdd3f6e3a1107d10cd8623fe2b",
-    "shared": "977fdba777dccba22e3752f532ba29a957f0a147218237a9b430a828fdba3f79"
+    "repo": "25275a5bcc8ea50da1ad3ae61991de48645007f528ea5e92162ab46a826303d0",
+    "shared": "a254adb84413d39095e9fa0ea2f2a52d00c4d6a76001d00bb124837439bfe0fa"
   },
   "pm/progress/security.md": {
     "repo": "7bccb015ac9e099aaf20e9070000c80f85e864db6a902c7ad9c00ec5aa5f5263",
