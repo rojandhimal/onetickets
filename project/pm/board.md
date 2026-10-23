@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 23 Oct 2026, 23:50 UTC, by Claude PM (tegs merged #62 (S2-4a) and #63 (DEV-7). New high advisories in the api's dependencies turn Dependency audit red on `main` and every PR, so SEC-22 (#67, from tegs's CI-fix thread) comes first. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 23 Oct 2026, 23:55 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65 (PM sync) and #67 (SEC-22, the dependency audit fix) tonight. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -107,10 +107,11 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-- `[claude]` **SEC-22 Fix the high advisories failing Dependency audit** (DevOps work from tegs's CI-fix thread; Security and QA review), [PR #67](https://github.com/rojandhimal/onetickets/pull/67): `zod` to `^4.6.6` ([GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)), `body-parser` 2.4.0 ([GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)) in the lockfile, and a `multer` `^2.5.0` override until Nest ships the fix. Dependency audit is red on `main` and every open PR until it lands. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)
+_(No items currently in review)_
 
 ### Done
 
+- SEC-22 High advisories failing Dependency audit ([#67](https://github.com/rojandhimal/onetickets/pull/67), from tegs's CI-fix thread), merged 23 Oct as `f380c8f`: `zod` `^4.6.6` (GHSA-mrhx-c7xc-m3w5), `body-parser` 2.4.0 (GHSA-27r3-jxmh-p828) and a `multer` `^2.5.0` override until Nest ships the fix. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)
 - PM sync after the D19 merge ([#65](https://github.com/rojandhimal/onetickets/pull/65)), merged 23 Oct as `04e7da7`; QA pass (`0a18399`). Its last records were lost when main was merged into it on GitHub, so this board and the graph restore them
 - DEV-7 CI check that the api image carries the RDS CA bundle ([#63](https://github.com/rojandhimal/onetickets/pull/63)), merged 23 Oct as `bcded67`; QA and Security pass (`184d4f9`). CI fails if the certificate `sslrootcert` names is missing from the image or differs from `apps/api/certs`
 - S2-4a Remove from this device and expiring saved tickets ([#62](https://github.com/rojandhimal/onetickets/pull/62)), merged 23 Oct as `f11ab57`; QA, Security and ProductDesign pass (`d99df5f`), 7 CI checks green. "Remove tickets from this device" on the ticket screen deletes the saved order, its page and the tab's key, and a saved order is never served more than 7 days after its event ends. This meets Security's ADR 0020 condition for turning `FEATURE_TICKETS` on
