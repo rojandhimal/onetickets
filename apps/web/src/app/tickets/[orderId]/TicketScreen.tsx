@@ -8,12 +8,15 @@ import {
   TICKETS_SW,
   type TicketDto,
   awaitingQr,
+  dropExpiredOrders,
   fetchOrderTickets,
   forgetSavedOrder,
+  hasSavedOrder,
   formatRef,
   googleCalendarUrl,
   icsFile,
   readSavedOrder,
+  removeFromDevice,
   saveForOffline,
   takeConfirmedOrder,
   takeTicketKey,
@@ -25,7 +28,22 @@ import styles from './tickets.module.css';
 type State =
   | { kind: 'loading' }
   | { kind: 'ready'; order: OrderTicketsDto }
-  | { kind: 'not-found' | 'offline' };
+  | { kind: 'not-found' | 'offline' | 'removed' };
+
+const MESSAGES = {
+  offline: {
+    title: "We couldn't load your tickets.",
+    body: 'Check your connection and try again. Your tickets are also in your email.',
+  },
+  'not-found': {
+    title: "That link doesn't work any more.",
+    body: 'Open the latest ticket email from OneTickets and use the link in it.',
+  },
+  removed: {
+    title: 'Removed from this device.',
+    body: 'Your tickets are still in your email.',
+  },
+} as const;
 
 /** Tries for a QR still being signed, a couple of seconds apart. */
 const QR_RETRIES = 5;
@@ -35,19 +53,31 @@ export function TicketScreen({ orderId }: { orderId: string }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [offlineReady, setOfflineReady] = useState(false);
   const [qrSlow, setQrSlow] = useState(false);
+  const [canRemove, setCanRemove] = useState(false);
   const key = useRef<string | null>(null);
+  // Once removed, this visit doesn't save the order again.
+  const removed = useRef(false);
 
   useEffect(() => {
     // Only ticket pages: the worker's scope stops it touching the rest of the site.
     navigator.serviceWorker?.register(TICKETS_SW, { scope: '/tickets/' }).catch(() => undefined);
+    void dropExpiredOrders();
   }, []);
 
-  const show = useCallback(async (order: OrderTicketsDto, cancelled: () => boolean) => {
-    setState({ kind: 'ready', order });
-    if (awaitingQr(order)) return;
-    const saved = await saveForOffline(order);
-    if (!cancelled()) setOfflineReady(saved);
-  }, []);
+  const show = useCallback(
+    async (order: OrderTicketsDto, cancelled: () => boolean) => {
+      setState({ kind: 'ready', order });
+      if (removed.current) return;
+      const saved = awaitingQr(order) ? false : await saveForOffline(order);
+      // Remove follows the order's own copy, not a complete save: a missing built file still
+      // leaves the name, email and QR on the device.
+      const held = await hasSavedOrder(orderId);
+      if (cancelled() || removed.current) return;
+      setOfflineReady(saved);
+      setCanRemove(held);
+    },
+    [orderId],
+  );
 
   const load = useCallback(
     async (cancelled: () => boolean) => {
@@ -109,17 +139,21 @@ export function TicketScreen({ orderId }: { orderId: string }) {
 
   if (state.kind !== 'ready') {
     const offline = state.kind === 'offline';
+    const message = MESSAGES[state.kind];
     return (
       <Shell>
         <div className={styles.messageCard}>
-          <h1 className={styles.messageTitle}>
-            {offline ? "We couldn't load your tickets." : "That link doesn't work any more."}
+          <h1
+            className={styles.messageTitle}
+            // After removing, focus lands here so the change is announced.
+            ref={(h1) => {
+              if (state.kind === 'removed') h1?.focus();
+            }}
+            tabIndex={state.kind === 'removed' ? -1 : undefined}
+          >
+            {message.title}
           </h1>
-          <p>
-            {offline
-              ? 'Check your connection and try again. Your tickets are also in your email.'
-              : 'Open the latest ticket email from OneTickets and use the link in it.'}
-          </p>
+          <p>{message.body}</p>
           {offline && (
             <button
               type="button"
@@ -166,7 +200,85 @@ export function TicketScreen({ orderId }: { orderId: string }) {
       <a href="/" className={styles.moreLink}>
         Find more events
       </a>
+      {canRemove && (
+        <RemoveFromDevice
+          onRemove={async () => {
+            removed.current = true;
+            await removeFromDevice(orderId);
+            // A lost or shared device is the point: the tickets leave the screen too.
+            setOfflineReady(false);
+            setCanRemove(false);
+            setState({ kind: 'removed' });
+          }}
+        />
+      )}
     </Shell>
+  );
+}
+
+/**
+ * Takes this order off the device (ADR 0020): a quiet button, then an inline confirm card. Shown
+ * whenever the order's copy is on the device, even if the rest of the save didn't finish.
+ */
+function RemoveFromDevice({ onRemove }: { onRemove: () => Promise<void> }) {
+  const [step, setStep] = useState<'idle' | 'confirm' | 'busy' | 'failed'>('idle');
+  const start = useRef<HTMLButtonElement>(null);
+  const question = useRef<HTMLParagraphElement>(null);
+  const opened = useRef(false);
+
+  useEffect(() => {
+    if (step === 'confirm') question.current?.focus();
+    // Back from the card: focus returns to the button that opened it.
+    if (step === 'idle' && opened.current) start.current?.focus();
+    if (step !== 'idle') opened.current = true;
+  }, [step]);
+
+  if (step === 'idle') {
+    return (
+      <button
+        ref={start}
+        type="button"
+        className={styles.removeButton}
+        onClick={() => setStep('confirm')}
+      >
+        Remove tickets from this device
+      </button>
+    );
+  }
+
+  return (
+    <div className={styles.removeConfirm} role="group" aria-labelledby="remove-question">
+      <p id="remove-question" ref={question} tabIndex={-1}>
+        <strong>Remove these tickets from this device?</strong> They&apos;ll still be in your email.
+      </p>
+      {step === 'failed' && (
+        <p role="alert">
+          <strong>We couldn&apos;t remove your tickets.</strong> Clear this site&apos;s data in your
+          browser settings instead.
+        </p>
+      )}
+      <div className={styles.removeActions}>
+        <button
+          type="button"
+          className={styles.darkButton}
+          aria-disabled={step === 'busy' || undefined}
+          onClick={async () => {
+            if (step === 'busy') return;
+            setStep('busy');
+            try {
+              await onRemove();
+            } catch {
+              setStep('failed');
+            }
+          }}
+        >
+          Remove
+        </button>
+        <button type="button" className={styles.keepButton} onClick={() => setStep('idle')}>
+          Keep
+        </button>
+      </div>
+    </div>
   );
 }
 
