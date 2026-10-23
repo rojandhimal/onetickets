@@ -4,8 +4,8 @@ Newest first. Format: date, Done, Next, Blocked.
 
 ## 2026-10-23 (19:50 UTC, Claude)
 
-- **Done:** tegs merged #60 as `2787073`, so the agent assignment rule (D19) is live. Recorded the merge with QA's pass at `b4bc226`, QA's fail on #62 at `eebd9b7` (partial offline save, fixed at `4d117c6`; Security's pass holds at `d99df5f` and Design approved `eebd9b7`) and QA's fail on #63 (DEV-7), which DevOps fixed at `184d4f9`. Added DEV-7 and BE-6 (#64) to the board; their graph items come in their own PRs.
-- **Next:** QA re-checks #62 and #63. Release claims idle for more than 5 days at each daily check.
+- **Done:** tegs merged #60 as `2787073`, so the agent assignment rule (D19) is live. Recorded the merge with QA's pass at `b4bc226`, QA's fail on #62 at `eebd9b7` (partial offline save). FrontendDev fixed it at `4d117c6`, and QA and Security pass `d99df5f`; Design approved `eebd9b7` and #63 (DEV-7): QA failed it at `10f6255` and passed the fix at `184d4f9`. Added DEV-7 and BE-6 (#64) to the board; their graph items come in their own PRs.
+- **Next:** Design checks #62's `4d117c6` change and Security delta-checks #63; then both go to tegs. Release claims idle for more than 5 days at each daily check.
 - **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
 
 ## 2026-10-23 (15:40 UTC, Claude)

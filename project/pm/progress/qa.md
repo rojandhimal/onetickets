@@ -22,6 +22,7 @@ Newest first. Format: date, Done, Next, Blocked.
     - Blocker: graph.jsonl conflicts with main.
     - Copy: "We couldn't remove your tickets." doesn't match the code.
     - eebd9b7: the copy is fixed. The partial-save blocker is still open, and graph.jsonl conflicts with main again.
+    - d99df5f: **passes**, as long as E2E goes green. hasSavedOrder fixes the partial-save case (the probe passes), it merges cleanly into main, and web tests are 192/192.
   - [#63](https://github.com/rojandhimal/onetickets/pull/63) DEV-7 CA bundle image check **fails** at 10f6255.
     - Without pipefail, two empty hashes compare equal, so a tf path naming a file missing from both certs and the image passes.
     - Fix: pipefail plus test -n on both hashes.
