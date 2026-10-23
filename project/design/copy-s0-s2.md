@@ -154,16 +154,23 @@ FrontendDev's current strings for all of the above are approved as they are; onl
 
 **Errors (Sprint 2)**
 
-| Case                                                 | Copy                                                                                                                     |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Name empty                                           | Enter the name for the ticket                                                                                            |
-| Email (same three as sign-up)                        | Enter your email address · Add an @, like jordan@example.com · Add the part after the @, like gmail.com                  |
-| Ran out at submit                                    | **Only {n} {type} {ticket was/tickets were} left.** We've changed your order to {n}. Check it and try again.             |
-| Sold out at submit                                   | **Those tickets have just gone.** Nothing was booked. · Back to the event                                                |
-| Network failure on submit                            | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                             |
-| Tickets can't load (offline, not cached)             | **We couldn't load your tickets.** Check your connection and try again. Your tickets are also in your email. · Try again |
-| Ticket page link not valid (S2-3, before My tickets) | **That link doesn't work any more.** Open the latest ticket email from OneTickets and use the link in it.                |
-| Ticket link expired (My tickets)                     | That link has expired. Enter your email and we'll send a new one.                                                        |
+| Case                                                                                                    | Copy                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name empty                                                                                              | Enter the name for the ticket                                                                                                                           |
+| Email (same three as sign-up)                                                                           | Enter your email address · Add an @, like jordan@example.com · Add the part after the @, like gmail.com                                                 |
+| Ran out at submit                                                                                       | **Only {n} {type} {ticket was/tickets were} left.** We've changed your order to {n}. Check it and try again.                                            |
+| Sold out at submit                                                                                      | **Those tickets have just gone.** Nothing was booked. · Back to the event                                                                               |
+| Network failure on submit                                                                               | We couldn't reach OneTickets. Check your connection and try again. Nothing was booked twice.                                                            |
+| Tickets can't load (offline, not cached)                                                                | **We couldn't load your tickets.** Check your connection and try again. Your tickets are also in your email. · Try again                                |
+| QR still being signed (in the QR box, role=status)                                                      | Getting your QR code ready… · after the retries run out: Your QR code is taking longer than usual. It's in your ticket email too.                       |
+| Every ticket in the order released or cancelled                                                         | Heading: Your tickets (not "You're going!"); no emailed line; hide Add to calendar                                                                      |
+| Remove saved tickets (S2-4a; quiet text button under Find more events, only once "Works offline" shows) | Remove tickets from this device                                                                                                                         |
+| Remove confirm (inline card in place of the button)                                                     | **Remove these tickets from this device?** They'll still be in your email. · Remove · Keep                                                              |
+| Removing failed (storage blocked; role=alert in the confirm card, tickets stay)                         | **We couldn't remove your tickets.** Clear this site's data in your browser settings instead.                                                           |
+| After removing (replaces the tickets on screen)                                                         | **Removed from this device.** Your tickets are still in your email. · Find more events                                                                  |
+| Ticket released or cancelled (stub, no QR)                                                              | **This ticket is no longer valid.** It was released or cancelled, so there's no QR to show. Questions? Reply to your ticket email to reach {organiser}. |
+| Ticket page link not valid (S2-3, before My tickets)                                                    | **That link doesn't work any more.** Open the latest ticket email from OneTickets and use the link in it.                                               |
+| Ticket link expired (My tickets)                                                                        | That link has expired. Enter your email and we'll send a new one.                                                                                       |
 
 ## Emails (S0 to S2)
 

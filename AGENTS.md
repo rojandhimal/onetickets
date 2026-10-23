@@ -18,13 +18,18 @@ graph, which is the source of truth for status:
 
 ```sh
 node scripts/state.mjs                  # active items, open PRs, roles, what needs tegs
+node scripts/state.mjs next <agent> <role>  # your unfinished task first, else unassigned ready ones
 node scripts/state.mjs role <role>      # your role's node and items
 node scripts/state.mjs show <id>        # one item or PR with its dependencies and links
 ```
 
-Update it in the same PR as your work (`node scripts/state.mjs set <id> status=review prs+=55`),
-and claim an item by opening a draft PR whose title starts with its id (working agreement section
-4). The protocol is in [project/state/README.md](project/state/README.md).
+`<agent>` is your AI provider in lowercase (`claude`, `codex`, `gemini`, ...). Every task names the
+agent working on it, and an agent holds **one task at a time** per role. Finish your own unfinished
+task before taking another. Claim an unassigned one with `node scripts/state.mjs claim <id> <agent>`
+and a draft PR whose title starts with its id. PM releases a claim after more than 5 days without
+activity (working agreement sections 4 and 5). Update the graph in the same PR as your work
+(`node scripts/state.mjs set <id> status=review prs+=55`). The protocol is in
+[project/state/README.md](project/state/README.md).
 
 ## What we're building
 
@@ -67,9 +72,10 @@ push; CI runs the same ones.
 1. **tegs merges.** Agents open pull requests and never merge to `main`, push to `main` or approve.
 2. **Nothing is applied to AWS.** Terraform and deploy workflows are written and reviewed only.
    Deploys stay off behind `DEPLOY_ENABLED`. Local development is Docker only for now.
-3. **One branch per role at a time, and one owner per card.** Start each PR from the latest `main`.
-   Before you build, check open pull requests and claim the card with a draft PR, because agents in
-   other tools may be working at the same time (working agreement, section 4). Use your tool's branch
+3. **One branch per role at a time, one owner per card, one task at a time.** Start each PR from the
+   latest `main`. Before you build, check open pull requests and claim the card in the graph and
+   with a draft PR, because agents in other tools may be working at the same time (working
+   agreement, sections 4 and 5). Use your tool's branch
    naming, or `<role>/<story>` (for example `backend/s1-2-ticket-types`).
 4. **Every PR documents itself.** Fill in the PR template (Before, After, How, How to test, story id),
    and update `README.md`, `docs/` or a new ADR in `docs/adr/` in the same PR. See

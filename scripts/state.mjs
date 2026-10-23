@@ -15,8 +15,12 @@
 //                                             (reviews.qa=pass@abc1234). Values parse as JSON when
 //                                             they can, so prs+=55 adds a number
 //   node scripts/state.mjs add '<json>'       append a node
+//   node scripts/state.mjs next [agent] [role] your unfinished items, then unassigned ready ones
+//   node scripts/state.mjs claim <id> [agent] take an item: one at a time per agent and role
+//   node scripts/state.mjs release <id>       PM: take the agent off an item (inactive > 5 days)
 //   node scripts/state.mjs check              validate; exits 1 on an error (runs in pnpm lint)
 // set and add also stamp meta.updated with today's date and meta.by with $STATE_BY when it is set.
+// $STATE_BY is <agent>/<role>, e.g. codex/frontend; next and claim read their defaults from it.
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -42,6 +46,14 @@ export const SCHEMA = {
 
 const ACTIVE = ['in_progress', 'review', 'blocked', 'ready'];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Task assignment (working agreement section 5). An item's `agent` is the AI provider working on
+// it (claude, codex, gemini, ...); no agent means unassigned. Each agent holds one task at a time
+// per role: one item in progress or blocked. PM takes the agent off a task when it has had no
+// activity for more than STALE_DAYS, so another agent can pick it up.
+export const STALE_DAYS = 5;
+const HELD = ['in_progress', 'blocked'];
+const AGENT = /^[a-z][a-z0-9-]*$/;
 
 export function parse(text) {
   const nodes = [];
@@ -82,7 +94,7 @@ export function validate(nodes) {
         errors.push(`${where}: ${key} "${node[key]}" is not one of ${schema[key].join(', ')}`);
       }
     }
-    for (const key of ['updated', 'date']) {
+    for (const key of ['updated', 'date', 'claimed', 'active']) {
       if (node[key] !== undefined && !DATE.test(node[key])) {
         errors.push(`${where}: ${key} must be YYYY-MM-DD`);
       }
@@ -110,6 +122,9 @@ export function validate(nodes) {
       for (const n of node.prs ?? []) {
         if (!Number.isInteger(n)) errors.push(`${where}: prs holds PR numbers, got ${n}`);
       }
+      if (node.agent !== undefined && !AGENT.test(node.agent)) {
+        errors.push(`${where}: agent is a lowercase provider name like claude or codex`);
+      }
     }
     if (node.type === 'pr') {
       if (!/^#\d+$/.test(node.id)) errors.push(`${where}: pr ids look like #54`);
@@ -117,6 +132,17 @@ export function validate(nodes) {
       if (node.author) expect(where, node.author, 'role');
     }
     if (node.type === 'risk') expect(where, node.owner.split(',')[0].trim(), 'role');
+  }
+  const held = new Map();
+  for (const node of nodes) {
+    if (node.type !== 'item' || !node.agent || !HELD.includes(node.status)) continue;
+    const key = `${node.agent} ${node.owner}`;
+    if (held.has(key)) {
+      errors.push(
+        `item ${node.id}: ${node.agent} already holds ${held.get(key)} as ${node.owner}; ` +
+          'one task at a time, so finish or release one',
+      );
+    } else held.set(key, node.id);
   }
   for (const node of nodes) {
     if (node.type === 'item' && node.prs) {
@@ -181,6 +207,146 @@ export function applyEdit(node, edit) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** The agent and role named by $STATE_BY (<agent>/<role>). */
+const stateBy = () => {
+  const [agent, role] = (process.env.STATE_BY ?? '').split('/');
+  return { agent: agent || undefined, role: role || undefined };
+};
+
+export const daysSince = (date, now = today()) =>
+  Math.round((Date.parse(now) - Date.parse(date)) / 86_400_000);
+
+const lastActive = (item) => item.active ?? item.claimed ?? item.updated;
+
+/** Items whose agent has done nothing on them for more than STALE_DAYS. */
+export function staleClaims(nodes, now = today()) {
+  return nodes.filter(
+    (n) =>
+      n.type === 'item' &&
+      n.agent &&
+      HELD.includes(n.status) &&
+      daysSince(lastActive(n), now) > STALE_DAYS,
+  );
+}
+
+const depsDone = (nodes, item) =>
+  (item.deps ?? []).every((dep) => nodes.find((n) => n.id === dep)?.status === 'done');
+
+/** Ready items nobody holds, with their dependencies done. tegs's own items are not for agents. */
+export function unassigned(nodes, role) {
+  return nodes.filter(
+    (n) =>
+      n.type === 'item' &&
+      n.status === 'ready' &&
+      !n.agent &&
+      n.owner !== 'tegs' &&
+      (!role || n.owner === role) &&
+      depsDone(nodes, n),
+  );
+}
+
+/**
+ * Keeps an item's claim dates in step after a set, in place: a new agent starts its claim today,
+ * no agent clears the dates, and the agent's own edits ($STATE_BY) keep it active. Dates given in
+ * the same set win.
+ */
+export function stampClaim(node, before, edited, by = stateBy().agent, now = today()) {
+  if (node.type !== 'item') return;
+  if (!node.agent) {
+    delete node.claimed;
+    delete node.active;
+  } else if (node.agent !== before) {
+    if (!edited.includes('claimed')) node.claimed = now;
+    if (!edited.includes('active')) node.active = now;
+  } else if (by === node.agent && !edited.includes('active')) node.active = now;
+}
+
+/** Gives an item to an agent, in place. Throws if someone else holds it or the agent is busy. */
+export function claim(nodes, id, agent, now = today()) {
+  const item = nodes.find((n) => n.id === id);
+  if (!item || item.type !== 'item') throw new Error(`no item "${id}"`);
+  if (!agent || !AGENT.test(agent)) {
+    throw new Error('name the agent: a lowercase provider like claude or codex (or set STATE_BY)');
+  }
+  if (['done', 'dropped'].includes(item.status)) throw new Error(`${id} is ${item.status}`);
+  if (item.agent && item.agent !== agent) {
+    const days = daysSince(lastActive(item), now);
+    throw new Error(
+      `${id} is held by ${item.agent}, last active ${lastActive(item)}` +
+        (days > STALE_DAYS ? `, ${days} days ago: ask PM to release it` : ''),
+    );
+  }
+  const busy = nodes.find(
+    (n) =>
+      n !== item &&
+      n.type === 'item' &&
+      n.agent === agent &&
+      n.owner === item.owner &&
+      HELD.includes(n.status),
+  );
+  if (busy) {
+    throw new Error(
+      `${agent} already holds ${busy.id} as ${item.owner}. One task at a time: move it to review ` +
+        `or done, or release it, first`,
+    );
+  }
+  if (item.agent !== agent) item.claimed = now;
+  item.agent = agent;
+  item.active = now;
+  if (['backlog', 'ready'].includes(item.status)) item.status = 'in_progress';
+  return item;
+}
+
+/** Takes the agent off an item, in place, so another agent can claim it. */
+export function release(nodes, id) {
+  const item = nodes.find((n) => n.id === id);
+  if (!item || item.type !== 'item') throw new Error(`no item "${id}"`);
+  if (!item.agent) throw new Error(`${id} has no agent`);
+  delete item.agent;
+  delete item.claimed;
+  delete item.active;
+  if (item.status === 'in_progress') item.status = 'ready';
+  return item;
+}
+
+/** What an agent should do at the start of a session: its own work first, then a free item. */
+export function next(nodes, agent, role, now = today()) {
+  const mine = nodes.filter(
+    (n) =>
+      n.type === 'item' &&
+      n.agent === agent &&
+      (!role || n.owner === role) &&
+      !['done', 'dropped'].includes(n.status),
+  );
+  const out = [`${agent}${role ? ` as ${role}` : ''}: one task at a time per role.`, '', 'Yours:'];
+  if (!mine.length) out.push('  none');
+  for (const n of mine) {
+    const prs = (n.prs ?? []).map((pr) => `#${pr}`).join(' ');
+    const days = daysSince(lastActive(n), now);
+    out.push(
+      `  ${n.status.padEnd(11)} ${n.id.padEnd(8)} ${n.owner.padEnd(8)} ${short(n.title, 60)}` +
+        `${prs ? ` [${prs}]` : ''}, last active ${lastActive(n)}` +
+        (HELD.includes(n.status) && days > STALE_DAYS ? ` (${days} days: PM may release it)` : ''),
+    );
+  }
+  const held = mine.filter((n) => HELD.includes(n.status));
+  if (held.length) {
+    out.push(
+      '',
+      `Finish ${held.map((n) => n.id).join(', ')} (or release it) before claiming more.`,
+    );
+    return out.join('\n');
+  }
+  out.push(
+    '',
+    `Unassigned and ready (claim one with: node scripts/state.mjs claim <id> ${agent}):`,
+  );
+  const free = unassigned(nodes, role);
+  if (!free.length) out.push('  none');
+  for (const n of free) out.push(`  ${n.id.padEnd(8)} ${n.owner.padEnd(8)} ${short(n.title, 80)}`);
+  return out.join('\n');
+}
+
 function stamp(nodes) {
   const meta = nodes.find((node) => node.type === 'meta');
   if (!meta) return;
@@ -217,7 +383,7 @@ export function brief(nodes) {
   out.push(`OneTickets state, updated ${meta.updated} by ${meta.by}, at main ${meta.main}${drift}`);
   out.push(`Sprint: ${sprint.id} ${sprint.name} (${sprint.status}). ${meta.phase}`);
 
-  out.push('', 'Active items (status, id, owner, title, waiting on):');
+  out.push('', 'Active items (status, id, owner, agent, title, waiting on):');
   const items = of('item').filter((item) => ACTIVE.includes(item.status));
   items.sort((a, b) => ACTIVE.indexOf(a.status) - ACTIVE.indexOf(b.status));
   for (const item of items) {
@@ -227,10 +393,23 @@ export function brief(nodes) {
       .filter(Boolean)
       .join('; ');
     out.push(
-      `  ${item.status.padEnd(11)} ${item.id.padEnd(7)} ${item.owner.padEnd(8)} ${short(item.title, 60)}` +
+      `  ${item.status.padEnd(11)} ${item.id.padEnd(8)} ${item.owner.padEnd(8)} ${(item.agent ?? '-').padEnd(7)} ${short(item.title, 60)}` +
         `${prs ? ` [${prs}]` : ''}${waits ? `, waiting on ${short(waits, 70)}` : ''}`,
     );
   }
+
+  const stale = staleClaims(nodes);
+  out.push('', `Claims for PM to check (no activity for more than ${STALE_DAYS} days):`);
+  if (!stale.length) out.push('  none');
+  for (const item of stale) {
+    out.push(`  ${item.id} ${item.agent} as ${item.owner}, last active ${lastActive(item)}`);
+  }
+  const free = unassigned(nodes);
+  out.push(
+    '',
+    `Unassigned and ready: ${free.map((item) => item.id).join(', ') || 'none'}` +
+      ' (node scripts/state.mjs next <agent> <role>)',
+  );
 
   const open = of('pr').filter((pr) => pr.state === 'open' || pr.state === 'draft');
   out.push('', 'Open PRs:');
@@ -363,7 +542,9 @@ function main(argv) {
       ]) {
         console.log(`${label}:`);
         for (const n of list)
-          console.log(`  ${n.status.padEnd(11)} ${n.id}: ${short(n.title, 90)}`);
+          console.log(
+            `  ${n.status.padEnd(11)} ${n.id}: ${short(n.title, 90)}${n.agent ? ` (${n.agent})` : ''}`,
+          );
       }
       break;
     }
@@ -374,8 +555,14 @@ function main(argv) {
       const [id, ...edits] = rest;
       const node = nodes.find((n) => n.id === id);
       if (!node) fail([`no node "${id}"; add it with: node scripts/state.mjs add '<json>'`]);
+      const before = node.agent;
       for (const edit of edits) applyEdit(node, edit);
       if (node.type !== 'meta' && node.type !== 'decision') node.updated = today();
+      stampClaim(
+        node,
+        before,
+        edits.map((edit) => edit.split(/[+-]?=/)[0]),
+      );
       save();
       console.log(JSON.stringify(node));
       break;
@@ -388,8 +575,31 @@ function main(argv) {
       console.log(JSON.stringify(node));
       break;
     }
+    case 'next': {
+      const by = stateBy();
+      const [agent = by.agent, role = by.role] = rest;
+      if (!agent) fail(['usage: node scripts/state.mjs next <agent> [role] (or set STATE_BY)']);
+      console.log(next(nodes, agent, role));
+      break;
+    }
+    case 'claim':
+    case 'release': {
+      const [id, agent = stateBy().agent] = rest;
+      let node;
+      try {
+        node = command === 'claim' ? claim(nodes, id, agent) : release(nodes, id);
+      } catch (error) {
+        fail([error.message]);
+      }
+      node.updated = today();
+      save();
+      console.log(JSON.stringify(node));
+      break;
+    }
     default:
-      fail([`unknown command "${command}". Commands: brief, show, role, list, set, add, check`]);
+      fail([
+        `unknown command "${command}". Commands: brief, show, role, list, set, add, next, claim, release, check`,
+      ]);
   }
 }
 
