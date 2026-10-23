@@ -106,6 +106,31 @@ describe('event page', () => {
     );
   });
 
+  it('shows a sold-out label instead of Get tickets only when every ticket is sold', async () => {
+    vi.stubEnv('FEATURE_BOOKING', 'true');
+    event = { ...publicEvent(), spotsLeft: 0, soldOut: true };
+    await renderPage();
+    let bar = screen.getByRole('complementary', { name: 'Tickets' });
+    expect(within(bar).getByText('Sold out')).toBeInTheDocument();
+    expect(within(bar).getByText('All taken')).toBeInTheDocument();
+    expect(within(bar).queryByRole('link', { name: 'Get tickets' })).toBeNull();
+    expect(
+      screen.getByText('Sold out; spots that are released go back on sale here.'),
+    ).toBeInTheDocument();
+    document.body.innerHTML = '';
+
+    // Held by other checkouts, not sold: still bookable, never "Sold out".
+    event = { ...publicEvent(), spotsLeft: 0, soldOut: false };
+    await renderPage();
+    bar = screen.getByRole('complementary', { name: 'Tickets' });
+    expect(within(bar).queryByText('Sold out')).toBeNull();
+    expect(within(bar).getByText('All taken right now')).toBeInTheDocument();
+    expect(within(bar).getByRole('link', { name: 'Get tickets' })).toBeInTheDocument();
+    expect(
+      screen.getByText('No booking fee. All taken right now. Check back in a few minutes.'),
+    ).toBeInTheDocument();
+  });
+
   it('is a 404 for an unknown event', async () => {
     event = null;
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');

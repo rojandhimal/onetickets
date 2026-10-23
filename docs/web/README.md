@@ -154,6 +154,13 @@ banner, date, title, organiser, then the key facts (price and spots left, venue 
 cancellations, accessibility). The ticket bar sticks to the bottom on phones and becomes a card in a
 right-hand column from 768 px. Online events never show their link; buyers get it with their ticket.
 
+Sold out and held are kept apart (DES-10, ARCH-2). Only `soldOut` from the api, true when every
+ticket on sale is sold, shows "Sold out": a grey label in place of Get tickets, and "Sold out; spots
+that are released go back on sale here." in the price row. When `spotsLeft` is 0 but nothing is
+sold out, checkout holds have the tickets for now: the bar says "All taken right now", the price row
+adds "Check back in a few minutes." and Get tickets stays, so checkout can report what's left. The
+public api has no capacity, so the bar reads "All taken" rather than the design's "All {n} taken".
+
 Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
 fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
