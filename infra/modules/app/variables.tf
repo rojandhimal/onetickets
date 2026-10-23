@@ -196,3 +196,14 @@ variable "revalidate_secret_version" {
   type        = number
   default     = 1
 }
+
+variable "banner_storage" {
+  description = "Where the API keeps event banners: local (container disk, lost on every deploy) or s3 (the uploads bucket's banners/ prefix). Switch to s3 once the API's S3 banner adapter is merged."
+  type        = string
+  default     = "local"
+
+  validation {
+    condition     = contains(["local", "s3"], var.banner_storage)
+    error_message = "banner_storage is local or s3."
+  }
+}

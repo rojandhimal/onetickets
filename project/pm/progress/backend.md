@@ -2,6 +2,22 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude)
+
+- **Done:** #58 (S2-3 signed QR tickets, API), at eda1451. It contains:
+  - the QR token codec, signed under the context `onetickets/ticket/v1`;
+  - the `TicketSigner` interface and a local Ed25519 signer that works in development and test only;
+  - redactor entries for ticket keys and the signing key;
+  - ADR 0011 set to Accepted (one key per environment, rotation by key id, sign after commit);
+  - the Next.js 16.4.2 bump, ported from #56 for the dependency audit.
+
+  QA and Security passed it, CI is green, and it's ready for tegs. A full orders and tickets API built on 22 Oct is kept in 563a3a6 and `backend/s2-orders-tickets-reference.patch` in the project files, while tegs chooses between it and #59.
+
+- **Next:**
+  - Restore orders into #58, or add signing on #59, per tegs's choice. Call `ticketSignerFromEnv()` at startup, as Security asked.
+  - Then the confirmation email (row 3.7).
+- **Blocked:** tegs's choice of order API.
+
 ## 2026-10-22 (Claude)
 
 - **Done:**
