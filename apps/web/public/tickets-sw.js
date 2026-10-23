@@ -4,6 +4,37 @@
 // can't. Nothing else on the site is touched.
 
 const CACHE = 'onetickets-tickets-v1';
+// Set by the page on each saved order (lib/tickets.ts, savedUntil): when it stops being served.
+const EXPIRES = 'x-onetickets-expires';
+
+const ORDER_TICKETS = /^\/api\/public\/orders\/([^/]+)\/tickets$/;
+
+const expired = (response) => {
+  const at = Date.parse(response.headers.get(EXPIRES) ?? '');
+  return Number.isNaN(at) || at <= Date.now();
+};
+
+/** Drops saved orders past their date, with their pages; if that empties it, the cache too. */
+async function dropExpiredOrders() {
+  if (!(await caches.has(CACHE))) return;
+  const cache = await caches.open(CACHE);
+  let left = 0;
+  let dropped = 0;
+  for (const request of await cache.keys()) {
+    const match = ORDER_TICKETS.exec(new URL(request.url).pathname);
+    if (!match) continue;
+    const saved = await cache.match(request);
+    if (saved && !expired(saved)) {
+      left += 1;
+      continue;
+    }
+    await cache.delete(request);
+    await cache.delete(`/tickets/${match[1]}`, { ignoreSearch: true });
+    dropped += 1;
+  }
+  // Only after dropping the last order: a page may be saving its first one right now.
+  if (dropped && !left) await caches.delete(CACHE);
+}
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -18,12 +49,11 @@ self.addEventListener('activate', (event) => {
           .filter((name) => name.startsWith('onetickets-tickets-') && name !== CACHE)
           .map((name) => caches.delete(name)),
       );
+      await dropExpiredOrders().catch(() => undefined);
       await self.clients.claim();
     })(),
   );
 });
-
-const ORDER_TICKETS = /^\/api\/public\/orders\/[^/]+\/tickets$/;
 
 /** Live first, so a revoked ticket or a changed time shows; the saved copy only without signal. */
 async function networkFirst(request) {
@@ -31,7 +61,9 @@ async function networkFirst(request) {
     return await fetch(request);
   } catch (error) {
     const cached = await caches.match(request, { cacheName: CACHE, ignoreSearch: true });
-    if (cached) return cached;
+    if (cached && !(ORDER_TICKETS.test(new URL(request.url).pathname) && expired(cached))) {
+      return cached;
+    }
     throw error;
   }
 }

@@ -152,7 +152,10 @@ export async function readSavedOrder(orderId: string): Promise<OrderTicketsDto |
   if (typeof caches === 'undefined') return null;
   try {
     const res = await caches.match(orderTicketsPath(orderId), { cacheName: TICKETS_CACHE });
-    return res ? ((await res.json()) as OrderTicketsDto) : null;
+    // Past its date it's as good as gone, even before dropExpiredOrders runs.
+    const expires = Date.parse(res?.headers.get(EXPIRES_HEADER) ?? '');
+    if (!res || Number.isNaN(expires) || expires <= Date.now()) return null;
+    return (await res.json()) as OrderTicketsDto;
   } catch {
     return null;
   }
@@ -173,6 +176,89 @@ export async function forgetSavedOrder(orderId: string): Promise<void> {
 export const TICKETS_CACHE = 'onetickets-tickets-v1';
 export const TICKETS_SW = '/tickets-sw.js';
 
+/** True if this device holds a saved copy of the order, complete or not, dated or not. */
+export async function hasSavedOrder(orderId: string): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  try {
+    return !!(await caches.match(orderTicketsPath(orderId), { cacheName: TICKETS_CACHE }));
+  } catch {
+    return false;
+  }
+}
+
+/** Days after the event ends that a saved order stays on the device (ADR 0020). */
+export const SAVED_DAYS_AFTER_END = 7;
+/** Header on a saved order: when to drop it. The worker reads it too. */
+export const EXPIRES_HEADER = 'x-onetickets-expires';
+
+export function savedUntil(event: Pick<OrderTicketsDto['event'], 'endsAt'>): Date {
+  return new Date(new Date(event.endsAt).getTime() + SAVED_DAYS_AFTER_END * 24 * 60 * 60 * 1000);
+}
+
+const SAVED_ORDER = /^\/api\/public\/orders\/([^/]+)\/tickets$/;
+
+/** Order ids saved on this device, read from the cache's own keys. */
+async function savedOrderIds(cache: Cache): Promise<string[]> {
+  const keys = await cache.keys();
+  return keys.flatMap((request) => {
+    const match = SAVED_ORDER.exec(new URL(request.url).pathname);
+    return match?.[1] ? [decodeURIComponent(match[1])] : [];
+  });
+}
+
+/** Drops one order's saved copy and its page. True if any order is still saved. */
+async function dropOrder(cache: Cache, orderId: string): Promise<boolean> {
+  await cache.delete(orderTicketsPath(orderId));
+  await cache.delete(`/tickets/${encodeURIComponent(orderId)}`, { ignoreSearch: true });
+  return (await savedOrderIds(cache)).length > 0;
+}
+
+/** With no order left, nothing on the device is worth keeping: the cache and the worker go. */
+async function clearWhenEmpty(): Promise<void> {
+  await caches.delete(TICKETS_CACHE);
+  const registrations = (await navigator.serviceWorker?.getRegistrations?.()) ?? [];
+  await Promise.all(
+    registrations
+      .filter((r) => new URL(r.scope).pathname === '/tickets/')
+      .map((r) => r.unregister()),
+  );
+}
+
+/**
+ * "Remove from this device": this order's saved copy, its page and this tab's key and stash. When
+ * no other order is saved, the built files and the worker go too.
+ */
+export async function removeFromDevice(orderId: string): Promise<void> {
+  try {
+    session()?.removeItem(keySlot(orderId));
+    session()?.removeItem(orderSlot(orderId));
+  } catch {
+    // Storage blocked: nothing was kept there.
+  }
+  if (typeof caches === 'undefined') return;
+  const cache = await caches.open(TICKETS_CACHE);
+  if (!(await dropOrder(cache, orderId))) await clearWhenEmpty();
+}
+
+/** Drops saved orders past their expiry; the worker does the same when it starts. */
+export async function dropExpiredOrders(now = new Date()): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try {
+    if (!(await caches.has(TICKETS_CACHE))) return;
+    const cache = await caches.open(TICKETS_CACHE);
+    let left = true;
+    for (const orderId of await savedOrderIds(cache)) {
+      const saved = await cache.match(orderTicketsPath(orderId));
+      const expires = Date.parse(saved?.headers.get(EXPIRES_HEADER) ?? '');
+      // A copy with no date predates expiry, so it's treated as expired.
+      if (Number.isNaN(expires) || expires <= now.getTime()) left = await dropOrder(cache, orderId);
+    }
+    if (!left) await clearWhenEmpty();
+  } catch {
+    // Storage blocked or busy: try again on the next visit.
+  }
+}
+
 /**
  * Keeps this order's tickets, this page and the scripts, styles and fonts it loaded in the
  * device's Cache Storage, where the service worker serves them when there's no signal. The
@@ -185,7 +271,12 @@ export async function saveForOffline(order: OrderTicketsDto): Promise<boolean> {
     const cache = await caches.open(TICKETS_CACHE);
     await cache.put(
       orderTicketsPath(order.orderId),
-      new Response(JSON.stringify(order), { headers: { 'content-type': 'application/json' } }),
+      new Response(JSON.stringify(order), {
+        headers: {
+          'content-type': 'application/json',
+          [EXPIRES_HEADER]: savedUntil(order.event).toISOString(),
+        },
+      }),
     );
     const assets = performance
       .getEntriesByType('resource')
