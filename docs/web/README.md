@@ -241,6 +241,11 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 - **Saved copy**: the page always asks the api first (with no key header if it has no key). The
   copy saved on the phone shows only when that request fails. A refused link never shows it, and a
   refused keyed link deletes it.
+- **Remove and expiry** (S2-4a): "Remove tickets from this phone", under Find more events, asks
+  first, then deletes the order's saved copy, its page and the tab's key. With no other order
+  saved, it also deletes the cache and unregisters the worker. The tickets stay on screen until the
+  page is left. A saved order is dropped 7 days after its event ends, on the next visit or when the
+  worker starts, and is never served after that date.
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."
 - **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar

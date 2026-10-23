@@ -58,12 +58,17 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
   signal, the same tab without a key sees nothing, so a shared phone reopening the page from
   history doesn't show someone else's tickets. The e2e test
   cuts the page and the worker off from the network and checks this at 375 and 1280 px.
-- The holder's name, the order email and the QR tokens stay in Cache Storage on that device until
-  the browser clears site data or the cache name changes. The key is never cached. That is the
-  attendee's own device, which Security accepted for MVP (22 Oct), but a shared phone keeps them too.
-  So "remove from this device", and dropping a saved order some days after its event ends, are an
-  S2-4 card that must land before public launch. Until then, signing out or clearing site data
-  removes them.
+- The holder's name, the order email and the QR tokens stay in Cache Storage on that device. The
+  key is never cached. That is the attendee's own device, which Security accepted for MVP (22 Oct),
+  but a shared phone keeps them too, so the time they stay is bounded (S2-4a):
+  - Each saved order carries an `x-onetickets-expires` header, 7 days after the event ends
+    (`SAVED_DAYS_AFTER_END`). The page and the worker never serve it after that. The page drops
+    expired orders on every visit and the worker drops them when it starts. Once the last order is
+    dropped, the cache goes too.
+  - "Remove tickets from this phone" on the ticket screen deletes that order's saved copy, its page
+    and the tab's key. When no other order is saved, it deletes the cache and unregisters the
+    worker.
+  - Signing out or clearing site data also removes them.
 - The worker only answers ticket pages, the one order read and built files. It never caches any
   other api path. Its script is same-origin, never kept by a shared cache, and sends no
   `Service-Worker-Allowed`, so its scope can't widen; e2e checks those headers.

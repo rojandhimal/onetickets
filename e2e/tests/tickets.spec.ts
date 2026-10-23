@@ -115,6 +115,32 @@ test('after the first visit the tickets open with no signal', async ({ page, con
   await context.setOffline(false);
 });
 
+test('"Remove tickets from this phone" leaves nothing saved on the device', async ({
+  page,
+  context,
+}) => {
+  await fakeTicketsApi(context);
+  await open(page);
+  await expect(page.getByText('Works offline')).toBeVisible();
+  const saved = () =>
+    page.evaluate(async () => ({
+      caches: await caches.keys(),
+      workers: (await navigator.serviceWorker.getRegistrations()).length,
+      key: Object.keys(sessionStorage).filter((k) => k.startsWith('onetickets:')),
+    }));
+  expect((await saved()).caches).toEqual(['onetickets-tickets-v1']);
+
+  await page.getByRole('button', { name: 'Remove tickets from this phone' }).click();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(
+    page.getByText('Removed from this phone. Your tickets are still in your email.'),
+  ).toBeFocused();
+  await expect(page.getByText('Works offline')).toHaveCount(0);
+  expect(await saved()).toEqual({ caches: [], workers: 0, key: [] });
+  await expectAccessible(page);
+});
+
 test('a wrong key shows no tickets', async ({ page, context }) => {
   await fakeTicketsApi(context);
   await open(page, 'tk_wrong_key_0123456789');

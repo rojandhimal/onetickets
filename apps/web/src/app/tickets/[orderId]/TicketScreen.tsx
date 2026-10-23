@@ -8,12 +8,14 @@ import {
   TICKETS_SW,
   type TicketDto,
   awaitingQr,
+  dropExpiredOrders,
   fetchOrderTickets,
   forgetSavedOrder,
   formatRef,
   googleCalendarUrl,
   icsFile,
   readSavedOrder,
+  removeFromDevice,
   saveForOffline,
   takeConfirmedOrder,
   takeTicketKey,
@@ -36,17 +38,20 @@ export function TicketScreen({ orderId }: { orderId: string }) {
   const [offlineReady, setOfflineReady] = useState(false);
   const [qrSlow, setQrSlow] = useState(false);
   const key = useRef<string | null>(null);
+  // Once removed, this visit doesn't save the order again.
+  const removed = useRef(false);
 
   useEffect(() => {
     // Only ticket pages: the worker's scope stops it touching the rest of the site.
     navigator.serviceWorker?.register(TICKETS_SW, { scope: '/tickets/' }).catch(() => undefined);
+    void dropExpiredOrders();
   }, []);
 
   const show = useCallback(async (order: OrderTicketsDto, cancelled: () => boolean) => {
     setState({ kind: 'ready', order });
-    if (awaitingQr(order)) return;
+    if (awaitingQr(order) || removed.current) return;
     const saved = await saveForOffline(order);
-    if (!cancelled()) setOfflineReady(saved);
+    if (!cancelled() && !removed.current) setOfflineReady(saved);
   }, []);
 
   const load = useCallback(
@@ -166,7 +171,91 @@ export function TicketScreen({ orderId }: { orderId: string }) {
       <a href="/" className={styles.moreLink}>
         Find more events
       </a>
+      <RemoveFromDevice
+        onRemove={async () => {
+          removed.current = true;
+          setOfflineReady(false);
+          await removeFromDevice(orderId);
+        }}
+      />
     </Shell>
+  );
+}
+
+/**
+ * Takes this order off the phone (ADR 0020): a quiet button, then an inline confirm. The tickets
+ * stay on screen until the page is left, and stay in the email.
+ */
+function RemoveFromDevice({ onRemove }: { onRemove: () => Promise<void> }) {
+  const [step, setStep] = useState<'idle' | 'confirm' | 'busy' | 'done' | 'failed'>('idle');
+  const start = useRef<HTMLButtonElement>(null);
+  const confirm = useRef<HTMLButtonElement>(null);
+  const status = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (step === 'confirm') confirm.current?.focus();
+    if (step === 'done' || step === 'failed') status.current?.focus();
+  }, [step]);
+
+  if (step === 'done' || step === 'failed') {
+    return (
+      <p ref={status} tabIndex={-1} role="status" className={styles.removeNote}>
+        {step === 'done'
+          ? 'Removed from this phone. Your tickets are still in your email.'
+          : "We couldn't remove them. Clear this site's data in your browser settings instead."}
+      </p>
+    );
+  }
+
+  if (step === 'idle') {
+    return (
+      <button
+        ref={start}
+        type="button"
+        className={styles.removeButton}
+        onClick={() => setStep('confirm')}
+      >
+        Remove tickets from this phone
+      </button>
+    );
+  }
+
+  return (
+    <div className={styles.removeConfirm} role="group" aria-labelledby="remove-question">
+      <p id="remove-question">
+        Remove these tickets from this phone? They&apos;ll still be in your email.
+      </p>
+      <div className={styles.removeActions}>
+        <button
+          ref={confirm}
+          type="button"
+          className={styles.darkButton}
+          aria-disabled={step === 'busy' || undefined}
+          onClick={async () => {
+            if (step === 'busy') return;
+            setStep('busy');
+            try {
+              await onRemove();
+              setStep('done');
+            } catch {
+              setStep('failed');
+            }
+          }}
+        >
+          Remove
+        </button>
+        <button
+          type="button"
+          className={styles.keepButton}
+          onClick={() => {
+            setStep('idle');
+            requestAnimationFrame(() => start.current?.focus());
+          }}
+        >
+          Keep
+        </button>
+      </div>
+    </div>
   );
 }
 

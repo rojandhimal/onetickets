@@ -1,10 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { qrPath } from '@/components/QrCode';
+import { fakeCaches } from '@/test/fake-caches';
 import { orderFixture } from '@/test/order-fixture';
 import {
+  EXPIRES_HEADER,
+  TICKETS_CACHE,
+  dropExpiredOrders,
   formatRef,
   googleCalendarUrl,
   icsFile,
+  readSavedOrder,
+  removeFromDevice,
+  savedUntil,
   stashConfirmedOrder,
   takeConfirmedOrder,
   takeTicketKey,
@@ -123,5 +130,74 @@ describe('QR code', () => {
     expect(size).toBe(33);
     // The top-left finder pattern starts at the quiet zone's edge.
     expect(d.startsWith('M4 4h1v1h-1z')).toBe(true);
+  });
+});
+
+describe('tickets saved on this device', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function saveOrders(entries: Record<string, string | null>) {
+    const fake = fakeCaches();
+    vi.stubGlobal('caches', fake.storage);
+    const cache = await fake.storage.open(TICKETS_CACHE);
+    for (const [orderId, expires] of Object.entries(entries)) {
+      const headers: Record<string, string> = expires ? { [EXPIRES_HEADER]: expires } : {};
+      await cache.put(
+        `/api/public/orders/${orderId}/tickets`,
+        new Response(JSON.stringify(orderFixture({ orderId })), { headers }),
+      );
+      await cache.put(`/tickets/${orderId}`, new Response('<html></html>'));
+    }
+    await cache.put('/_next/static/chunks/app.js', new Response(''));
+    return fake.stores;
+  }
+
+  it('keeps a saved order until 7 days after the event ends', () => {
+    expect(savedUntil({ endsAt: '2026-11-14T13:00:00+11:00' }).toISOString()).toBe(
+      '2026-11-21T02:00:00.000Z',
+    );
+  });
+
+  it('drops orders past their date, and anything with no date, but keeps the rest', async () => {
+    const stores = await saveOrders({
+      old: '2026-10-01T00:00:00.000Z',
+      undated: null,
+      soon: '2026-12-01T00:00:00.000Z',
+    });
+    await dropExpiredOrders(new Date('2026-10-23T00:00:00Z'));
+    expect([...stores.get(TICKETS_CACHE)!.keys()].sort()).toEqual([
+      '/_next/static/chunks/app.js',
+      '/api/public/orders/soon/tickets',
+      '/tickets/soon',
+    ]);
+  });
+
+  it('clears the cache when the last saved order expires', async () => {
+    const stores = await saveOrders({ old: '2026-10-01T00:00:00.000Z' });
+    await dropExpiredOrders(new Date('2026-10-23T00:00:00Z'));
+    expect(stores.has(TICKETS_CACHE)).toBe(false);
+  });
+
+  it('never reads a copy past its date', async () => {
+    await saveOrders({ old: '2000-01-01T00:00:00.000Z', soon: '2099-01-01T00:00:00.000Z' });
+    expect(await readSavedOrder('old')).toBeNull();
+    expect((await readSavedOrder('soon'))?.orderId).toBe('soon');
+  });
+
+  it('removes one order and keeps the others and the built files', async () => {
+    const stores = await saveOrders({
+      a: '2099-01-01T00:00:00.000Z',
+      b: '2099-01-01T00:00:00.000Z',
+    });
+    sessionStorage.setItem('onetickets:ticket-key:a', FAKE_KEY);
+    await removeFromDevice('a');
+    expect(sessionStorage.getItem('onetickets:ticket-key:a')).toBeNull();
+    expect([...stores.get(TICKETS_CACHE)!.keys()].sort()).toEqual([
+      '/_next/static/chunks/app.js',
+      '/api/public/orders/b/tickets',
+      '/tickets/b',
+    ]);
+    await removeFromDevice('b');
+    expect(stores.has(TICKETS_CACHE)).toBe(false);
   });
 });

@@ -1,12 +1,18 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
+import { EXPIRES_HEADER, TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
+import { fakeCaches } from '@/test/fake-caches';
 import { orderFixture, ticketFixture } from '@/test/order-fixture';
 import { TicketScreen } from './TicketScreen';
 
 const KEY = 'tk_abcdefghijklmnop'; // gitleaks:allow (fake ticket key)
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+/** A copy saved on the phone, still within its date. */
+const saved = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    headers: { [EXPIRES_HEADER]: '2099-01-01T00:00:00.000Z' },
+  });
 
 function api(handler: () => Response | Promise<Response>) {
   const fetch = vi.fn(async () => handler());
@@ -273,7 +279,7 @@ describe('ticket screen', () => {
   it('opens the copy saved on this phone when there is no signal', async () => {
     const order = orderFixture();
     vi.stubGlobal('caches', {
-      match: vi.fn(async () => json(order)),
+      match: vi.fn(async () => saved(order)),
       open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(async () => undefined) })),
     });
     api(() => {
@@ -312,7 +318,7 @@ describe('ticket screen', () => {
     function savedCopy() {
       const deleted = vi.fn(async () => true);
       vi.stubGlobal('caches', {
-        match: vi.fn(async () => json(orderFixture())),
+        match: vi.fn(async () => saved(orderFixture())),
         open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(), delete: deleted })),
       });
       return deleted;
@@ -353,5 +359,48 @@ describe('ticket screen', () => {
       render(<TicketScreen orderId="ord_1" />);
       expect(await screen.findByRole('heading', { name: "You're going!" })).toBeInTheDocument();
     });
+  });
+
+  it('removes the tickets from this phone after a confirm, and keeps them on screen', async () => {
+    const { storage, stores } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    const unregister = vi.fn(async () => true);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: vi.fn(async () => ({})),
+        ready: Promise.resolve({}),
+        getRegistrations: async () => [
+          { scope: `${location.origin}/tickets/`, unregister },
+          { scope: `${location.origin}/other/`, unregister: vi.fn() },
+        ],
+      },
+      configurable: true,
+    });
+    api(() => json(orderFixture()));
+    const user = userEvent.setup();
+    render(<TicketScreen orderId="ord_1" />);
+    expect(await screen.findByText('Works offline')).toBeInTheDocument();
+    expect(stores.get(TICKETS_CACHE)?.has('/api/public/orders/ord_1/tickets')).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Remove tickets from this phone' }));
+    const group = screen.getByRole('group', {
+      name: "Remove these tickets from this phone? They'll still be in your email.",
+    });
+    expect(screen.getByRole('button', { name: 'Remove' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Keep' }));
+    expect(group).not.toBeInTheDocument();
+    expect(stores.has(TICKETS_CACHE)).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Remove tickets from this phone' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(
+      await screen.findByText('Removed from this phone. Your tickets are still in your email.'),
+    ).toHaveFocus();
+    expect(stores.has(TICKETS_CACHE)).toBe(false);
+    expect(sessionStorage.getItem('onetickets:ticket-key:ord_1')).toBeNull();
+    expect(unregister).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Works offline')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
   });
 });
