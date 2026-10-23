@@ -89,7 +89,7 @@ locals {
       cpu               = var.api_cpu
       memory            = var.api_memory
       desired_count     = var.api_desired_count
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = "3001" },
         { name = "APP_ENV", value = var.environment },
@@ -104,7 +104,14 @@ locals {
         # The API tells the web app to drop cached public pages after a publish, over the
         # private network rather than through Cloudflare and the load balancer.
         { name = "WEB_INTERNAL_URL", value = local.internal_web_url },
-      ]
+        ],
+        # Banners in S3 are still served by the API at WEB_URL/api/public/banners
+        # (the default BANNER_PUBLIC_BASE_URL) and cached by Cloudflare (infra/edge).
+        var.banner_storage == "s3" ? [
+          { name = "BANNER_STORAGE", value = "s3" },
+          { name = "UPLOADS_BUCKET", value = aws_s3_bucket.uploads.id },
+        ] : [],
+      )
       secrets = [
         { name = "DATABASE_URL", valueFrom = "${var.db_app_secret_arn}:url::" },
         { name = "MFA_ENCRYPTION_KEY", valueFrom = "${aws_secretsmanager_secret.api.arn}:mfa_encryption_key::" },
@@ -338,8 +345,8 @@ resource "aws_iam_role_policy" "execution_secrets" {
   policy = data.aws_iam_policy_document.execution_secrets.json
 }
 
-# Identity of the running app code. Starts with uploads access only; add
-# grants here as features need them (SES, KMS signing).
+# Identity of the running app code. Uploads access is per prefix; add a
+# prefix here when a feature stores something new (ticket PDFs).
 resource "aws_iam_role" "task" {
   name               = "${var.name}-ecs-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
@@ -348,7 +355,7 @@ resource "aws_iam_role" "task" {
 data "aws_iam_policy_document" "task" {
   statement {
     actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    resources = ["${aws_s3_bucket.uploads.arn}/*"]
+    resources = ["${aws_s3_bucket.uploads.arn}/banners/*"]
   }
   statement {
     actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
@@ -814,7 +821,8 @@ resource "aws_appautoscaling_policy" "api_cpu" {
 }
 
 # ---------------------------------------------------------------------------
-# Private uploads bucket (event images, ticket PDFs); served via signed URLs.
+# Private uploads bucket. Event banners live under banners/ and reach browsers
+# only through the API (WEB_URL/api/public/banners), cached by Cloudflare.
 # ---------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "uploads" {
@@ -845,4 +853,28 @@ resource "aws_s3_bucket_versioning" "uploads" {
   versioning_configuration {
     status = "Enabled"
   }
+}
+
+# Versioning keeps a replaced or deleted image recoverable for a while, not
+# forever: an organiser who removes a banner expects it gone.
+resource "aws_s3_bucket_lifecycle_configuration" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+    expiration {
+      expired_object_delete_marker = true
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.uploads]
 }
