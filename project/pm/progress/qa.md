@@ -19,6 +19,7 @@ Newest first. Format: date, Done, Next, Blocked.
     - Independent probes: verification needs the context, any one-byte flip fails, a foreign key fails, padding bits are rejected and production keys are refused. The probe is in qa/scripts/qa58.test.ts.
     - Issuing tickets and row 3.7 are still to come.
     - Checklist row 3.6 wording is out of date.
+    - Re-checked at 1b51537 (docs only: neutral order-API wording and a progress entry): still a pass.
 - **Next:** Re-check #59 when its fixes are pushed. Review #58's issuing follow-up.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 

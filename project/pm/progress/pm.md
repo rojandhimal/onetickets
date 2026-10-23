@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #56 (S2-3 ticket screen) as `da8d689`. It carried the Next.js bump, so SEC-21 is done and #60 is now only the PM sync. Merged main into #60 and resolved the conflicts (package.json and the lockfile taken from main; graph role nodes). Asked BackendDev (#58) and DevOps (#61) to merge main the same way.
+- **Next:** tegs's new rule: assign each board task to one agent provider, one task at a time, and PM releases claims that are idle for more than 5 days. It goes into a PR straight after this sync.
+- **Blocked:** nothing.
+
 ## 2026-10-23 (06:40 UTC, Claude)
 
 - **Done:** Four PRs passed every review they need with all checks green, and are with tegs in merge order: #60 (SEC-21, the critical Next.js fix) first, then #56 and #58 (S2-3 ticket screen and signing) and #61 (DEV-5). Recorded the verdicts in the graph, fixed QA checklist row 3.6 to match ADR 0011 (one key per environment, token carries the ticket id), and synced the role logs. Nothing merged overnight.

@@ -1,0 +1,397 @@
+/* Attendee ticket screen, design artboard 4 (Your ticket). Indigo ground, white stub; phone first,
+   centred in a 420 px column on wider screens (handoff-s2.md, S2-3). */
+
+.page {
+  min-height: 100dvh;
+  background: var(--indigo);
+  color: var(--white);
+}
+
+/* The ink focus ring vanishes on indigo, so invert it here. The stub stays white, so it keeps ink. */
+.page :focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--ink);
+}
+.stub :focus-visible {
+  outline-color: var(--ink);
+  box-shadow: 0 0 0 4px var(--white);
+}
+
+.main {
+  width: 100%;
+  max-width: calc(420px + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 18px var(--gutter) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.topRow {
+  min-height: 32px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.offlineChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 16%);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.lede {
+  margin: 0;
+  font-size: 15px;
+  color: #dcdafb;
+  overflow-wrap: anywhere;
+}
+
+.stub {
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Vertical scrolling stays with the page; sideways drags page through the tickets. */
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.stubHead {
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eventName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.15;
+}
+
+.place {
+  font-size: 14px;
+  color: var(--slate);
+}
+
+/* The tear line, with notches cut in the indigo ground on both sides. */
+.perforation {
+  position: relative;
+  height: 0;
+  margin: 0 18px;
+  border-top: 2px dashed var(--line-button);
+}
+.perforation::before,
+.perforation::after {
+  content: '';
+  position: absolute;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--indigo);
+}
+.perforation::before {
+  left: -32px;
+}
+.perforation::after {
+  right: -32px;
+}
+
+.stubBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.qr {
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  padding: 6px;
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: 12px;
+}
+.qr svg {
+  display: block;
+}
+
+.qrPending {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--paper);
+  color: var(--slate);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.qrPending p {
+  margin: 0;
+}
+
+.noQr {
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--slate);
+}
+
+.noQr strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.facts {
+  margin: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  text-align: center;
+}
+.facts div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.facts dt {
+  font-size: 12px;
+  color: var(--slate);
+}
+.facts dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--slate);
+  text-align: center;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pageButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--white);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pageButton[aria-disabled='true'] {
+  border: 1.5px dashed #a5a0f5;
+  background: transparent;
+  color: #a5a0f5;
+  cursor: default;
+}
+
+.position {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.calendar {
+  position: relative;
+}
+
+.lightButton {
+  width: 100%;
+  min-height: 52px;
+  border-radius: var(--radius-button);
+  border: 0;
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Under 640 px the menu is a bottom sheet over a scrim; from 640 px a popover under the button. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgb(22 22 29 / 40%);
+}
+.calendarMenu {
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgb(22 22 29 / 18%);
+}
+.calendarMenu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.calendarMenu li + li {
+  border-top: 1px solid var(--line-divider);
+}
+.calendarMenu a {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 4px;
+  font-weight: 600;
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  .scrim {
+    display: none;
+  }
+  .calendarMenu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    top: calc(100% + 8px);
+    padding: 4px 16px;
+    border-radius: var(--radius-button);
+    box-shadow: 0 8px 24px rgb(22 22 29 / 24%);
+  }
+}
+
+/* "Can't load" and "link doesn't work": a white card on indigo. */
+.messageCard {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.messageCard p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.messageTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.2;
+}
+.messageCard :focus-visible {
+  outline-color: var(--ink);
+  box-shadow: 0 0 0 4px var(--white);
+}
+
+.darkButton {
+  min-height: 52px;
+  border-radius: var(--radius-button);
+  border: 0;
+  background: var(--ink);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Loading from a link: grey blocks where the text and QR go. */
+.bone {
+  display: block;
+  border-radius: 6px;
+  background: var(--line-divider);
+}
+.intro .bone {
+  background: rgb(255 255 255 / 22%);
+}
+.boneHeading {
+  width: 60%;
+  height: 34px;
+}
+.boneLede {
+  width: 85%;
+  height: 18px;
+}
+.boneShort {
+  width: 40%;
+  height: 14px;
+}
+.boneLong {
+  width: 80%;
+  height: 22px;
+}
+.boneMid {
+  width: 65%;
+  height: 16px;
+}
+.boneQr {
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  border-radius: 12px;
+}
+.skeleton {
+  user-select: none;
+}
+
+.moreLink {
+  align-self: center;
+  padding: 12px;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 15px;
+}
+.moreLink:hover {
+  color: #dcdafb;
+}
