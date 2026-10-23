@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 23 Oct 2026, 15:20 UTC, by Claude PM (tegs merged #56, #58 and #61 today. SEC-21 and DEV-5 are done, and S2-3's screen and signing are on main. Every card now names its agent, one task at a time (D19). The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 23 Oct 2026, 15:40 UTC, by Claude PM (tegs merged #56, #58 and #61 today. SEC-21 and DEV-5 are done, and S2-3's screen and signing are on main. Every card now names its agent, one task at a time (D19). The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -100,7 +100,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### In progress
 
-- `[claude]` **S2-4a Remove from this device and expiring saved tickets** (FrontendDev; QA, Security and ProductDesign review), [draft PR #62](https://github.com/rojandhimal/onetickets/pull/62). Split out of S2-4: a control on the ticket screen deletes the saved order and its tab slots, and saved orders drop a few days after the event ends (7 proposed). Security's condition on #56 (ADR 0020); it must land before `FEATURE_TICKETS` goes on anywhere real people use it
 - `[codex]` **S2-2 One-screen free checkout** (FrontendDev in the other tool, with ProductDesign and QA review): single checkout screen at `/e/:slug/tickets` with hold notice (`role="status"`), ticket stepper per type, attendee details (name, email), opt-in, summary, and idempotency key (INV-5). [Draft PR #59](https://github.com/rojandhimal/onetickets/pull/59), behind `FEATURE_BOOKING`, has the checkout screen (Design approved) and its own order API, which Claude QA failed and Claude Security sent back at `3c2ff43`: the 40-bit order ref in the URL exposes the buyer's name and email, and the public select policies let any organiser read other organisers' orders. The Claude BackendDev built a second order API (`563a3a6`, since cut out of [draft PR #58](https://github.com/rojandhimal/onetickets/pull/58) and kept as a patch) built to Security's rules (`POST /public/orders`, then `GET /public/orders/:orderId/tickets` with the ticket key as a bearer header, never in a URL). Both add `0009_orders.sql`, so one goes. **tegs is choosing;** PM recommends keeping the Claude order API, with #59 keeping only the checkout screen and sending buyers to `confirmationPath(orderId, ticketKey)`
 - `[unassigned]`, blocked on the order API choice: **S2-3 Signed QR tickets and confirmation** (Claude BackendDev and FrontendDev; QA, Security and ProductDesign review). On main since 23 Oct: the ticket stub (artboard 4) with the QR, pager, offline copy, Wake Lock note and Add to calendar, behind `FEATURE_TICKETS` ([#56](https://github.com/rojandhimal/onetickets/pull/56), `da8d689`), and the ticket token codec, an Ed25519 signer behind an interface (local key in dev and CI only, AWS KMS later per R6), ticket keys in the redactor and ADR 0011 Accepted with one signing key per environment ([#58](https://github.com/rojandhimal/onetickets/pull/58), `0a4ce89`). Still to do: issuing and signing tickets, and the confirmation email (row 3.7), on whichever order API tegs keeps
 - (tegs) RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
@@ -108,7 +107,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-_(No items currently in review)_
+- `[claude]` **S2-4a Remove from this device and expiring saved tickets** (FrontendDev; QA, Security and ProductDesign review), [PR #62](https://github.com/rojandhimal/onetickets/pull/62). Split out of S2-4: "Remove tickets from this device" on the ticket screen deletes the saved order, its page and the tab's key, and a saved order is never served more than 7 days after its event ends. Security's condition on #56 (ADR 0020); it must land before `FEATURE_TICKETS` goes on anywhere real people use it. Security passed at `7d8f61d`; QA and ProductDesign to review, and it needs main merged in
 
 ### Done
 

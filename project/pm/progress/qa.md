@@ -10,6 +10,10 @@ Newest first. Format: date, Done, Next, Blocked.
   - The pass depends on lint/unit and e2e going green on e862049.
   - Nit: the #56 pr node lacks the QA fail.
   - #60 re-checked at cc62030 (main merged in, project/ only): still a pass. Nit: row 3.4 still has the old brightness copy.
+  - #60 at 79e5a22 (D19 agent assignment, one task at a time) needs one fix.
+    - The tool and docs pass: I drove next, claim, release, the stale list and the validate guard on a scratch graph, and the 14 tests pass.
+    - The fix: S2-4a is on the board as [claude] but missing from graph.jsonl.
+    - Asked PM to get tegs's confirmation that "one at a time" means per agent and role.
   - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
     - A 404 with a key shows the bad-link message and drops the saved copy.
     - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.

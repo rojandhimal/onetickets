@@ -8,6 +8,8 @@ Newest first. Format: date, Done, Next, Blocked.
 
 - #61 DEV-5: delta check 302d454..28193ce (merge of main). Infra unchanged, diff vs main is infra + graph.jsonl only. Pass holds.
 - S2-4a (#62 draft) plan approved for FrontendDev: 7-day expiry after event end, checked on fetch too, fails closed, offline Remove, tests.
+- #62 S2-4a: pass at 7d8f61d. Expiry fails closed in the worker and the page, offline Remove clears the cache, worker and session keys. Satisfies the ADR 0020 condition for FEATURE_TICKETS.
+- #63 DEV-7: pass at 10f6255. CI checks the api image's sslrootcert matches apps/api/certs, fails closed, no new permissions.
 
 **Next**
 
