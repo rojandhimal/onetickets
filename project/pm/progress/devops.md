@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, later)
+
+- **Done:** tegs merged DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61), after I merged main (#56) into it to clear the conflict. Security and QA passed the delta check.
+- **Next:** no DevOps card is ready on the graph. DEV-2 waits on tegs's AWS accounts. Asked PM for the next card.
+- **Blocked:** nothing. Reminder for tegs: add Zone: Cache Rules Edit to the Cloudflare token before the next edge apply.
+
 ## 2026-10-23 (Claude)
 
 - **Done:** DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) is ready for tegs at 302d454, with all 12 CI checks green and Security and QA passes:

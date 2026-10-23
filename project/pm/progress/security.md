@@ -7,6 +7,7 @@ Newest first. Format: date, Done, Next, Blocked.
 **Done**
 
 - #61 DEV-5: delta check 302d454..28193ce (merge of main). Infra unchanged, diff vs main is infra + graph.jsonl only. Pass holds.
+- S2-4a (#62 draft) plan approved for FrontendDev: 7-day expiry after event end, checked on fetch too, fails closed, offline Remove, tests.
 
 **Next**
 

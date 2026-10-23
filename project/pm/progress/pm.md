@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (15:20 UTC, Claude)
+
+- **Done:** tegs merged #58 and #61 after #56, so DEV-5 is done and S2-3's screen and signing are on main. Merged main into #60 again, and added tegs's agent assignment rule to it, because #60 needed a new review anyway. Every item gets `agent`, `claimed` and `active`. `state.mjs` gains `next`, `claim` and `release`, and the brief lists idle claims. The working agreement (section 5), AGENTS.md, agent briefs, graph README and board follow, and D19 records the rule. Gave FrontendDev S2-4a (#62) and DevOps DEV-7 (RDS bundle CI check) while the order API waits.
+- **Next:** QA re-checks #60, then tegs merges it. PM releases claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-23 (15:00 UTC, Claude)
 
 - **Done:** tegs merged #56 (S2-3 ticket screen) as `da8d689`. It carried the Next.js bump, so SEC-21 is done and #60 is now only the PM sync. Merged main into #60 and resolved the conflicts (package.json and the lockfile taken from main; graph role nodes). Asked BackendDev (#58) and DevOps (#61) to merge main the same way.
