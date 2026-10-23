@@ -169,7 +169,9 @@ resource "cloudflare_ruleset" "request_headers" {
 # nothing ever needs purging. The edge keeps them for 30 days, not the year
 # the origin allows, so a removed banner is gone from Cloudflare within the
 # same 30 days the uploads bucket keeps old versions. Said explicitly rather
-# than left to Cloudflare's by-extension default.
+# than left to Cloudflare's by-extension default. Banner keys are plain
+# UUID file names, so paths with "%" or ".." are left out: the TTL override
+# must only ever apply to the banner route itself.
 resource "cloudflare_ruleset" "cache" {
   zone_id = var.zone_id
   name    = "OneTickets cache"
@@ -178,7 +180,7 @@ resource "cloudflare_ruleset" "cache" {
 
   rules = [{
     description = "Cache event banners"
-    expression  = "http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(lower(http.request.uri.path), \"/api/public/banners/\")"
+    expression  = "http.host in {${join(" ", formatlist("\"%s\"", local.web_hosts))}} and starts_with(lower(http.request.uri.path), \"/api/public/banners/\") and not http.request.uri.path contains \"%\" and not http.request.uri.path contains \"..\""
     action      = "set_cache_settings"
     action_parameters = {
       cache = true
