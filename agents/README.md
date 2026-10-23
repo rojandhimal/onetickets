@@ -20,10 +20,12 @@ merges. The briefs here are plain Markdown, so any AI tool can play any role.
    through `CLAUDE.md`, Gemini CLI through `GEMINI.md`).
 2. Give it this prompt, with the role filled in:
 
-   > You are the <Role> agent for OneTickets. Read AGENTS.md and agents/<role>.md, then run
-   > `node scripts/state.mjs` and `node scripts/state.mjs role <role>`. Carry on from your role's
-   > next item. Follow the rules in AGENTS.md. Open a pull request for your work, and in it update
-   > the state graph and your progress log.
+   > You are the <Role> agent for OneTickets, working as <agent> (claude, codex, gemini, ...). Read
+   > AGENTS.md and agents/<role>.md, then run `node scripts/state.mjs` and
+   > `node scripts/state.mjs next <agent> <role>`. Finish your own unfinished task first; if you
+   > hold none, claim one unassigned ready task with `node scripts/state.mjs claim <id> <agent>`.
+   > One task at a time. Follow the rules in AGENTS.md. Open a pull request for your work, and in
+   > it update the state graph and your progress log.
 
 3. If the tool can't open pull requests, ask it to push a branch and give you the compare link.
 
@@ -46,9 +48,10 @@ adds a progress entry. That's the whole handoff.
 Agents in different tools can also work at the same time (tegs, 22 Oct 2026). Coming back after a
 break, an agent starts from the current `main`, the state graph and the open pull requests, not from where
 it stopped, because another tool may have finished or started its next item. Before building, it
-checks the open pull requests and claims its card with a draft PR, so each card has one owner
-whatever the tool. The rules are in the
-[working agreement](../project/pm/working-agreement.md), section 4.
+checks the open pull requests and claims its card in the graph and with a draft PR, so each card
+has one owner whatever the tool. Every task names its agent, each agent takes one task at a time,
+and PM releases a claim after more than 5 days without activity. The rules are in the
+[working agreement](../project/pm/working-agreement.md), sections 4 and 5.
 
 ## Where shared files live
 
