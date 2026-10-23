@@ -55,6 +55,20 @@ describe('redact', () => {
   });
 });
 
+describe('ticket secrets', () => {
+  it('removes ticket keys and the signing key by name and from links', () => {
+    const out = redact({ ticketKey: 'k3y', env: { TICKET_SIGNING_KEY: 's33d' }, orderId: 'o1' });
+    expect(out).toEqual({
+      ticketKey: REDACTED,
+      env: { TICKET_SIGNING_KEY: REDACTED },
+      orderId: 'o1',
+    });
+    expect(redactString('opened https://onetickets.example.test/tickets/o1#key=k3y')).toBe(
+      `opened https://onetickets.example.test/tickets/o1#key=${REDACTED}`,
+    );
+  });
+});
+
 describe('redactString', () => {
   it('scrubs OAuth codes in URLs', () => {
     expect(redactString('/auth/google/callback?code=4/abc&state=xyz')).toBe(

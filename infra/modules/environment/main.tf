@@ -115,6 +115,7 @@ module "app" {
   web_hostname              = var.web_hostname
   api_hostname              = var.api_hostname
   behind_cloudflare         = var.behind_cloudflare
+  banner_storage            = var.banner_storage
   ingress_cidrs             = var.ingress_cidrs
   ingress_ipv6_cidrs        = var.ingress_ipv6_cidrs
   db_address                = module.database.address
