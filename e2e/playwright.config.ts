@@ -3,6 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 // End-to-end tests run the built web and api against a real Postgres (DATABASE_URL).
 // Locally: `docker compose up -d postgres mailpit`, `pnpm build`, then `pnpm e2e`.
 const webUrl = 'http://localhost:3000';
+// Lets context.route and setOffline reach service workers too, so the ticket screen's offline test
+// (tests/tickets.spec.ts) cuts the worker off like a phone with no signal.
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= '1';
 const apiUrl = 'http://localhost:3001';
 // Shared test-only secret (32 bytes, base64) so publish/edit in e2e invalidates Next's data cache.
 const revalidateSecret = Buffer.alloc(32, 9).toString('base64');
@@ -59,6 +62,7 @@ export default defineConfig({
       env: {
         API_URL: apiUrl,
         FEATURE_EVENT_WIZARD: 'true',
+        FEATURE_TICKETS: 'true',
         REVALIDATE_SECRET: revalidateSecret,
       },
     },

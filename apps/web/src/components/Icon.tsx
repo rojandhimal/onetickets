@@ -30,6 +30,12 @@ const paths = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  calendar: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M8 3v4M16 3v4M3 10h18" />
+    </>
+  ),
   'wifi-off': (
     <path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5v.01M3 3l18 18" />
   ),

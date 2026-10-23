@@ -18,3 +18,11 @@ export function isEventBannerShown(): boolean {
 export function isBookingEnabled(): boolean {
   return process.env.FEATURE_BOOKING === 'true';
 }
+
+/**
+ * S2-3 ticket screen (`/tickets/:orderId`): the confirmation and ticket stubs. Off until the
+ * tickets api and checkout (S2-2) ship.
+ */
+export function isTicketsEnabled(): boolean {
+  return process.env.FEATURE_TICKETS === 'true';
+}
