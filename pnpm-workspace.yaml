@@ -7,3 +7,8 @@ onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
   - sharp
+
+# @nestjs/platform-express pins multer 2.4.0, which has a high advisory
+# (fixed in 2.5.0). Drop this once Nest ships a release with the fix.
+overrides:
+  multer: ^2.5.0
