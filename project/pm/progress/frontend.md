@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, DES-10 sold-out bar and price note, #66)
+
+- **Done:** #62 (S2-4a) merged. Claimed DES-10 with draft #66: the event page shows "Sold out" only when the api says every ticket is sold, and "All taken right now. Check back in a few minutes." with Get tickets kept while checkout holds fill the event (ARCH-2). Unit tests for both states.
+- **Next:** ProductDesign confirms the two copy defaults ("All taken" with no number, held copy in the price row), then Design and QA review #66.
+- **Blocked:** Nothing. Wiring the ticket screen to real orders still waits on tegs's order API choice.
+
 ## 2026-10-23 (Claude, S2-4a ready for review, #62)
 
 - **Done:** Built "Remove tickets from this device" and 7-day expiry for saved tickets behind `FEATURE_TICKETS`, with Design's copy and Security's four adjustments. The worker checks expiry before serving and fails closed. Remove works offline and without the key, and takes the tickets off the screen. Unit tests, plus e2e at 375 and 1280 px for remove, reload after remove, and expiry on the next visit. All checks and 48/48 e2e pass.

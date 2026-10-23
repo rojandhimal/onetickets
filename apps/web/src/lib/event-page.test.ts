@@ -12,12 +12,20 @@ describe('event page wording', () => {
   it('prices and spots', () => {
     expect(priceLabel(0)).toBe('Free');
     expect(priceLabel(5335)).toBe('A$53.35');
-    expect(spotsLine(18)).toBe('18 spots left');
-    expect(spotsLine(1)).toBe('1 spot left');
-    expect(spotsLine(0)).toBe('All taken');
-    expect(priceNote({ priceFromAllInCents: 0, spotsLeft: 18 })).toBe(
+    expect(spotsLine({ spotsLeft: 18, soldOut: false })).toBe('18 spots left');
+    expect(spotsLine({ spotsLeft: 1, soldOut: false })).toBe('1 spot left');
+    expect(priceNote({ priceFromAllInCents: 0, spotsLeft: 18, soldOut: false })).toBe(
       'No booking fee. 18 spots left.',
     );
+  });
+
+  it('keeps held tickets apart from sold out (ARCH-2)', () => {
+    const held = { priceFromAllInCents: 0, spotsLeft: 0, soldOut: false };
+    expect(spotsLine(held)).toBe('All taken right now');
+    expect(priceNote(held)).toBe('All taken right now. Check back in a few minutes.');
+    const sold = { priceFromAllInCents: 0, spotsLeft: 0, soldOut: true };
+    expect(spotsLine(sold)).toBe('All tickets taken');
+    expect(priceNote(sold)).toBe('Sold out; spots that are released go back on sale here.');
   });
 
   it('summarises accessibility with the first feature first', () => {
