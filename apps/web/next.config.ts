@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
       { source: '/:path*', headers: securityHeaders },
       // Listed after the catch-all so its Referrer-Policy wins.
       { source: '/auth/verify', headers: verifyPageHeaders },
+      // Ticket pages carry their key in the fragment, which browsers never send; this also keeps
+      // the order id out of any Referer (S2-3).
+      { source: '/tickets/:path*', headers: verifyPageHeaders },
     ];
   },
   async rewrites() {

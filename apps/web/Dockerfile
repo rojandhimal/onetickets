@@ -35,7 +35,8 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /repo/apps/web/.next/static ./apps/web/.next/static
-# Add `COPY ... /repo/apps/web/public ./apps/web/public` once apps/web/public exists.
+# Static files served as-is, such as the ticket screen's service worker (tickets-sw.js).
+COPY --from=build --chown=node:node /repo/apps/web/public ./apps/web/public
 USER node
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
