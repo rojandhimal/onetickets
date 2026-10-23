@@ -2,6 +2,24 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, S2-3 QA fixes, #56)
+
+- **Done:** Fixed QA's two findings on #56. The page now always asks the api first (with no key header when it has none), and shows the copy saved on the phone only when that request fails. A refused keyed link deletes the saved copy. Earlier, on 22 Oct: bumped Next to 16.4.2 for three advisories, fixed the gitleaks false positives the repo's way, renumbered the ADR to 0020, and applied Design's revoked and QR-pending copy. Security and Design passed at 3336dff. All checks and 44/44 e2e pass.
+- **Next:** QA re-checks 3336dff..head. Wire to the order API tegs picks.
+- **Blocked:** tegs's choice between #58's and #59's order API.
+
+## 2026-10-22 (Claude, S2-3 ready for review, #56)
+
+- **Done:** Built artboard 4 behind `FEATURE_TICKETS`: "You're going!", one stub at a time with a touch swipe and Previous/Next, a QR drawn in the browser with Wake Lock, Add to calendar as a bottom sheet or popover, offline through a service worker scoped to `/tickets/` (ADR 0020). Applied ProductDesign's S2-3 fill-ins and the BackendDev's final orders contract (#58). The key leaves the address bar at once and stays in `sessionStorage` for the tab; checkout can stash the created order for an instant first render with `stashConfirmedOrder`. Format, lint, typecheck, all unit tests and the ticket e2e at 375 and 1280 px with axe and the CSP guard pass.
+- **Next:** QA, ProductDesign and Security review #56. Import the order types from `@onetickets/shared` once #58 merges. Tell the other tool's checkout about `stashConfirmedOrder` once Security agrees the key flow.
+- **Blocked:** Security's OK on the ticket key handling; Design's copy for a revoked ticket ("This ticket no longer works." is a placeholder).
+
+## 2026-10-22 (Claude, S2-3 confirmation and ticket stub)
+
+- **Done:** Claimed S2-3's frontend part (artboard 4: confirmation screen and ticket stub) with a draft PR. Checked main at 7023181 and the open PRs (#53, #54, #55): nothing else touches the confirmation or ticket screens. S2-2 checkout (`/e/:slug/tickets`) stays with the other tool's FrontendDev.
+- **Next:** Agree the tickets api contract with the Claude BackendDev. Build "You're going!", the ticket pager, the QR card with Wake Lock, the offline cache and Add to calendar behind a runtime flag, against a typed stub until the api lands.
+- **Blocked:** Nothing.
+
 ## 2026-10-21 (SEC-14 enforce CSP site-wide)
 
 - **Done:** Implemented SEC-14 site-wide enforced CSP ([ADR 0018](/docs/adr/0018-enforced-nonce-csp-on-event-pages.md)). Exported `strictSiteCsp` in `apps/web/src/lib/security-headers.ts` and configured `apps/web/src/proxy.ts` matcher to apply the strict nonce-based CSP and `Cache-Control: private, no-store` across all page/document routes (excluding API, static assets, and images). Verified `apps/web/src/proxy.test.ts` across page routes and exclusions. Updated ADR 0018 and security checklist in `docs/security/checklist.md`. All 24 test files (156 unit tests) pass.
