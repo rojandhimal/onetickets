@@ -164,10 +164,14 @@ jobs:
       # apps/api/package.json would only show when tasks fail to start in AWS.
       - name: Check the api image carries the RDS CA bundle
         if: matrix.app == 'api'
+        # pipefail so a missing file fails the step instead of comparing two empty hashes.
+        shell: bash
         run: |
-          path=$(grep -o 'sslrootcert=[^&"]*' infra/modules/database/main.tf | cut -d= -f2)
-          test -n "$path" || { echo "No sslrootcert in infra/modules/database/main.tf"; exit 1; }
+          set -o pipefail
+          paths=$(grep -o 'sslrootcert=[^&"]*' infra/modules/database/main.tf | cut -d= -f2 | sort -u)
+          test "$(echo "$paths" | grep -c .)" = 1 || { echo "Expected one sslrootcert in infra/modules/database/main.tf, found: $paths"; exit 1; }
+          path=$paths
           expected=$(sha256sum "apps/api/certs/$(basename "$path")" | cut -d' ' -f1)
           actual=$(docker run --rm --entrypoint sha256sum onetickets-api:ci "$path" | cut -d' ' -f1)
           echo "sslrootcert=$path expected=$expected actual=$actual"
-          test "$actual" = "$expected"
+          test -n "$expected" && test -n "$actual" && test "$actual" = "$expected"
