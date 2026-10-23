@@ -11,6 +11,7 @@ import {
   dropExpiredOrders,
   fetchOrderTickets,
   forgetSavedOrder,
+  hasSavedOrder,
   formatRef,
   googleCalendarUrl,
   icsFile,
@@ -52,6 +53,7 @@ export function TicketScreen({ orderId }: { orderId: string }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [offlineReady, setOfflineReady] = useState(false);
   const [qrSlow, setQrSlow] = useState(false);
+  const [canRemove, setCanRemove] = useState(false);
   const key = useRef<string | null>(null);
   // Once removed, this visit doesn't save the order again.
   const removed = useRef(false);
@@ -62,12 +64,20 @@ export function TicketScreen({ orderId }: { orderId: string }) {
     void dropExpiredOrders();
   }, []);
 
-  const show = useCallback(async (order: OrderTicketsDto, cancelled: () => boolean) => {
-    setState({ kind: 'ready', order });
-    if (awaitingQr(order) || removed.current) return;
-    const saved = await saveForOffline(order);
-    if (!cancelled() && !removed.current) setOfflineReady(saved);
-  }, []);
+  const show = useCallback(
+    async (order: OrderTicketsDto, cancelled: () => boolean) => {
+      setState({ kind: 'ready', order });
+      if (removed.current) return;
+      const saved = awaitingQr(order) ? false : await saveForOffline(order);
+      // Remove follows the order's own copy, not a complete save: a missing built file still
+      // leaves the name, email and QR on the device.
+      const held = await hasSavedOrder(orderId);
+      if (cancelled() || removed.current) return;
+      setOfflineReady(saved);
+      setCanRemove(held);
+    },
+    [orderId],
+  );
 
   const load = useCallback(
     async (cancelled: () => boolean) => {
@@ -190,13 +200,14 @@ export function TicketScreen({ orderId }: { orderId: string }) {
       <a href="/" className={styles.moreLink}>
         Find more events
       </a>
-      {offlineReady && (
+      {canRemove && (
         <RemoveFromDevice
           onRemove={async () => {
             removed.current = true;
             await removeFromDevice(orderId);
             // A lost or shared device is the point: the tickets leave the screen too.
             setOfflineReady(false);
+            setCanRemove(false);
             setState({ kind: 'removed' });
           }}
         />
@@ -207,7 +218,7 @@ export function TicketScreen({ orderId }: { orderId: string }) {
 
 /**
  * Takes this order off the device (ADR 0020): a quiet button, then an inline confirm card. Shown
- * once the saved copy exists, since before that there's nothing to remove.
+ * whenever the order's copy is on the device, even if the rest of the save didn't finish.
  */
 function RemoveFromDevice({ onRemove }: { onRemove: () => Promise<void> }) {
   const [step, setStep] = useState<'idle' | 'confirm' | 'busy' | 'failed'>('idle');

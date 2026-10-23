@@ -434,4 +434,37 @@ describe('ticket screen', () => {
     expect(screen.getByRole('article', { name: 'Ticket 1 of 2' })).toBeInTheDocument();
     Reflect.deleteProperty(navigator, 'serviceWorker');
   });
+
+  it('offers Remove when the order is saved even if a built file could not be', async () => {
+    const { storage, stores } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { register: vi.fn(async () => ({})), ready: Promise.resolve({}) },
+      configurable: true,
+    });
+    // A chunk from an earlier deploy that the server no longer has.
+    const entries = vi
+      .spyOn(performance, 'getEntriesByType')
+      .mockReturnValue([
+        { name: `${location.origin}/_next/static/chunks/old-deploy.js` } as PerformanceEntry,
+      ]);
+    api(() => json(orderFixture()));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        String(url).includes('/_next/static/')
+          ? new Response('gone', { status: 404 })
+          : json(orderFixture()),
+      ),
+    );
+    render(<TicketScreen orderId="ord_1" />);
+    expect(
+      await screen.findByRole('button', { name: 'Remove tickets from this device' }),
+    ).toBeInTheDocument();
+    expect(stores.get(TICKETS_CACHE)?.has('/api/public/orders/ord_1/tickets')).toBe(true);
+    // Not everything is saved, so it doesn't claim to work offline.
+    expect(screen.queryByText('Works offline')).not.toBeInTheDocument();
+    entries.mockRestore();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
 });

@@ -176,6 +176,16 @@ export async function forgetSavedOrder(orderId: string): Promise<void> {
 export const TICKETS_CACHE = 'onetickets-tickets-v1';
 export const TICKETS_SW = '/tickets-sw.js';
 
+/** True if this device holds a saved copy of the order, complete or not, dated or not. */
+export async function hasSavedOrder(orderId: string): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  try {
+    return !!(await caches.match(orderTicketsPath(orderId), { cacheName: TICKETS_CACHE }));
+  } catch {
+    return false;
+  }
+}
+
 /** Days after the event ends that a saved order stays on the device (ADR 0020). */
 export const SAVED_DAYS_AFTER_END = 7;
 /** Header on a saved order: when to drop it. The worker reads it too. */

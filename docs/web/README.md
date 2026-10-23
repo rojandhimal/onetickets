@@ -241,7 +241,8 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 - **Saved copy**: the page always asks the api first (with no key header if it has no key). The
   copy saved on the phone shows only when that request fails. A refused link never shows it, and a
   refused keyed link deletes it.
-- **Remove and expiry** (S2-4a): once "Works offline" shows, "Remove tickets from this device"
+- **Remove and expiry** (S2-4a): whenever the order is saved on the device (even if the rest of
+  the save failed), "Remove tickets from this device"
   appears under Find more events. It opens an inline confirm card. "Remove" deletes the order's
   saved copy, its page, and the tab's key and stashed order, with or without signal. With no other
   order saved, it also deletes the cache and unregisters the worker. The page then shows "Removed
