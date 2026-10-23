@@ -242,8 +242,8 @@ function RemoveFromDevice({ onRemove }: { onRemove: () => Promise<void> }) {
       </p>
       {step === 'failed' && (
         <p role="alert">
-          We couldn&apos;t remove them. Clear this site&apos;s data in your browser settings
-          instead.
+          <strong>We couldn&apos;t remove your tickets.</strong> Clear this site&apos;s data in your
+          browser settings instead.
         </p>
       )}
       <div className={styles.removeActions}>

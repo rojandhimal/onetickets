@@ -245,7 +245,8 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
   appears under Find more events. It opens an inline confirm card. "Remove" deletes the order's
   saved copy, its page, and the tab's key and stashed order, with or without signal. With no other
   order saved, it also deletes the cache and unregisters the worker. The page then shows "Removed
-  from this device." in place of the tickets. A saved order is never served after 7 days past its
+  from this device." in place of the tickets. If storage is blocked, the card says it couldn't remove them
+  and the tickets stay. A saved order is never served after 7 days past its
   event's end, by the page or the worker. It is dropped on the next visit or when the worker starts.
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."

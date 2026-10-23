@@ -407,4 +407,31 @@ describe('ticket screen', () => {
     expect(unregister).toHaveBeenCalledTimes(1);
     Reflect.deleteProperty(navigator, 'serviceWorker');
   });
+
+  it('keeps the tickets on screen and says so when removing fails', async () => {
+    const { storage } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { register: vi.fn(async () => ({})), ready: Promise.resolve({}) },
+      configurable: true,
+    });
+    api(() => json(orderFixture()));
+    const user = userEvent.setup();
+    render(<TicketScreen orderId="ord_1" />);
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove tickets from this device' }),
+    );
+    // Storage blocked from here on.
+    vi.stubGlobal('caches', {
+      open: async () => {
+        throw new DOMException('blocked', 'SecurityError');
+      },
+    });
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "We couldn't remove your tickets. Clear this site's data in your browser settings instead.",
+    );
+    expect(screen.getByRole('article', { name: 'Ticket 1 of 2' })).toBeInTheDocument();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
 });
