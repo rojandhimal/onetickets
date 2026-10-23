@@ -9,17 +9,19 @@ Newest first. Format: date, Done, Next, Blocked.
   - The graph is valid at 110 nodes.
   - The pass depends on lint/unit and e2e going green on e862049.
   - Nit: the #56 pr node lacks the QA fail.
+  - #60 re-checked at cc62030 (main merged in, project/ only): still a pass. Nit: row 3.4 still has the old brightness copy.
   - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
     - A 404 with a key shows the bad-link message and drops the saved copy.
     - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.
     - main is merged in and the ADR is now 0020.
     - Web unit tests pass 185/185 with my probes. The pass depends on CI going green.
-  - #61 re-checked at d2e620f (the ported Next bump, identical to #60's) and at 302d454 (the cache rule skips % and ..): still a pass.
+  - #61 re-checked at d2e620f (the ported Next bump, identical to #60's) and at 302d454 (the cache rule skips % and ..): still a pass. Also at 28193ce (main merged in; infra unchanged).
   - [#58](https://github.com/rojandhimal/onetickets/pull/58) S2-3 codec and signer pass at eda1451.
     - Independent probes: verification needs the context, any one-byte flip fails, a foreign key fails, padding bits are rejected and production keys are refused. The probe is in qa/scripts/qa58.test.ts.
     - Issuing tickets and row 3.7 are still to come.
     - Checklist row 3.6 wording is out of date.
     - Re-checked at 1b51537 (docs only: neutral order-API wording and a progress entry): still a pass.
+    - Re-checked at 63f304c (main merged in after #56; only #58's 11 files differ from main): still a pass.
 - **Next:** Re-check #59 when its fixes are pushed. Review #58's issuing follow-up.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 

@@ -15,9 +15,14 @@ session. The graph is about 20 KB, and its brief is about 50 lines.
 ```sh
 git pull                                  # the graph on main is the shared copy
 node scripts/state.mjs                    # brief: active items, open PRs, roles, what needs tegs
+node scripts/state.mjs next <agent> <role>  # your unfinished task, or unassigned ready ones
 node scripts/state.mjs role <your-role>   # your role's node, what you own, what you review
 node scripts/state.mjs show <id>          # one item or PR with everything linked to it
 ```
+
+`<agent>` is your AI provider in lowercase: `claude`, `codex`, `gemini` and so on. Set
+`STATE_BY=<agent>/<role>` (for example `STATE_BY=codex/frontend`) and `next` and `claim` use it
+when you leave the arguments out.
 
 No Node? Read `graph.jsonl` directly: one JSON object per line, so `grep '"status":"ready"'` or
 `grep '"owner":"backend"'` works too.
@@ -25,10 +30,24 @@ No Node? Read `graph.jsonl` directly: one JSON object per line, so `grep '"statu
 The brief says when `main` has moved since the graph was last updated. Then check what merged since
 (`git log --oneline <graph main>..origin/main`) before trusting the statuses.
 
-Before starting an item, check that nobody else holds it: look at its status and the open pull
-requests. Claim it by opening a draft PR whose title starts with the item id (for example
-`S2-2: one-screen free checkout`) and by setting the item `in_progress` in that PR. Two teams can
-be active at once (risk R8), and a draft PR is the claim everyone can see straight away.
+## Taking a task
+
+Every item names the agent working on it in `agent`; no agent means unassigned
+([working agreement section 5](../pm/working-agreement.md)). An agent holds **one task at a time per
+role**: one item in progress or blocked. Moving it to review or done, or releasing it, frees the
+agent for the next.
+
+1. Run `next`. If you hold an unfinished task, carry on with it.
+2. Otherwise claim an unassigned ready item: `node scripts/state.mjs claim S2-4 codex`. That sets
+   `agent`, `claimed` and `active` to today and moves the item to `in_progress`. It refuses an item
+   another agent holds, and a second task while you hold one.
+3. Open a draft PR whose title starts with the item id (for example `S2-4: My tickets`), so the
+   claim also shows on GitHub. Two teams can be active at once (risk R8).
+
+Any `set` on your item with `STATE_BY=<agent>/<role>` moves `active` to today. The brief lists
+claims with no activity for more than 5 days. PM checks their PRs for recent pushes, then releases
+them (`node scripts/state.mjs release <id>`, which clears the agent and puts an in-progress item
+back to ready) or reassigns them (`set <id> agent=<other>`).
 
 ## When you finish a piece of work
 
@@ -59,6 +78,8 @@ next agent reads.
 | Change                                                | Who                                                     |
 | ----------------------------------------------------- | ------------------------------------------------------- |
 | Your role node; your item's status, PRs and `waiting` | The role doing the work, in its PR                      |
+| Claiming an item (`claim`)                            | The agent taking it, in its draft PR                    |
+| Releasing or reassigning an idle claim (`release`)    | PM, after more than 5 days without activity             |
 | A PR node's `reviews`                                 | The reviewer, in a PR or through PM                     |
 | Merges (`state=merged`, `merged=<sha>`, items done)   | PM after tegs merges, with `meta.main`                  |
 | New items, sprints, decisions, risks, priorities      | PM, with tegs for scope, cost or user-visible decisions |
@@ -72,15 +93,15 @@ conflict for PM to settle.
 
 Every line has `type` and a unique `id`. Fields that name another node are the graph's edges.
 
-| Type       | Id                                     | Required fields                            | Edges and other fields                                                                                                |
-| ---------- | -------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `meta`     | `meta`                                 | `updated`, `by`, `main`, `sprint`, `phase` | `sprint` names the current sprint; `main` is the main commit the graph matches                                        |
-| `sprint`   | `S0` to `S10`                          | `name`, `status`                           | `status`: planned, in_progress, done; `accepted`, `evidence`                                                          |
-| `role`     | `pm`, `backend`, …, `tegs`             | `name`, `now`, `next`, `blocked`           | `tool` last used, `brief`, `log`                                                                                      |
-| `item`     | story or card id, e.g. `S2-2`, `SEC-6` | `title`, `status`, `owner`                 | `owner` → role; `deps` → items; `reviewers` → roles; `sprint` → sprint; `prs` → PR numbers; `waiting`, `spec`, `note` |
-| `pr`       | `#54`                                  | `title`, `state`, `branch`                 | `item` → item; `author` → role; `reviews` as `{role: "pass@sha"}`; `head`, `merged`, `ci`, `tool`                     |
-| `decision` | `D01`, `D02`, …                        | `date`, `text`, `by`                       |                                                                                                                       |
-| `risk`     | `R1`, `R2`, …                          | `text`, `owner`, `status`                  | `status`: open, closed; `action`                                                                                      |
+| Type       | Id                                     | Required fields                            | Edges and other fields                                                                                                                              |
+| ---------- | -------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `meta`     | `meta`                                 | `updated`, `by`, `main`, `sprint`, `phase` | `sprint` names the current sprint; `main` is the main commit the graph matches                                                                      |
+| `sprint`   | `S0` to `S10`                          | `name`, `status`                           | `status`: planned, in_progress, done; `accepted`, `evidence`                                                                                        |
+| `role`     | `pm`, `backend`, …, `tegs`             | `name`, `now`, `next`, `blocked`           | `tool` last used, `brief`, `log`                                                                                                                    |
+| `item`     | story or card id, e.g. `S2-2`, `SEC-6` | `title`, `status`, `owner`                 | `owner` → role; `deps` → items; `reviewers` → roles; `sprint` → sprint; `prs` → PR numbers; `agent`, `claimed`, `active`; `waiting`, `spec`, `note` |
+| `pr`       | `#54`                                  | `title`, `state`, `branch`                 | `item` → item; `author` → role; `reviews` as `{role: "pass@sha"}`; `head`, `merged`, `ci`, `tool`                                                   |
+| `decision` | `D01`, `D02`, …                        | `date`, `text`, `by`                       |                                                                                                                                                     |
+| `risk`     | `R1`, `R2`, …                          | `text`, `owner`, `status`                  | `status`: open, closed; `action`                                                                                                                    |
 
 Item `status` is one of backlog, ready, in_progress, review, blocked, done or dropped. Dates are
 `YYYY-MM-DD`. PR nodes cover open PRs and recent merges; older PR numbers stay on their items'

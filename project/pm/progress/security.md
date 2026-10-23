@@ -2,6 +2,20 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude)
+
+**Done**
+
+- #61 DEV-5: delta check 302d454..28193ce (merge of main). Infra unchanged, diff vs main is infra + graph.jsonl only. Pass holds.
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Re-check #59 after fixes.
+
+**Blocked**
+
+- None.
+
 ## 2026-10-22 (Claude)
 
 - **Done:**

@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "7a4348998b1a52622495e994cea622d463920d389b16a97c9c59eead068e5311",
-    "shared": "b6d1aae261645a8454192ef22b11d5ff87c75087211f42db663be6cd05c9281c"
+    "repo": "2f90de5cd46bbd719c8b5e50a2e297e055fc9030b654087f2406b10f9f99da30",
+    "shared": "85307ad65be4fec8c1d44e11b3a800e3362e12c8e6f821b03d6a1190d5d45a83"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -72,16 +72,16 @@
     "shared": "9098e043c60e2c29aac7ccf63dc1d1b8e5b7041cb789d3fc5a5d87356623204f"
   },
   "pm/progress/qa.md": {
-    "repo": "127effc8573b0d12f685480e795e4339aa4b0665143ebf2d2622fb7ee7f76130",
-    "shared": "8f531307f5cf8beb7cc09e70c17ff057dc7db09f6f328f2e86c6f69c2fa8443b"
+    "repo": "b66167d77170c4d5b4fbc585a7e80c2e4204eb7a5fca942f5b9b7dd3db34ac8d",
+    "shared": "cb94495dde2c0f6a3923ed22732ad80889359dc400b0ac4747ff42f1222cc5e5"
   },
   "pm/progress/security.md": {
-    "repo": "72edd65cec5525c3562f626317eb50d74f51a489dfc7aafcbd5dd6e5ee22b663",
-    "shared": "72edd65cec5525c3562f626317eb50d74f51a489dfc7aafcbd5dd6e5ee22b663"
+    "repo": "8be6c7bbf7a4c815b6e3126f3b719d429f7c3fe2c580fb6c92d0dd052756eb23",
+    "shared": "8be6c7bbf7a4c815b6e3126f3b719d429f7c3fe2c580fb6c92d0dd052756eb23"
   },
   "pm/working-agreement.md": {
-    "repo": "6b0805dd85066f5ebe1a8261898b47eb2a1b521f7334f59475ecbc4ad66f6a7b",
-    "shared": "0bb7636e90a7c3f2e6d516b93de8a6f04de1fcb286c6f6083d81576a74dfd376"
+    "repo": "9bf79b8a7906e4fc48c69d351a7bdd504faa99b02c565b13732a5f5359395a4f",
+    "shared": "3a21a278074af333aa53029984830fdad55e84faaa9c068c1e67117903a5826b"
   },
   "qa/sprint-0-acceptance.md": {
     "repo": "f72de63d28e16991dc6b53b45d33c69acefcbd241ce66763a88fe3dfc12fcd24",
@@ -132,11 +132,11 @@
     "shared": "519b903497053e6405a82fe5adbf37e97ed138bda8289aafbc8296a95adacadf"
   },
   "state/README.md": {
-    "repo": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348",
-    "shared": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348"
+    "repo": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f",
+    "shared": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f"
   },
   "state/graph.jsonl": {
-    "repo": "231aeaa31173c2f3d5363b20033bed5e37e9210ee16cccc2a075e7e19912d97a",
-    "shared": "231aeaa31173c2f3d5363b20033bed5e37e9210ee16cccc2a075e7e19912d97a"
+    "repo": "14e9b7cd8abe12c59132b69af5964d8b4c9c975104b37fc05c71edb8e2396efd",
+    "shared": "14e9b7cd8abe12c59132b69af5964d8b4c9c975104b37fc05c71edb8e2396efd"
   }
 }
