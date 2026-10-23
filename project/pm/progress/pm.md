@@ -2,6 +2,36 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (15:40 UTC, Claude)
+
+- **Done:** Fixed QA's finding on #60: the graph now has S2-4a (`agent` claude, in review with #62) and a #62 PR node, using the same S2-4a line #62 adds, so the board and graph agree. Moved S2-4a to Review on the board.
+- **Next:** QA re-checks #60 from `79e5a22`. Once tegs confirms "one task at a time" means per agent and role, #60 is ready for tegs.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (15:20 UTC, Claude)
+
+- **Done:** tegs merged #58 and #61 after #56, so DEV-5 is done and S2-3's screen and signing are on main. Merged main into #60 again, and added tegs's agent assignment rule to it, because #60 needed a new review anyway. Every item gets `agent`, `claimed` and `active`. `state.mjs` gains `next`, `claim` and `release`, and the brief lists idle claims. The working agreement (section 5), AGENTS.md, agent briefs, graph README and board follow, and D19 records the rule. Gave FrontendDev S2-4a (#62) and DevOps DEV-7 (RDS bundle CI check) while the order API waits. Released S2-3 (now blocked on the order API choice), so BackendDev can take the S3 banner adapter (BE-6) under one task at a time.
+- **Next:** QA re-checks #60, then tegs merges it. PM releases claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #56 (S2-3 ticket screen) as `da8d689`. It carried the Next.js bump, so SEC-21 is done and #60 is now only the PM sync. Merged main into #60 and resolved the conflicts (package.json and the lockfile taken from main; graph role nodes). Asked BackendDev (#58) and DevOps (#61) to merge main the same way.
+- **Next:** tegs's new rule: assign each board task to one agent provider, one task at a time, and PM releases claims that are idle for more than 5 days. It goes into a PR straight after this sync.
+- **Blocked:** nothing.
+
+## 2026-10-23 (06:40 UTC, Claude)
+
+- **Done:** Four PRs passed every review they need with all checks green, and are with tegs in merge order: #60 (SEC-21, the critical Next.js fix) first, then #56 and #58 (S2-3 ticket screen and signing) and #61 (DEV-5). Recorded the verdicts in the graph, fixed QA checklist row 3.6 to match ADR 0011 (one key per environment, token carries the ticket id), and synced the role logs. Nothing merged overnight.
+- **Next:** After #60 merges, restart the PM branch from main with this sync. The S2-2 order API choice (#58's reference build or #59) is still with tegs; ticket issuing and the email (row 3.7) wait on it.
+- **Blocked:** tegs's merges and the order API choice.
+
+## 2026-10-22 (19:10 UTC, Claude)
+
+- **Done:** All Claude threads paused 14:22 to 19:00 on a usage limit. Meanwhile tegs merged #54 (SEC-6) and #57 (STATE-1), which carried #55 and #53. Recorded the merges in the state graph and on the board. The other tool opened draft #59 for S2-2, and it also builds the order API and a basic confirmation page, which #58 had claimed but not yet built. Moved S2-2-API to #59 so the work isn't done twice; #58 goes back to S2-3 signing on top of #59, and #56 builds the ticket stub on #59's confirmation page.
+- **Next:** QA reviews #59. Claude Security checks #59's order ref (a bearer reference in the URL that returns name and email) against its S2-3 conditions. DevOps opens the DEV-5 PR now that #54 has merged.
+- **Blocked:** nothing.
+
 ## 2026-10-22 (14:10 UTC, Claude)
 
 - **Done:** tegs decided that agents in several tools keep working at once, towards one goal, each starting from the current state. Recorded it in the working agreement (section 4), AGENTS.md rule 3, agents/README.md and the decisions log. Claimed S2-3 for Claude BackendDev and FrontendDev, since the other tool's FrontendDev has S2-2. Put Claude DevOps's SEC-6 (#54) on the board. This sync carries the other PM's #53, so the two board PRs don't conflict.
