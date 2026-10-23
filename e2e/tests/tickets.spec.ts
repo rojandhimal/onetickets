@@ -115,30 +115,69 @@ test('after the first visit the tickets open with no signal', async ({ page, con
   await context.setOffline(false);
 });
 
-test('"Remove tickets from this phone" leaves nothing saved on the device', async ({
+const savedOnDevice = (page: Page) =>
+  page.evaluate(async () => ({
+    caches: await caches.keys(),
+    workers: (await navigator.serviceWorker.getRegistrations()).length,
+    session: Object.keys(sessionStorage).filter((k) => k.startsWith('onetickets:')),
+  }));
+
+test('"Remove tickets from this device" leaves no ticket on the device', async ({
   page,
   context,
 }) => {
   await fakeTicketsApi(context);
   await open(page);
   await expect(page.getByText('Works offline')).toBeVisible();
-  const saved = () =>
-    page.evaluate(async () => ({
-      caches: await caches.keys(),
-      workers: (await navigator.serviceWorker.getRegistrations()).length,
-      key: Object.keys(sessionStorage).filter((k) => k.startsWith('onetickets:')),
-    }));
-  expect((await saved()).caches).toEqual(['onetickets-tickets-v1']);
+  expect((await savedOnDevice(page)).caches).toEqual(['onetickets-tickets-v1']);
 
-  await page.getByRole('button', { name: 'Remove tickets from this phone' }).click();
+  await page.getByRole('button', { name: 'Remove tickets from this device' }).click();
   await expectAccessible(page);
+  // Works with no signal and without the key.
+  await context.setOffline(true);
+  await page.evaluate(() => sessionStorage.clear());
   await page.getByRole('button', { name: 'Remove', exact: true }).click();
-  await expect(
-    page.getByText('Removed from this phone. Your tickets are still in your email.'),
-  ).toBeFocused();
-  await expect(page.getByText('Works offline')).toHaveCount(0);
-  expect(await saved()).toEqual({ caches: [], workers: 0, key: [] });
+  await expect(page.getByRole('heading', { name: 'Removed from this device.' })).toBeFocused();
+  await expect(page.getByRole('article')).toHaveCount(0);
+  expect(await savedOnDevice(page)).toEqual({ caches: [], workers: 0, session: [] });
   await expectAccessible(page);
+
+  // A reload with signal shows no ticket: the key has gone with the saved copy.
+  await context.setOffline(false);
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    "That link doesn't work any more.",
+  );
+});
+
+test('a saved order past its date is dropped on the next visit', async ({ page, context }) => {
+  const api = await fakeTicketsApi(context);
+  await open(page);
+  await expect(page.getByText('Works offline')).toBeVisible();
+  // Age the saved copy as if the event ended more than 7 days ago.
+  await page.evaluate(async (path) => {
+    const cache = await caches.open('onetickets-tickets-v1');
+    const saved = await cache.match(path);
+    const headers = new Headers(saved!.headers);
+    headers.set('x-onetickets-expires', '2000-01-01T00:00:00.000Z');
+    await cache.put(path, new Response(await saved!.text(), { headers }));
+  }, `/api/public/orders/${ORDER}/tickets`);
+
+  api.online = false;
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    "We couldn't load your tickets.",
+  );
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        async (path) => !!(await caches.match(path)),
+        `/api/public/orders/${ORDER}/tickets`,
+      ),
+    )
+    .toBe(false);
+  await context.setOffline(false);
 });
 
 test('a wrong key shows no tickets', async ({ page, context }) => {

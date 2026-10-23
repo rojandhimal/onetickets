@@ -406,7 +406,7 @@
   border: 0;
   background: none;
   color: var(--white);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -444,13 +444,4 @@
   color: var(--ink);
   font-weight: 700;
   font-size: 15px;
-}
-
-.removeNote {
-  align-self: center;
-  margin: 0;
-  padding: 10px 12px;
-  color: var(--white);
-  font-size: 14px;
-  text-align: center;
 }

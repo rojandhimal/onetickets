@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, S2-4a ready for review, #62)
+
+- **Done:** Built "Remove tickets from this device" and 7-day expiry for saved tickets behind `FEATURE_TICKETS`, with Design's copy and Security's four adjustments. The worker checks expiry before serving and fails closed. Remove works offline and without the key, and takes the tickets off the screen. Unit tests, plus e2e at 375 and 1280 px for remove, reload after remove, and expiry on the next visit. All checks and 48/48 e2e pass.
+- **Next:** QA, Security and Design review #62.
+- **Blocked:** Nothing.
+
 ## 2026-10-23 (Claude, S2-4a claimed)
 
 - **Done:** #56 (S2-3 ticket screen) merged. Claimed S2-4a, "Remove from this device" and expiring saved tickets, which Security made a condition of ADR 0020. PM split it out of S2-4 because it needs no order API.

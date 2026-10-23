@@ -163,6 +163,8 @@ describe('ticket screen', () => {
     );
     expect(google).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.queryByRole('button', { name: /wallet/i })).not.toBeInTheDocument();
+    // Nothing saved here (no Cache Storage), so nothing to remove.
+    expect(screen.queryByRole('button', { name: /Remove tickets/ })).not.toBeInTheDocument();
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('link', { name: 'Google Calendar' })).not.toBeInTheDocument();
@@ -361,7 +363,7 @@ describe('ticket screen', () => {
     });
   });
 
-  it('removes the tickets from this phone after a confirm, and keeps them on screen', async () => {
+  it('removes the tickets from this device after a confirm, and from the screen', async () => {
     const { storage, stores } = fakeCaches();
     vi.stubGlobal('caches', storage);
     const unregister = vi.fn(async () => true);
@@ -382,25 +384,27 @@ describe('ticket screen', () => {
     expect(await screen.findByText('Works offline')).toBeInTheDocument();
     expect(stores.get(TICKETS_CACHE)?.has('/api/public/orders/ord_1/tickets')).toBe(true);
 
-    await user.click(screen.getByRole('button', { name: 'Remove tickets from this phone' }));
+    const start = screen.getByRole('button', { name: 'Remove tickets from this device' });
+    await user.click(start);
     const group = screen.getByRole('group', {
-      name: "Remove these tickets from this phone? They'll still be in your email.",
+      name: "Remove these tickets from this device? They'll still be in your email.",
     });
-    expect(screen.getByRole('button', { name: 'Remove' })).toHaveFocus();
+    expect(screen.getByText(/They'll still be in your email/)).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Keep' }));
     expect(group).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove tickets from this device' })).toHaveFocus();
     expect(stores.has(TICKETS_CACHE)).toBe(true);
 
-    await user.click(screen.getByRole('button', { name: 'Remove tickets from this phone' }));
+    await user.click(screen.getByRole('button', { name: 'Remove tickets from this device' }));
     await user.click(screen.getByRole('button', { name: 'Remove' }));
-    expect(
-      await screen.findByText('Removed from this phone. Your tickets are still in your email.'),
-    ).toHaveFocus();
+    expect(await screen.findByRole('heading', { name: 'Removed from this device.' })).toHaveFocus();
+    expect(screen.getByText('Your tickets are still in your email.')).toBeInTheDocument();
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+    expect(screen.queryByText(/jordan@example\.test/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Find more events' })).toBeInTheDocument();
     expect(stores.has(TICKETS_CACHE)).toBe(false);
     expect(sessionStorage.getItem('onetickets:ticket-key:ord_1')).toBeNull();
     expect(unregister).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText('Works offline')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: "You're going!" })).toBeInTheDocument();
     Reflect.deleteProperty(navigator, 'serviceWorker');
   });
 });

@@ -62,12 +62,16 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
   key is never cached. That is the attendee's own device, which Security accepted for MVP (22 Oct),
   but a shared phone keeps them too, so the time they stay is bounded (S2-4a):
   - Each saved order carries an `x-onetickets-expires` header, 7 days after the event ends
-    (`SAVED_DAYS_AFTER_END`). The page and the worker never serve it after that. The page drops
-    expired orders on every visit and the worker drops them when it starts. Once the last order is
-    dropped, the cache goes too.
-  - "Remove tickets from this phone" on the ticket screen deletes that order's saved copy, its page
-    and the tab's key. When no other order is saved, it deletes the cache and unregisters the
+    (`SAVED_DAYS_AFTER_END`), worked out from the api's `endsAt` when the order is saved. A
+    missing or unreadable date counts as expired. The worker checks it before serving a saved
+    order, so a phone that stays offline stops showing it on time. The page drops expired orders
+    on every visit and the worker drops them when it starts. Once the last order is dropped, the
+    cache goes too.
+  - "Remove tickets from this device" on the ticket screen works offline and without the key. It
+    deletes that order's saved copy, its page, and the tab's key and stashed order, then takes the
+    tickets off the screen. When no other order is saved, it deletes the cache and unregisters the
     worker.
+  - A refused keyed link still deletes the saved copy.
   - Signing out or clearing site data also removes them.
 - The worker only answers ticket pages, the one order read and built files. It never caches any
   other api path. Its script is same-origin, never kept by a shared cache, and sends no
