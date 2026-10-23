@@ -187,4 +187,4 @@ Newest first. Format: date, Done, Next, Blocked.
 
 - **Done:** Test strategy and Sprint 0 checklist in qa/. QA passed S0-1 ([#1](https://github.com/rojandhimal/onetickets/pull/1)), S0-3 web ([#2](https://github.com/rojandhimal/onetickets/pull/2)) and S0-4 ([#6](https://github.com/rojandhimal/onetickets/pull/6)), all merged. The e2e and accessibility harness ([#5](https://github.com/rojandhimal/onetickets/pull/5)) merged, so every PR now runs browser and axe tests, including the sign-up pages.
 - **Next:** Re-test S0-3 signed-in flows when the auth api PR opens; review S0-2 and S0-5 PRs; add the doc-update check to every PR review.
-- **Blocked:** S0-2 deploy checks a
+- **Blocked:** S0-2 deploy checks and the staging demo wait on tegs's AWS account; S0-3 Google sign-in on staging waits on tegs's Google OAuth client.

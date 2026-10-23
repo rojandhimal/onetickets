@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "b6a342c76ff806ae3ef2d0d02028a81af71036c8330173c557bc3c8723a02e09",
-    "shared": "3b349b056b9e6a56b10750d8b98ab622461a21517140529d6e2353642107c184"
+    "repo": "82b51c44857fd220040896d3f60cabad48e8ea5e9b530c55d46caf93bb537b91",
+    "shared": "1c428e349edfdcee3df36790f6da76c3fa7d91857c22957c5a21fa4ece7690bd"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -52,8 +52,8 @@
     "shared": "d2511c2cf4611a59d351af011dbe4da22ad7d9fd941ef56404fa0529d3f54176"
   },
   "pm/progress/design.md": {
-    "repo": "f47dbf10ff588ef6eb4ae4be0ecc155a3d5191a45a507c61148b1d4fad908de6",
-    "shared": "71ced3a19e1fe2556597261e77d4ad5eb355b77ba0da7429fd23f623991f64a2"
+    "repo": "7118b7091bf5733925b37ad338e9d2ade1da108ab205cfd649ed1eef9ec4694c",
+    "shared": "f82f7a9d910deee4f7ae196a528e1839f986355ecdeb8f8299fef77b860514d0"
   },
   "pm/progress/devops.md": {
     "repo": "d258e1eaf750a28bcdcf81ec391a40e5aed8b5bd00c49fa99f13f97704e382f7",
@@ -72,8 +72,8 @@
     "shared": "fbaa87467ec984adeb941fb75815be461b51df5f37cc5286e0aca21a73581fcc"
   },
   "pm/progress/qa.md": {
-    "repo": "9ca64f788bbd23fe7c7015a5411a96128f45b186740838c7683c53742b592f7f",
-    "shared": "dc212536d8dd34c0e6949ac11c6aa6cad63c1acb79a06b31a9689e6f8665462b"
+    "repo": "c54550166d64230a912018432f2c6df0ca0009a79790db59c7b718c7c939492f",
+    "shared": "f26d256303308920df8b86aa908c31fabfeb9f837e2549fbc216fea60bb336e8"
   },
   "pm/progress/security.md": {
     "repo": "6f4c0a2ded209795b111033b3fe8742db3182da7deccaa92f404b062112aec5a",
@@ -136,7 +136,7 @@
     "shared": "1740b7447ef59f83c0ae1362a4d7b18219517687ae2a0ee4cf50b1faa49d6348"
   },
   "state/graph.jsonl": {
-    "repo": "cee654cdd1daf324d6ea5ddc55b228ff2a0b148edd34e1dae4583c6c1fb2aae6",
-    "shared": "cee654cdd1daf324d6ea5ddc55b228ff2a0b148edd34e1dae4583c6c1fb2aae6"
+    "repo": "a0b92151b8338a7ac4b92c3077bc3bb995aa23a77438c7b5af1dee8f5e83546f",
+    "shared": "a0b92151b8338a7ac4b92c3077bc3bb995aa23a77438c7b5af1dee8f5e83546f"
   }
 }

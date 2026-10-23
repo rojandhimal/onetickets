@@ -79,6 +79,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-2 S4-4: verify Stripe webhook signature on raw body and re-fetch the PaymentIntent before fulfilling
 - SEC-3 S1-1/S1-3: sanitise event descriptions server-side, CSP on the event page
 - SEC-4 S2-4: buyer ticket magic link is read-only, longer-lived, never logged or leaked in Referer
+- S2-4 also ships "Remove from this device" for saved tickets and drops saved offline orders a few days after the event ends. This is Security's condition on the S2-3 confirmation screen ([#56](https://github.com/rojandhimal/onetickets/pull/56), ADR 0020) and must land before public launch (FrontendDev)
 - SEC-7 Before S3-1/S6-6 reach real users: member invites become pending invites that need acceptance (BackendDev)
 - SEC-8 Before S7 payouts: user-level security log (audit log is per organisation) that emails and logs recovery-code use and MFA reset. The MFA-enabled email already shipped in #10 (BackendDev)
 - SEC-9 Before launch: scheduled cleanup of spent magic links (they hold emails, so Privacy Act retention), OAuth states, rate-limit rows and expired sessions (BackendDev)
