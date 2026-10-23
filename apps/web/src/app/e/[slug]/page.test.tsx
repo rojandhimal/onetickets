@@ -112,7 +112,7 @@ describe('event page', () => {
     await renderPage();
     let bar = screen.getByRole('complementary', { name: 'Tickets' });
     expect(within(bar).getByText('Sold out')).toBeInTheDocument();
-    expect(within(bar).getByText('All taken')).toBeInTheDocument();
+    expect(within(bar).getByText('All tickets taken')).toBeInTheDocument();
     expect(within(bar).queryByRole('link', { name: 'Get tickets' })).toBeNull();
     expect(
       screen.getByText('Sold out; spots that are released go back on sale here.'),
@@ -127,7 +127,7 @@ describe('event page', () => {
     expect(within(bar).getByText('All taken right now')).toBeInTheDocument();
     expect(within(bar).getByRole('link', { name: 'Get tickets' })).toBeInTheDocument();
     expect(
-      screen.getByText('No booking fee. All taken right now. Check back in a few minutes.'),
+      screen.getByText('All taken right now. Check back in a few minutes.'),
     ).toBeInTheDocument();
   });
 

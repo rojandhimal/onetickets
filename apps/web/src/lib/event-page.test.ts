@@ -22,11 +22,9 @@ describe('event page wording', () => {
   it('keeps held tickets apart from sold out (ARCH-2)', () => {
     const held = { priceFromAllInCents: 0, spotsLeft: 0, soldOut: false };
     expect(spotsLine(held)).toBe('All taken right now');
-    expect(priceNote(held)).toBe(
-      'No booking fee. All taken right now. Check back in a few minutes.',
-    );
+    expect(priceNote(held)).toBe('All taken right now. Check back in a few minutes.');
     const sold = { priceFromAllInCents: 0, spotsLeft: 0, soldOut: true };
-    expect(spotsLine(sold)).toBe('All taken');
+    expect(spotsLine(sold)).toBe('All tickets taken');
     expect(priceNote(sold)).toBe('Sold out; spots that are released go back on sale here.');
   });
 

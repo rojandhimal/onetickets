@@ -41,7 +41,7 @@ type Availability = Pick<PublicEventDto, 'spotsLeft' | 'soldOut'>;
  * event, it's "right now", never sold out (ARCH-2).
  */
 export function spotsLine({ spotsLeft, soldOut }: Availability): string {
-  if (soldOut) return 'All taken';
+  if (soldOut) return 'All tickets taken';
   if (spotsLeft <= 0) return 'All taken right now';
   return `${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left`;
 }
@@ -49,8 +49,8 @@ export function spotsLine({ spotsLeft, soldOut }: Availability): string {
 /** The second line under Price in the key facts. */
 export function priceNote(event: Pick<PublicEventDto, 'priceFromAllInCents'> & Availability) {
   if (event.soldOut) return 'Sold out; spots that are released go back on sale here.';
+  if (event.spotsLeft <= 0) return 'All taken right now. Check back in a few minutes.';
   const fee = event.priceFromAllInCents === 0 ? 'No booking fee.' : 'Booking fee included.';
-  if (event.spotsLeft <= 0) return `${fee} All taken right now. Check back in a few minutes.`;
   return `${fee} ${spotsLine(event)}.`;
 }
 
