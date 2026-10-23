@@ -34,15 +34,24 @@ export function priceLabel(cents: number): string {
   return cents === 0 ? 'Free' : formatAud(cents);
 }
 
-export function spotsLine(spotsLeft: number): string {
-  if (spotsLeft <= 0) return 'All taken';
+type Availability = Pick<PublicEventDto, 'spotsLeft' | 'soldOut'>;
+
+/**
+ * The bar's short line. Sold out only when every ticket is sold; while checkout holds fill the
+ * event, it's "right now", never sold out (ARCH-2).
+ */
+export function spotsLine({ spotsLeft, soldOut }: Availability): string {
+  if (soldOut) return 'All tickets taken';
+  if (spotsLeft <= 0) return 'All taken right now';
   return `${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left`;
 }
 
 /** The second line under Price in the key facts. */
-export function priceNote(event: Pick<PublicEventDto, 'priceFromAllInCents' | 'spotsLeft'>) {
+export function priceNote(event: Pick<PublicEventDto, 'priceFromAllInCents'> & Availability) {
+  if (event.soldOut) return 'Sold out; spots that are released go back on sale here.';
+  if (event.spotsLeft <= 0) return 'All taken right now. Check back in a few minutes.';
   const fee = event.priceFromAllInCents === 0 ? 'No booking fee.' : 'Booking fee included.';
-  return `${fee} ${spotsLine(event.spotsLeft)}.`;
+  return `${fee} ${spotsLine(event)}.`;
 }
 
 /** The key-facts row: the first feature in bold, the rest inline. Null when nothing is set. */
