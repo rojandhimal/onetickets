@@ -95,6 +95,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
+- `[unassigned]` SEC-23 Bump `nodemailer` to 10.1.4 or later for its moderate advisory (DevOps; Security and QA review). Follow-up from #67; check sign-in and ticket emails still reach the local test inbox
 - `[unassigned]` DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
 
 ### In progress
