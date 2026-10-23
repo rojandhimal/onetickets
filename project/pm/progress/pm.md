@@ -2,6 +2,18 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (23:40 UTC, Claude)
+
+- **Done:** tegs merged #62 as `f11ab57`, so S2-4a is done and the ticket screen meets Security's ADR 0020 condition. Merged main into #65 and recorded it. FrontendDev (Claude) is free, so I pointed it at DES-10, the only unassigned ready frontend item.
+- **Next:** tegs merges #63 and #65. FrontendDev claims DES-10.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (19:50 UTC, Claude)
+
+- **Done:** tegs merged #60 as `2787073`, so the agent assignment rule (D19) is live. Recorded the merge with QA's pass at `b4bc226`, QA's fail on #62 at `eebd9b7` (partial offline save). FrontendDev fixed it at `4d117c6`, and QA, Security and Design pass `d99df5f` and #63 (DEV-7): QA failed it at `10f6255` and passed the fix at `184d4f9`. Added DEV-7 and BE-6 (#64) to the board; their graph items come in their own PRs.
+- **Next:** #62 (all 7 checks green) and #63 (Security's pass holds at `184d4f9`) are ready for tegs, and so is this sync, #65. Release claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-23 (15:40 UTC, Claude)
 
 - **Done:** Fixed QA's finding on #60: the graph now has S2-4a (`agent` claude, in review with #62) and a #62 PR node, using the same S2-4a line #62 adds, so the board and graph agree. Moved S2-4a to Review on the board.
