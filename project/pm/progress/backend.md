@@ -2,6 +2,16 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude), BE-6
+
+- **Done:** BE-6, the S3 banner adapter, in #64.
+  - `S3BannerStorage` stores banners at `banners/<key>` with the `BANNER_KEY` check and the content type. `read` treats NoSuchKey and AccessDenied as null.
+  - `BANNER_STORAGE=s3` with `UPLOADS_BUCKET` selects it.
+  - Banner 404s send `no-store`.
+  - Docs and `infra/README.md` are updated.
+- **Next:** QA and Security reviews. After that, S2-3 issuing once tegs picks the order API.
+- **Blocked:** nothing.
+
 ## 2026-10-23 (Claude)
 
 - **Done:** #58 (S2-3 signed QR tickets, API), at eda1451. It contains:
