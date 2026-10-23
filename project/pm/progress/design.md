@@ -4,7 +4,7 @@ Newest first. Format: date, Done, Next, Blocked.
 
 ## 2026-10-23 (Claude)
 
-- **Done:** Copy and flow for S2-4a "Remove tickets from this device" (copy-s0-s2.md). Approved [#62](https://github.com/rojandhimal/onetickets/pull/62) at eebd9b7, rendered at 375 and 1280, 0 axe violations. Re-approved #56 at 8dfed02.
+- **Done:** Copy and flow for S2-4a "Remove tickets from this device" (copy-s0-s2.md). Approved [#62](https://github.com/rojandhimal/onetickets/pull/62) at eebd9b7 and again at d99df5f (Remove shows whenever the order is saved), rendered at 375 and 1280, 0 axe violations. Re-approved #56 at 8dfed02.
 - **Next:** S2-4 My tickets reviews when they open.
 - **Blocked:** Nothing.
 

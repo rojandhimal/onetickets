@@ -11,6 +11,7 @@ Newest first. Format: date, Done, Next, Blocked.
 - #62 S2-4a: pass at 7d8f61d. Expiry fails closed in the worker and the page, offline Remove clears the cache, worker and session keys. Satisfies the ADR 0020 condition for FEATURE_TICKETS.
 - #62: pass holds at d99df5f (copy change, QA fix 4d117c6 shows Remove whenever the order copy is cached, merges of main).
 - #63 DEV-7: pass at 10f6255. CI checks the api image's sslrootcert matches apps/api/certs, fails closed, no new permissions.
+- #63: pass holds at 184d4f9 (QA's pipefail and non-empty-hash fix 13c268d, plus main).
 
 **Next**
 
