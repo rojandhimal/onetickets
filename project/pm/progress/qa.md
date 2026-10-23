@@ -14,6 +14,21 @@ Newest first. Format: date, Done, Next, Blocked.
     - The tool and docs pass: I drove next, claim, release, the stale list and the validate guard on a scratch graph, and the 14 tests pass.
     - The fix: S2-4a is on the board as [claude] but missing from graph.jsonl.
     - Asked PM to get tegs's confirmation that "one at a time" means per agent and role.
+    - f0c8c29 (S2-3 released while it waits on the order API) is fine. The S2-4a fix is still open.
+    - Passes at b4bc226, the merged head: S2-4a is now in the graph.
+  - [#62](https://github.com/rojandhimal/onetickets/pull/62) S2-4a remove-from-device and expiry **fails** at 7d8f61d.
+    - What works: the remove flow, focus, expiry in both the page and the worker, and unit tests (189/189).
+    - Blocker: a partial offline save keeps the order on the device with no Remove button. The probe is in qa/scripts/qa62.test.tsx.
+    - Blocker: graph.jsonl conflicts with main.
+    - Copy: "We couldn't remove your tickets." doesn't match the code.
+    - eebd9b7: the copy is fixed. The partial-save blocker is still open, and graph.jsonl conflicts with main again.
+    - d99df5f: **passes**, as long as E2E goes green. hasSavedOrder fixes the partial-save case (the probe passes), it merges cleanly into main, and web tests are 192/192.
+  - [#65](https://github.com/rojandhimal/onetickets/pull/65) PM sync **passes** at 23d630b: the state check is valid, tests are 14/14 and it merges cleanly. Nits: #62 qa node, stale qa role node.
+    - Passes at 0a18399 with the nits fixed. E2E on #62 at d99df5f is green, so the #62 pass has no remaining condition.
+  - [#63](https://github.com/rojandhimal/onetickets/pull/63) DEV-7 CA bundle image check **fails** at 10f6255.
+    - Without pipefail, two empty hashes compare equal, so a tf path naming a file missing from both certs and the image passes.
+    - Fix: pipefail plus test -n on both hashes.
+    - Passes at 184d4f9: pipefail, exactly one sslrootcert and test -n are in, and the empty-hash case now fails. This depends on the api image job.
   - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
     - A 404 with a key shows the bad-link message and drops the saved copy.
     - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.
