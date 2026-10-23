@@ -120,11 +120,18 @@ export function awaitingQr(order: OrderTicketsDto): boolean {
 export type OrderTicketsResult =
   { ok: true; order: OrderTicketsDto } | { ok: false; kind: 'not-found' | 'offline' | 'failed' };
 
-export async function fetchOrderTickets(orderId: string, key: string): Promise<OrderTicketsResult> {
+/**
+ * Reads the order. With no key it still asks, so the answer says whether there's signal: the api
+ * refuses it, and only a failed request lets the page fall back to a saved copy.
+ */
+export async function fetchOrderTickets(
+  orderId: string,
+  key: string | null,
+): Promise<OrderTicketsResult> {
   let res: Response;
   try {
     res = await fetch(orderTicketsPath(orderId), {
-      headers: { authorization: `Bearer ${key}` },
+      headers: key ? { authorization: `Bearer ${key}` } : {},
       cache: 'no-store',
     });
   } catch {
@@ -148,6 +155,17 @@ export async function readSavedOrder(orderId: string): Promise<OrderTicketsDto |
     return res ? ((await res.json()) as OrderTicketsDto) : null;
   } catch {
     return null;
+  }
+}
+
+/** Drops this order's saved copy, once the api says the link no longer opens it. */
+export async function forgetSavedOrder(orderId: string): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try {
+    const cache = await caches.open(TICKETS_CACHE);
+    await cache.delete(orderTicketsPath(orderId));
+  } catch {
+    // Nothing saved, or storage blocked.
   }
 }
 

@@ -238,6 +238,9 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
   order, its own HTML and the built files it loaded into Cache Storage. "Works offline" shows once
   all of that and every QR is in. With no signal the worker answers from that cache
   ([ADR 0020](../adr/0020-ticket-screen-offline-with-a-scoped-service-worker.md)).
+- **Saved copy**: the page always asks the api first (with no key header if it has no key). The
+  copy saved on the phone shows only when that request fails. A refused link never shows it, and a
+  refused keyed link deletes it.
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."
 - **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar

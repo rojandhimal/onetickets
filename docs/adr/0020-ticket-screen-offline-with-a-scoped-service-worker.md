@@ -36,6 +36,10 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
 - After a successful read, the page saves the order response, its own HTML and the
   `/_next/static/` files it loaded into the `onetickets-tickets-v1` cache, then shows "Works
   offline". A new cache name drops the old one when the worker activates.
+- The page always asks the api first, with no `Authorization` header when it has no key. Only a
+  request that fails (no signal, or the api down) shows the saved copy. Any answer from the api
+  wins: a refused link (revoked, expired, or no key) shows "That link doesn't work any more.", and
+  a refused keyed link also deletes the saved order from Cache Storage.
 - The QR is drawn in the browser from the signed token (ADR 0011) as an inline SVG, so there are no
   QR image URLs to cache or leak.
 - The page takes the key out of the address bar with `history.replaceState` as soon as it reads
@@ -50,7 +54,9 @@ so the key never reaches a server log or a `Referer`, the same way sign-in links
 ## Consequences
 
 - With no signal, an attendee who opened their tickets once can still show the QR, even in a new
-  tab that no longer has the key: the saved copy is read from Cache Storage by order id. The e2e test
+  tab that no longer has the key: the saved copy is read from Cache Storage by order id. With
+  signal, the same tab without a key sees nothing, so a shared phone reopening the page from
+  history doesn't show someone else's tickets. The e2e test
   cuts the page and the worker off from the network and checks this at 375 and 1280 px.
 - The holder's name, the order email and the QR tokens stay in Cache Storage on that device until
   the browser clears site data or the cache name changes. The key is never cached. That is the

@@ -174,7 +174,11 @@ describe('ticket screen', () => {
     expect(
       await screen.findByRole('heading', { name: "That link doesn't work any more." }),
     ).toBeInTheDocument();
-    expect(fetch).not.toHaveBeenCalled();
+    // Asked with no key, so the answer can tell "no signal" from "no access".
+    expect(fetch).toHaveBeenCalledWith('/api/public/orders/ord_1/tickets', {
+      headers: {},
+      cache: 'no-store',
+    });
     view.unmount();
 
     window.location.hash = `#key=${KEY}`;
@@ -302,5 +306,52 @@ describe('ticket screen', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('a copy saved on this phone', () => {
+    function savedCopy() {
+      const deleted = vi.fn(async () => true);
+      vi.stubGlobal('caches', {
+        match: vi.fn(async () => json(orderFixture())),
+        open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(), delete: deleted })),
+      });
+      return deleted;
+    }
+
+    it('is not shown, and is dropped, when the api refuses the link', async () => {
+      const deleted = savedCopy();
+      api(() => json({}, 404));
+      render(<TicketScreen orderId="ord_1" />);
+      expect(
+        await screen.findByRole('heading', { name: "That link doesn't work any more." }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/jordan@example\.test/)).not.toBeInTheDocument();
+      expect(caches.match).not.toHaveBeenCalled();
+      expect(deleted).toHaveBeenCalledWith('/api/public/orders/ord_1/tickets');
+    });
+
+    it('is not shown online without a key, as on a shared phone opened from history', async () => {
+      window.location.hash = '';
+      const deleted = savedCopy();
+      const fetch = api(() => json({}, 404));
+      render(<TicketScreen orderId="ord_1" />);
+      expect(
+        await screen.findByRole('heading', { name: "That link doesn't work any more." }),
+      ).toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(screen.queryByText(/jordan@example\.test/)).not.toBeInTheDocument();
+      expect(caches.match).not.toHaveBeenCalled();
+      expect(deleted).not.toHaveBeenCalled();
+    });
+
+    it('is shown without a key only when there is no signal', async () => {
+      window.location.hash = '';
+      savedCopy();
+      api(() => {
+        throw new TypeError('Failed to fetch');
+      });
+      render(<TicketScreen orderId="ord_1" />);
+      expect(await screen.findByRole('heading', { name: "You're going!" })).toBeInTheDocument();
+    });
   });
 });

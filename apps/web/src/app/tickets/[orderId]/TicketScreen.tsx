@@ -9,6 +9,7 @@ import {
   type TicketDto,
   awaitingQr,
   fetchOrderTickets,
+  forgetSavedOrder,
   formatRef,
   googleCalendarUrl,
   icsFile,
@@ -50,16 +51,21 @@ export function TicketScreen({ orderId }: { orderId: string }) {
 
   const load = useCallback(
     async (cancelled: () => boolean) => {
-      const result = key.current
-        ? await fetchOrderTickets(orderId, key.current)
-        : ({ ok: false, kind: 'not-found' } as const);
+      const result = await fetchOrderTickets(orderId, key.current);
       if (cancelled()) return;
       if (result.ok) return show(result.order, cancelled);
-      // A copy saved on this phone by an earlier visit beats an error at the door.
+      if (result.kind === 'not-found') {
+        // The api answered: a revoked or expired link, or no key. Never the saved copy then, and a
+        // keyed refusal drops it so this phone stops holding the tickets.
+        if (key.current) await forgetSavedOrder(orderId);
+        if (!cancelled()) setState({ kind: 'not-found' });
+        return;
+      }
+      // No signal (or the api is down): a copy saved by an earlier visit beats an error at the door.
       const saved = await readSavedOrder(orderId);
       if (cancelled()) return;
       if (saved) return show(saved, cancelled);
-      setState({ kind: result.kind === 'not-found' ? 'not-found' : 'offline' });
+      setState({ kind: 'offline' });
     },
     [orderId, show],
   );

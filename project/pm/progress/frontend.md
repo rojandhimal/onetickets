@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, S2-3 QA fixes, #56)
+
+- **Done:** Fixed QA's two findings on #56. The page now always asks the api first (with no key header when it has none), and shows the copy saved on the phone only when that request fails. A refused keyed link deletes the saved copy. Earlier, on 22 Oct: bumped Next to 16.4.2 for three advisories, fixed the gitleaks false positives the repo's way, renumbered the ADR to 0020, and applied Design's revoked and QR-pending copy. Security and Design passed at 3336dff. All checks and 44/44 e2e pass.
+- **Next:** QA re-checks 3336dff..head. Wire to the order API tegs picks.
+- **Blocked:** tegs's choice between #58's and #59's order API.
+
 ## 2026-10-22 (Claude, S2-3 ready for review, #56)
 
 - **Done:** Built artboard 4 behind `FEATURE_TICKETS`: "You're going!", one stub at a time with a touch swipe and Previous/Next, a QR drawn in the browser with Wake Lock, Add to calendar as a bottom sheet or popover, offline through a service worker scoped to `/tickets/` (ADR 0020). Applied ProductDesign's S2-3 fill-ins and the BackendDev's final orders contract (#58). The key leaves the address bar at once and stays in `sessionStorage` for the tab; checkout can stash the created order for an instant first render with `stashConfirmedOrder`. Format, lint, typecheck, all unit tests and the ticket e2e at 375 and 1280 px with axe and the CSP guard pass.
