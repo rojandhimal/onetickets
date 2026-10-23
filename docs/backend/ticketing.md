@@ -15,5 +15,5 @@ How QR tickets are signed (S2-3). The token format and key decisions are in
 - The key id is the first 8 bytes of the SHA-256 of the raw public key, and is in every token.
 - The redactor scrubs `ticketKey`, `TICKET_SIGNING_KEY` and `#key=` in links.
 
-Issuing and storing tickets builds on the orders schema from S2-2 (#59) and lands once that
+Issuing and storing tickets builds on the S2-2 order API tegs keeps, and lands once that
 merges.
