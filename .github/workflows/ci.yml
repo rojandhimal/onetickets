@@ -155,3 +155,19 @@ jobs:
           # pull requests don't use up the repository's cache quota and evict main's layers.
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: ${{ github.ref == 'refs/heads/main' && format('type=gha,mode=max,scope={0}', matrix.app) || '' }}
+          # Loaded into the runner's Docker so the next step can look inside it.
+          load: true
+          tags: onetickets-${{ matrix.app }}:ci
+      # In AWS, DATABASE_URL points sslrootcert at the RDS CA bundle inside the image (SEC-6).
+      # Nothing in CI connects over TLS, so check here that the file the URL names is in the
+      # image and is the bundle in apps/api/certs. Otherwise a dropped `files` entry in
+      # apps/api/package.json would only show when tasks fail to start in AWS.
+      - name: Check the api image carries the RDS CA bundle
+        if: matrix.app == 'api'
+        run: |
+          path=$(grep -o 'sslrootcert=[^&"]*' infra/modules/database/main.tf | cut -d= -f2)
+          test -n "$path" || { echo "No sslrootcert in infra/modules/database/main.tf"; exit 1; }
+          expected=$(sha256sum "apps/api/certs/$(basename "$path")" | cut -d' ' -f1)
+          actual=$(docker run --rm --entrypoint sha256sum onetickets-api:ci "$path" | cut -d' ' -f1)
+          echo "sslrootcert=$path expected=$expected actual=$actual"
+          test "$actual" = "$expected"
