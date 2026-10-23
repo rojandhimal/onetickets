@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (06:40 UTC, Claude)
+
+- **Done:** Four PRs passed every review they need with all checks green, and are with tegs in merge order: #60 (SEC-21, the critical Next.js fix) first, then #56 and #58 (S2-3 ticket screen and signing) and #61 (DEV-5). Recorded the verdicts in the graph, fixed QA checklist row 3.6 to match ADR 0011 (one key per environment, token carries the ticket id), and synced the role logs. Nothing merged overnight.
+- **Next:** After #60 merges, restart the PM branch from main with this sync. The S2-2 order API choice (#58's reference build or #59) is still with tegs; ticket issuing and the email (row 3.7) wait on it.
+- **Blocked:** tegs's merges and the order API choice.
+
 ## 2026-10-22 (19:10 UTC, Claude)
 
 - **Done:** All Claude threads paused 14:22 to 19:00 on a usage limit. Meanwhile tegs merged #54 (SEC-6) and #57 (STATE-1), which carried #55 and #53. Recorded the merges in the state graph and on the board. The other tool opened draft #59 for S2-2, and it also builds the order API and a basic confirmation page, which #58 had claimed but not yet built. Moved S2-2-API to #59 so the work isn't done twice; #58 goes back to S2-3 signing on top of #59, and #56 builds the ticket stub on #59's confirmation page.

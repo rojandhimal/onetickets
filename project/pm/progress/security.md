@@ -23,7 +23,10 @@ Newest first. Format: date, Done, Next, Blocked.
   - #56 key handling OK'd for FrontendDev. Conditions: fragment plus replaceState, sessionStorage only, a header to the API, and no key in Cache Storage. The service worker caches only the order and `/tickets/` assets. "Remove from device" and expiry after the event are an S2-4 card due before launch.
   - DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) (banners in S3, infra): **pass** at 3f8f2d9. The task role is limited to banners/* with no list, and the bucket stays private. The edge cache respects origin headers on the web hostnames, and old versions expire after 30 days.
   - S2-3 confirmation screen [#56](https://github.com/rojandhimal/onetickets/pull/56): **pass** at c3c54ac and ac05895, which includes the Next 16.4.2 bump (lockfile integrity matches npm; fixes 3 GHSAs). One condition: gitleaks is red on three fake test keys, which need allow comments and .gitleaksignore fingerprints. ADR 0020 now commits to remove-from-device and expiry before launch.
-- **Next:** confirm gitleaks is green on #56; re-check #59; the S2-3 tickets PR #58.
+  - #56 re-checked: **pass** at 3336dff (gitleaks green) and 8dfed02 (the api answer wins over the saved copy, and a keyed refusal deletes it). QA's shared-device point: no change needed before merge, but "remove from device" must land before FEATURE_TICKETS goes on with real people.
+  - SEC-21 [#60](https://github.com/rojandhimal/onetickets/pull/60) Next 16.4.2: **pass** at e862049 (integrity matches npm).
+  - S2-3 signing [#58](https://github.com/rojandhimal/onetickets/pull/58): **pass** at eda1451. The token has no personal data and a context-bound signature, the local signer refuses to run outside dev and test, the redactor covers ticket keys, and ADR 0011 is Accepted.
+- **Next:** the orders and tickets diff once tegs picks #58's or #59's; re-check #59.
 - **Blocked:** nothing.
 
 ## 2026-10-21

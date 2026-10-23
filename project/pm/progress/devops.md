@@ -2,6 +2,14 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude)
+
+- **Done:** DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) is ready for tegs at 302d454, with all 12 CI checks green and Security and QA passes:
+  - Fixed review notes: a 30-day edge TTL, any-case path matching, no caching of 4xx/5xx, and no caching of paths containing "%" or "..".
+  - Ported the Next.js 16.4.2 bump from #56 to clear the dependency audit.
+- **Next:** pick up the next DevOps card from the graph once #61 merges.
+- **Blocked:** nothing. tegs adds Zone: Cache Rules Edit to the Cloudflare token before the next edge apply.
+
 ## 2026-10-22 (Claude, evening)
 
 - **Done:** tegs merged SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) (f8d07e9). DEV-5 is up as [#61](https://github.com/rojandhimal/onetickets/pull/61) from fresh main. It's the infra side of S3 banners: the switch, narrower IAM, 30-day version expiry and a Cloudflare cache rule, with no CloudFront. The state graph is updated and Security and QA are asked to review.

@@ -2,6 +2,26 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude)
+
+- **Done:** Re-checked [#60](https://github.com/rojandhimal/onetickets/pull/60) for `f227cd1..e862049`: pass.
+  - SEC-21 bumps Next.js to 16.4.2. The lockfile moves only next and @next/*, and the dependency audit is now green.
+  - The graph is valid at 110 nodes.
+  - The pass depends on lint/unit and e2e going green on e862049.
+  - Nit: the #56 pr node lacks the QA fail.
+  - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
+    - A 404 with a key shows the bad-link message and drops the saved copy.
+    - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.
+    - main is merged in and the ADR is now 0020.
+    - Web unit tests pass 185/185 with my probes. The pass depends on CI going green.
+  - #61 re-checked at d2e620f (the ported Next bump, identical to #60's) and at 302d454 (the cache rule skips % and ..): still a pass.
+  - [#58](https://github.com/rojandhimal/onetickets/pull/58) S2-3 codec and signer pass at eda1451.
+    - Independent probes: verification needs the context, any one-byte flip fails, a foreign key fails, padding bits are rejected and production keys are refused. The probe is in qa/scripts/qa58.test.ts.
+    - Issuing tickets and row 3.7 are still to come.
+    - Checklist row 3.6 wording is out of date.
+- **Next:** Re-check #59 when its fixes are pushed. Review #58's issuing follow-up.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 2026-10-22 (Claude)
 
 - **Done:** Reviewed [#55](https://github.com/rojandhimal/onetickets/pull/55) (board sync, working agreement section 4) at 012b235: pass. The rules are consistent across AGENTS.md, agents/README and the working agreement, the board matches main, and there's no personal data or secrets.
