@@ -107,3 +107,4 @@
 {"type":"risk","id":"R7","text":"AWS cost","owner":"devops","action":"About US$375-380/month planned, alert at US$450","status":"open"}
 {"type":"risk","id":"R8","text":"Two AI teams active at once can duplicate work (Claude FrontendDev rebuilt #48)","owner":"pm","action":"Check the graph and open PRs before starting; claim with a draft PR named after the item id","status":"open"}
 {"type":"pr","id":"#61","title":"DEV-5: banners in the uploads bucket, cached by Cloudflare (infra)","item":"DEV-5","branch":"claude/devops-dnhiin","state":"open","author":"devops","tool":"claude","reviews":{}}
+{"type":"item","id":"BE-6","title":"S3 banner adapter for BANNER_STORAGE=s3 (DEV-5 follow-up)","status":"in_progress","owner":"backend","reviewers":["qa","security"],"agent":"claude","claimed":"2026-10-23","active":"2026-10-23","updated":"2026-10-23"}
