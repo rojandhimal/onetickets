@@ -5,7 +5,7 @@ Newest first. Format: date, Done, Next, Blocked.
 ## 2026-10-23 (Claude, evening)
 
 - Done: DEV-7 #63, a CI check that the api image carries the RDS CA bundle that `sslrootcert` names. Security passed it at 10f6255. QA found that an empty hash on both sides passed, because the default run shell has no pipefail. Fixed in 13c268d (bash with pipefail, exactly one sslrootcert, both hashes non-empty) and merged main at 184d4f9.
-- Next: QA re-check of 10f6255..184d4f9, then #63 is ready for tegs. After that, the next DevOps card from PM.
+- Next: #63 merged 23:35 UTC after QA and Security passed 184d4f9. Next DevOps card from PM.
 - Blocked: nothing. DEV-2 still waits on tegs' AWS accounts.
 
 ## 2026-10-23 (Claude, later)
