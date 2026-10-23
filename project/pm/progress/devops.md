@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-23 (Claude, night)
+
+- **Done:** Cleared the dependency audit that turned every PR red (first seen on #65). New high advisories hit zod (fixed in 4.6.6), body-parser (2.4.0) and multer (2.5.0). zod is bumped in api and shared, body-parser is refreshed in the lockfile, and multer gets a pnpm override because `@nestjs/platform-express` pins 2.4.0.
+- **Next:** drop the multer override once Nest ships a release with the fix. nodemailer has a moderate advisory (fixed in 10.1.4); it doesn't fail CI yet.
+- **Blocked:** nothing.
+
 ## 2026-10-23 (Claude, later)
 
 - **Done:** tegs merged DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61), after I merged main (#56) into it to clear the conflict. Security and QA passed the delta check.
