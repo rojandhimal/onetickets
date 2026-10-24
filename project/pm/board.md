@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 23 Oct 2026, 23:55 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65 (PM sync) and #67 (SEC-22, the dependency audit fix) tonight. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 00:50 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65, #66 (DES-10), #67 (SEC-22, the dependency audit fix) and #68 overnight. Ready: SEC-23 for DevOps, DES-8 for FrontendDev and BE-7 for BackendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -66,7 +66,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - QA-3 Post-merge DEV-4 review (QA): verify #42 at `532c207` against the Docker-image CI criteria and record an explicit verdict. Security/DevOps passes and seven successful checks are present; they do not replace the required QA review
 - BE-5 Ticket-create retry hardening evaluation (BackendDev with FrontendDev; QA and Security review): compare current main's per-tab queue with a lost successful POST response or two tabs replaying a kept new type (ADR 0016). Reproduce before proposing a narrow fix; evaluate the preserved local idempotency receipt approach without importing its duplicate UI. Use a fresh migration number and current-main tests if adopted. This is a follow-up, not a new Sprint 1 acceptance blocker
 
-- DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 - DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
 - SEC-20 Contact-email default, part 2 (BackendDev and FrontendDev; QA, Security and ProductDesign review; before Sprint 2 sends attendee emails): part 1 merged in #41, removing the silent publisher-email fallback. Publishing without an email is still allowed. Complete the agreed saved-email publish check (`contact_email` in `missing`, checklist item "Contact email for attendees"), visible editable prefill with the signed-in user's email and Review's "Replies from attendees go to {email} · Change". No backfill for existing drafts
 - SEC-17 Optional hardening from #16 / #19 (BackendDev, Security review): use column-scoped update grants so `ot_app` cannot change `ticket_types.event_id`, and document how owner backfills work under FORCE RLS. [Security notes](/project/pm/progress/security.md); not a Sprint 1 blocker
@@ -96,7 +95,8 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 ### Ready
 
 - `[unassigned]` SEC-23 Bump `nodemailer` to 10.1.4 or later for its moderate advisory (DevOps; Security and QA review). Follow-up from #67; check sign-in and ticket emails still reach the local test inbox
-- `[unassigned]` DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
+- `[unassigned]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` (BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
+- `[unassigned]` DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 
 ### In progress
 
@@ -112,6 +112,8 @@ _(No items currently in review)_
 
 ### Done
 
+- DES-10 Sold-out bar and price note ([#66](https://github.com/rojandhimal/onetickets/pull/66)), merged 23 Oct as `e0f33b1`; ProductDesign pass (`c695a7c`). Sold out follows `soldOut` (ARCH-2): "All tickets taken" with a grey "Sold out" label. Held (no spots left, not sold out) reads "All taken right now" and keeps Get tickets. QA passed it after merge (`c695a7c`, web tests 193/193)
+- PM sync restoring the graph records lost in #65 ([#68](https://github.com/rojandhimal/onetickets/pull/68)), merged 24 Oct as `d2f11d1`
 - SEC-22 High advisories failing Dependency audit ([#67](https://github.com/rojandhimal/onetickets/pull/67), from tegs's CI-fix thread), merged 23 Oct as `f380c8f`: `zod` `^4.6.6` (GHSA-mrhx-c7xc-m3w5), `body-parser` 2.4.0 (GHSA-27r3-jxmh-p828) and a `multer` `^2.5.0` override until Nest ships the fix. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)
 - PM sync after the D19 merge ([#65](https://github.com/rojandhimal/onetickets/pull/65)), merged 23 Oct as `04e7da7`; QA pass (`0a18399`). Its last records were lost when main was merged into it on GitHub, so this board and the graph restore them
 - DEV-7 CI check that the api image carries the RDS CA bundle ([#63](https://github.com/rojandhimal/onetickets/pull/63)), merged 23 Oct as `bcded67`; QA and Security pass (`184d4f9`). CI fails if the certificate `sslrootcert` names is missing from the image or differs from `apps/api/certs`
