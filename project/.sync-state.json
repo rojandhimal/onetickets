@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "5547594c42155d6c85cc9b3bc3b925e0e2d1282b31ddcc51add35a2eaa3522d6",
-    "shared": "1bb046d1cf3bc78dcbdc64c79a2d782b8636d6604c55a7c3c35dbb4d3cb16348"
+    "repo": "c7dcc60e3056b3780735fed8f04dbcfcfd1fc8c629830043d09f7a8da12653fa",
+    "shared": "219edc499c3a44d6c017ae5fc9b68e2765e87e46cda9c5dbd3ca51a3d17980a2"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -56,8 +56,8 @@
     "shared": "98d893a747f6be69e254ac7d54937922cc834706188c58a65b88f82dfeeba679"
   },
   "pm/progress/devops.md": {
-    "repo": "4653eea5bf5e78eada989e51a4ee7e8d606c493aeee5b394e4932bab2fc6c4cf",
-    "shared": "4653eea5bf5e78eada989e51a4ee7e8d606c493aeee5b394e4932bab2fc6c4cf"
+    "repo": "ea02086da47dd7ff75c88aaef8032ab4d8be0181d40d64d91c8ea41bba7e1328",
+    "shared": "ea02086da47dd7ff75c88aaef8032ab4d8be0181d40d64d91c8ea41bba7e1328"
   },
   "pm/progress/docs.md": {
     "repo": "cd7780b485ab452b15b6d3792cce5d7deea537fcf377aa3c8e0821ef7f8d247a",
@@ -68,12 +68,12 @@
     "shared": "61c1b31e6117aa9114797188209440ee929c28cd7a5ef93226070d9ba706b677"
   },
   "pm/progress/pm.md": {
-    "repo": "1b0e068018c2d225b8084174b26c33fe1bfa1ef2a98fe6b53f4171546c9a9385",
-    "shared": "c8643784fe49773e3dd09e082311db6d1cc187530cbe1bcfeb4289d1ed605403"
+    "repo": "a5cd82e4d9e4b97407ceb5f4e530a60610095d2bc98a53f72a94948d32a7601b",
+    "shared": "7e89a6e622320724c2b2e054a383b58b8a2a00fdce26a30c7dab97717a7e91f7"
   },
   "pm/progress/qa.md": {
-    "repo": "a2eb5f833d612d37e5155cda70600a8f542a218f33178420d5c4b09271f9cab4",
-    "shared": "00cc9d7697aab683086b1dd095af38c624e8a6df48d5000d013f25fd4825170b"
+    "repo": "a12018c9dbef4c38ee127430a5dfa1331246c86b7003298e28712990b59fb959",
+    "shared": "b28d776ae81bf41c9c949cbf9abfd965d615a03fe83f26b01b78823d09436b28"
   },
   "pm/progress/security.md": {
     "repo": "46923d52dc8da871be166bb73ccd131e5367c3af79a6c25a4a964771c4a58f85",
@@ -132,11 +132,11 @@
     "shared": "2e8dc91da84f8448ee4cbfcf65a030ef1e9545a349435f62b8686b05bdf308e5"
   },
   "state/README.md": {
-    "repo": "4fb41e33fb22c623e5a5783c652ac6bf66ab452caaded6fd936dd1163a794b7a",
-    "shared": "4fb41e33fb22c623e5a5783c652ac6bf66ab452caaded6fd936dd1163a794b7a"
+    "repo": "b6470d1efa50f27baa390cb9f34a9bd7900ea51413a51332669abc2a13be8dfc",
+    "shared": "b6470d1efa50f27baa390cb9f34a9bd7900ea51413a51332669abc2a13be8dfc"
   },
   "state/graph.jsonl": {
-    "repo": "79542a0dd8ea95a40866c17e852482fca0b46fd92fe6d148bb4bd76d092f6c1e",
-    "shared": "79542a0dd8ea95a40866c17e852482fca0b46fd92fe6d148bb4bd76d092f6c1e"
+    "repo": "237bb8df9a45bc981df0846151bc7295c5d4ab5a58379138c97f323545589da2",
+    "shared": "237bb8df9a45bc981df0846151bc7295c5d4ab5a58379138c97f323545589da2"
   }
 }

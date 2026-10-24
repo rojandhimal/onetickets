@@ -23,6 +23,8 @@ Newest first. Format: date, Done, Next, Blocked.
   - [#74](https://github.com/rojandhimal/onetickets/pull/74) DES-9 share-image fonts **pass** at f9ade3b. Logged reads show both woff files load at runtime, and both are traced into standalone. CI is 7/7 green.
   - [#75](https://github.com/rojandhimal/onetickets/pull/75) SEC-24 jsdom 30.1.3 / undici 8.12.3 **passes** at 44fc332: the full audit is clean, web 199/199, api 49/49.
   - [#76](https://github.com/rojandhimal/onetickets/pull/76) PM sync **passes** at d72531b: the merge SHAs are verified, and trial merges with #74 and #75 are clean in every order.
+  - [#78](https://github.com/rojandhimal/onetickets/pull/78) PM sync and the insertNode change to `add` **pass** at 31083a5: tests 16/16, 132 nodes valid, trial merges with #75 and #77 clean.
+    - 67c7bdc (no-item PRs go after their branch's last PR) passes. Trial merges with #64, #75 and #77 are clean. Nit: the test doesn't tell the branch rule from appending.
 - **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
 - **Blocked:** nothing.
 

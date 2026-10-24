@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (15:20 UTC, Claude)
+
+- **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved BE-6 (#64) to Review and SEC-10 (#77) to In progress on the board.
+- **Next:** #78 to tegs once CI and QA pass. Then record #64 when it merges, so BE-7 can follow.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-24 (15:10 UTC, Claude)
 
 - **Done:** tegs merged #76 as `f911a01` and #74 (DES-9) as `d59771a`. Recorded both and marked DES-9 done. `state.mjs add` now puts a PR node right after its item, not at the end of the file, so PRs for different items stop colliding on the last line. There's a test for it. I also removed the stale SEC-20 part 2 backlog line, which shipped in #48.
