@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, SEC-16 organiser sign-out)
+
+- **Done:** #70 (DES-8) merged. SEC-16: "Sign out" in the organiser header calls `POST /auth/sign-out`, then `clearDeviceDrafts()` even when the api fails or is offline, then loads `/signin`. Unit tests for the failure paths, and `e2e/tests/sign-out.spec.ts` at 375 and 1280 px (drafts database gone, old session cookie no longer signs in).
+- **Next:** Security, QA and ProductDesign review the PR, including where the control sits.
+- **Blocked:** Nothing. Wiring the ticket screen to real orders still waits on tegs's order API choice.
+
 ## 2026-10-24 (Claude, DES-8 hero buttons, #70)
 
 - **Done:** #66 (DES-10) merged. DES-8 in #70: from 768 px the event page's Back and Share buttons line up with the 1040 px content column instead of the window edges. The event page e2e checks the alignment at 375 and 1280 px; it fails without the fix (16 px against 144 px at 1280).
