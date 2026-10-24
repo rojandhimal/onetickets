@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #71 (SEC-23, `nodemailer` 10.1.7) as `185c3b6`, #72 (SEC-16, sign out) as `970aefc` and PM sync #73 as `06cf06d`, with no conflicts. Recorded all three, marked SEC-23 and SEC-16 done and set `meta.main` to `06cf06d`.
+- **Next:** DevOps claims SEC-24 (`undici` via `jsdom`). FrontendDev opens DES-9 (share-image font), with ProductDesign and QA review. BackendDev's BE-7 waits for a free branch.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-24 (01:50 UTC, Claude)
 
 - **Done:** tegs merged #70 (DES-8) as `acf8a74`, then merged main into PM sync #69 on GitHub and merged it as `28c1069`. No records were lost, but the merge put `meta.main` back to `f380c8f`. I've recorded both PRs, marked DES-8 done, added QA to DES-8's reviewers (I had left it off) and set `meta.main` to `28c1069`.
