@@ -42,3 +42,25 @@ export function onSale(start: SalesStart, end: SalesEnd, event: EventTimes, now:
   const to = salesEndsAt(end, event);
   return !!from && !!to && from <= now && now < to;
 }
+
+interface TypeAvailability {
+  onSale: boolean;
+  spotsLeft: number;
+  soldOut: boolean;
+}
+
+/**
+ * Whether an event is sold out and how many spots it has left, both counted over the types on
+ * sale now. With nothing on sale (before sales open or after they close), every type counts.
+ */
+export function eventAvailability(types: TypeAvailability[]): {
+  spotsLeft: number;
+  soldOut: boolean;
+} {
+  const onSaleTypes = types.filter((t) => t.onSale);
+  const counted = onSaleTypes.length > 0 ? onSaleTypes : types;
+  return {
+    spotsLeft: counted.reduce((sum, t) => sum + t.spotsLeft, 0),
+    soldOut: counted.length > 0 && counted.every((t) => t.soldOut),
+  };
+}

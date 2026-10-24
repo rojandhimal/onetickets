@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { onSale, salesEndsAt, windowIsValid } from './sales-window.js';
+import { eventAvailability, onSale, salesEndsAt, windowIsValid } from './sales-window.js';
 
 const event = {
   startsAt: new Date('2026-11-14T08:00:00Z'),
@@ -38,5 +38,35 @@ describe('ticket sales windows', () => {
     expect(windowIsValid(start, { kind: 'hour_before' }, event)).toBe(false);
     expect(windowIsValid(start, { kind: 'event_end' }, event)).toBe(true);
     expect(windowIsValid(start, { kind: 'hour_before' }, { ...event, startsAt: null })).toBe(true);
+  });
+});
+
+describe('event availability', () => {
+  const type = (onSale: boolean, spotsLeft: number, soldOut = false) => ({
+    onSale,
+    spotsLeft,
+    soldOut,
+  });
+
+  it('counts only the types on sale', () => {
+    // The only type on sale is full of holds; the other one opens later (QA on #66).
+    expect(eventAvailability([type(true, 0), type(false, 50)])).toEqual({
+      spotsLeft: 0,
+      soldOut: false,
+    });
+    expect(eventAvailability([type(true, 0, true), type(false, 50)])).toEqual({
+      spotsLeft: 0,
+      soldOut: true,
+    });
+    expect(eventAvailability([type(true, 3), type(true, 4), type(false, 50)]).spotsLeft).toBe(7);
+  });
+
+  it('counts every type when nothing is on sale', () => {
+    expect(eventAvailability([type(false, 10), type(false, 5)])).toEqual({
+      spotsLeft: 15,
+      soldOut: false,
+    });
+    expect(eventAvailability([type(false, 0, true)]).soldOut).toBe(true);
+    expect(eventAvailability([])).toEqual({ spotsLeft: 0, soldOut: false });
   });
 });
