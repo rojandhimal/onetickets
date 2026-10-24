@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "69a9a189d80233ad1b125ed480c6d1ea559a852f7825982a018cf956257ce5f7",
-    "shared": "bc075398d6078974934f4e701788a04b6f13eba765237039e80e5388adeee1ba"
+    "repo": "9db1eba6b62921b00d363f1fdd485b9999ad66aa774152f86d1ff133275cbff0",
+    "shared": "8ba376535cb91cbcadca6ca405f6a52a5f576c856caf4e63f898e5d16c169e33"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -64,16 +64,16 @@
     "shared": "cb19594e57a256a11b0906a75f6ee5b58d6bfaac8eff86f27efe5396f6ed0397"
   },
   "pm/progress/frontend.md": {
-    "repo": "21dcc2cee95ceb19d06d7b54d27d12b3898c1de826a010ad5a4e330cc3bff1cf",
-    "shared": "566cda72733896dac7e744e576a9d423c7adddded017af8a397f952a3977ecdc"
+    "repo": "7c39f14659000ab47871f79836aad3847a5f2d212f8e64f4ea90b31066435989",
+    "shared": "0c5d543d85480bc83faee6b23318029b11f4b966eb083605159bd798b1f59c07"
   },
   "pm/progress/pm.md": {
-    "repo": "b7810b92286cc9c52893bc72bf22a3d7c18f4241f2f75b3c9b2bab5227666957",
-    "shared": "12b003815c169a10ab808689163ef8cf2ab82cfa5b4e7281768ff125951181fb"
+    "repo": "a366195857cfcb6790050cda45767dfa9114095d1854fc9e485a194145408a14",
+    "shared": "265035c314d243873038f88224724894fde21f820a12bc0add1b455fc05fc066"
   },
   "pm/progress/qa.md": {
-    "repo": "7ba9c130eda09d8bcf3c7bd5b441b515c4463fd49bfaad81d5a4d9ac817edfcf",
-    "shared": "4c6a628b801d0c9cee44c10bb3088c03c613efc6e4f16dfca2cbf54db5883845"
+    "repo": "aa26c5f4ae0a9bcef73e7bc501e7b46468c7603d5f2468e4621289ca4105ff3b",
+    "shared": "a87a0eb5e976918c050d67cc13cb82528af35ad3ec5613f1c16883ca295e19d6"
   },
   "pm/progress/security.md": {
     "repo": "ac8dad1fb2c1226dbc2b1dab88d6e4ef0cc6b7d60c1f16248e66ea37f765aeb7",
@@ -136,7 +136,7 @@
     "shared": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f"
   },
   "state/graph.jsonl": {
-    "repo": "49b679ab0f0bc3e98775e8b7ec88ac4c21649d49766e17d38257bea5bbea6d37",
-    "shared": "49b679ab0f0bc3e98775e8b7ec88ac4c21649d49766e17d38257bea5bbea6d37"
+    "repo": "a916c76f841d974e4ac49b0681c55b63737d43db4ef60896efcb91bf4af444ca",
+    "shared": "a916c76f841d974e4ac49b0681c55b63737d43db4ef60896efcb91bf4af444ca"
   }
 }

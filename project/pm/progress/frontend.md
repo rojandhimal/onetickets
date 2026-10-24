@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, DES-8 hero buttons, #70)
+
+- **Done:** #66 (DES-10) merged. DES-8 in #70: from 768 px the event page's Back and Share buttons line up with the 1040 px content column instead of the window edges. The event page e2e checks the alignment at 375 and 1280 px; it fails without the fix (16 px against 144 px at 1280).
+- **Next:** ProductDesign reviews #70. Then wire the ticket screen to real orders once tegs picks the order API.
+- **Blocked:** Nothing.
+
 ## 2026-10-23 (Claude, DES-10 sold-out bar and price note, #66)
 
 - **Done:** #62 (S2-4a) merged. Claimed DES-10 with draft #66: the event page shows "Sold out" only when the api says every ticket is sold, and "All taken right now. Check back in a few minutes." with Get tickets kept while checkout holds fill the event (ARCH-2). Unit tests for both states.

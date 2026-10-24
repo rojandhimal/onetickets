@@ -65,6 +65,17 @@ test('a published event has a public page anyone can open', async ({ page, conte
     'content',
     /opengraph-image/,
   );
+  // Back and share sit on the content's edges at every width, not the viewport's (DES-8).
+  const back = await page.getByRole('link', { name: 'Back to events' }).boundingBox();
+  const share = await page.getByRole('button', { name: /Share/ }).boundingBox();
+  const title = await page.getByRole('heading', { level: 1 }).boundingBox();
+  // On phones the title spans the content; from 768 px the ticket card ends the column.
+  const wide = page.viewportSize()!.width >= 768;
+  const end = wide
+    ? await page.getByRole('complementary', { name: 'Tickets' }).boundingBox()
+    : title;
+  expect(Math.round(back!.x)).toBe(Math.round(title!.x));
+  expect(Math.round(share!.x + share!.width)).toBe(Math.round(end!.x + end!.width));
   await expectAccessible(page);
 });
 

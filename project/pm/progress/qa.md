@@ -2,6 +2,16 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- **Done:**
+  - [#66](https://github.com/rojandhimal/onetickets/pull/66) DES-10 **passes** at c695a7c. Verdict posted after tegs merged it (e0f33b1). Web tests 193/193. The held and sold states follow the handoff. "All tickets taken" has no count because the public DTO has no capacity.
+  - Follow-up for the api: soldOut covers on-sale types only, while spotsLeft sums every type. A hold-full on-sale type plus an off-sale type shows "N spots left".
+  - [#68](https://github.com/rojandhimal/onetickets/pull/68) PM sync was merged before review. Main's graph is restored and valid (121 nodes). Nits: DES-10 and the #66 node, and meta.main.
+  - [#69](https://github.com/rojandhimal/onetickets/pull/69) PM sync **passes** at bc2bb16 (123 nodes, valid). Nits: record qa pass@c695a7c on #66; add a card for the soldOut follow-up.
+- **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
+- **Blocked:** nothing.
+
 ## 2026-10-23 (Claude)
 
 - **Done:** Re-checked [#60](https://github.com/rojandhimal/onetickets/pull/60) for `f227cd1..e862049`: pass.
