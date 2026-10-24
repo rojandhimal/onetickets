@@ -2,6 +2,72 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #71 (SEC-23, `nodemailer` 10.1.7) as `185c3b6`, #72 (SEC-16, sign out) as `970aefc` and PM sync #73 as `06cf06d`, with no conflicts. Recorded all three, marked SEC-23 and SEC-16 done and set `meta.main` to `06cf06d`.
+- **Next:** DevOps claims SEC-24 (`undici` via `jsdom`). FrontendDev opens DES-9 (share-image font), with ProductDesign and QA review. BackendDev's BE-7 waits for a free branch.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (01:50 UTC, Claude)
+
+- **Done:** tegs merged #70 (DES-8) as `acf8a74`, then merged main into PM sync #69 on GitHub and merged it as `28c1069`. No records were lost, but the merge put `meta.main` back to `f380c8f`. I've recorded both PRs, marked DES-8 done, added QA to DES-8's reviewers (I had left it off) and set `meta.main` to `28c1069`.
+- **Then:** every `state.mjs set` and `add` stamped the meta line, so any two PRs that touched the graph conflicted on its first line (#69, #70 and #71 all did). Now only `set meta` stamps it, with a test. I also added SEC-24 for DevOps: the dev-only `undici` advisory DevOps found on #71.
+- **Next:** QA reviews this sync. Record #71 (SEC-23) and #72 (SEC-16) when tegs merges them. DevOps can claim SEC-24.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (00:50 UTC, Claude)
+
+- **Done:** tegs merged #66 (DES-10, sold-out bar and price note) as `e0f33b1` and the PM sync #68 as `d2f11d1`. #68 kept the restored graph records. Recorded both, DES-10 done, and promoted DES-8 (hero buttons on the 1040 px column) to ready for FrontendDev, which is free again.
+- **Then:** QA passed #66 after merge. From QA's review, added BE-7 (event `spotsLeft` should count only on-sale types, like `soldOut`) as ready for BackendDev.
+- **Next:** DevOps claims SEC-23, FrontendDev DES-8, BackendDev BE-7.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (23:40 to 23:50 UTC, Claude)
+
+- **Done:** tegs merged #62 as `f11ab57`, so S2-4a is done and the ticket screen meets Security's ADR 0020 condition. Merged main into #65 and recorded it. FrontendDev (Claude) is free, so I pointed it at DES-10, the only unassigned ready frontend item.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). tegs's CI-fix thread already opened #67 with the fix, so I recorded it as SEC-22 (DevOps, Security and QA review). tegs merged #65 as `04e7da7`, but the main merge on GitHub kept main's older graph lines, so this sync restores #62, #63, S2-4a, DEV-7 and the role lines. Removed the stale DEV-6 backlog card (done in #45).
+- **Then:** tegs merged #67 as `f380c8f`, so SEC-22 is done and Dependency audit is green again.
+- **Next:** QA reviews this sync. FrontendDev claims DES-10. DevOps (free) can claim SEC-23, the `nodemailer` follow-up I added as ready.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). Opened SEC-22 for DevOps, the free role, with Security and QA review. Removed the stale DEV-6 backlog card (done in #45).
+- **Next:** DevOps lands SEC-22, then I merge main into #65 so it goes green. FrontendDev claims DES-10.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (19:50 UTC, Claude)
+
+- **Done:** tegs merged #60 as `2787073`, so the agent assignment rule (D19) is live. Recorded the merge with QA's pass at `b4bc226`, QA's fail on #62 at `eebd9b7` (partial offline save). FrontendDev fixed it at `4d117c6`, and QA, Security and Design pass `d99df5f` and #63 (DEV-7): QA failed it at `10f6255` and passed the fix at `184d4f9`. Added DEV-7 and BE-6 (#64) to the board; their graph items come in their own PRs.
+- **Next:** #62 (all 7 checks green) and #63 (Security's pass holds at `184d4f9`) are ready for tegs, and so is this sync, #65. Release claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (15:40 UTC, Claude)
+
+- **Done:** Fixed QA's finding on #60: the graph now has S2-4a (`agent` claude, in review with #62) and a #62 PR node, using the same S2-4a line #62 adds, so the board and graph agree. Moved S2-4a to Review on the board.
+- **Next:** QA re-checks #60 from `79e5a22`. Once tegs confirms "one task at a time" means per agent and role, #60 is ready for tegs.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (15:20 UTC, Claude)
+
+- **Done:** tegs merged #58 and #61 after #56, so DEV-5 is done and S2-3's screen and signing are on main. Merged main into #60 again, and added tegs's agent assignment rule to it, because #60 needed a new review anyway. Every item gets `agent`, `claimed` and `active`. `state.mjs` gains `next`, `claim` and `release`, and the brief lists idle claims. The working agreement (section 5), AGENTS.md, agent briefs, graph README and board follow, and D19 records the rule. Gave FrontendDev S2-4a (#62) and DevOps DEV-7 (RDS bundle CI check) while the order API waits. Released S2-3 (now blocked on the order API choice), so BackendDev can take the S3 banner adapter (BE-6) under one task at a time.
+- **Next:** QA re-checks #60, then tegs merges it. PM releases claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #56 (S2-3 ticket screen) as `da8d689`. It carried the Next.js bump, so SEC-21 is done and #60 is now only the PM sync. Merged main into #60 and resolved the conflicts (package.json and the lockfile taken from main; graph role nodes). Asked BackendDev (#58) and DevOps (#61) to merge main the same way.
+- **Next:** tegs's new rule: assign each board task to one agent provider, one task at a time, and PM releases claims that are idle for more than 5 days. It goes into a PR straight after this sync.
+- **Blocked:** nothing.
+
+## 2026-10-23 (06:40 UTC, Claude)
+
+- **Done:** Four PRs passed every review they need with all checks green, and are with tegs in merge order: #60 (SEC-21, the critical Next.js fix) first, then #56 and #58 (S2-3 ticket screen and signing) and #61 (DEV-5). Recorded the verdicts in the graph, fixed QA checklist row 3.6 to match ADR 0011 (one key per environment, token carries the ticket id), and synced the role logs. Nothing merged overnight.
+- **Next:** After #60 merges, restart the PM branch from main with this sync. The S2-2 order API choice (#58's reference build or #59) is still with tegs; ticket issuing and the email (row 3.7) wait on it.
+- **Blocked:** tegs's merges and the order API choice.
+
+## 2026-10-22 (19:10 UTC, Claude)
+
+- **Done:** All Claude threads paused 14:22 to 19:00 on a usage limit. Meanwhile tegs merged #54 (SEC-6) and #57 (STATE-1), which carried #55 and #53. Recorded the merges in the state graph and on the board. The other tool opened draft #59 for S2-2, and it also builds the order API and a basic confirmation page, which #58 had claimed but not yet built. Moved S2-2-API to #59 so the work isn't done twice; #58 goes back to S2-3 signing on top of #59, and #56 builds the ticket stub on #59's confirmation page.
+- **Next:** QA reviews #59. Claude Security checks #59's order ref (a bearer reference in the URL that returns name and email) against its S2-3 conditions. DevOps opens the DEV-5 PR now that #54 has merged.
+- **Blocked:** nothing.
+
 ## 2026-10-22 (14:10 UTC, Claude)
 
 - **Done:** tegs decided that agents in several tools keep working at once, towards one goal, each starting from the current state. Recorded it in the working agreement (section 4), AGENTS.md rule 3, agents/README.md and the decisions log. Claimed S2-3 for Claude BackendDev and FrontendDev, since the other tool's FrontendDev has S2-2. Put Claude DevOps's SEC-6 (#54) on the board. This sync carries the other PM's #53, so the two board PRs don't conflict.

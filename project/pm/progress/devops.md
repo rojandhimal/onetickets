@@ -2,6 +2,38 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- Done: #63 (DEV-7) merged. Opened #71 for SEC-23, which bumps nodemailer from 10.0.10 to 10.1.7 for three moderate addressparser advisories. Unit, integration and lint checks pass. A sign-in email reached Mailpit locally and its link signed in.
+- Next: Security and QA review #71. The api sends no ticket emails yet, so only sign-in was checked.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts. Dev-only undici advisory via jsdom (web) is outside SEC-23.
+
+## 2026-10-23 (Claude, evening)
+
+- Done: DEV-7 #63, a CI check that the api image carries the RDS CA bundle that `sslrootcert` names. Security passed it at 10f6255. QA found that an empty hash on both sides passed, because the default run shell has no pipefail. Fixed in 13c268d (bash with pipefail, exactly one sslrootcert, both hashes non-empty) and merged main at 184d4f9.
+- Next: #63 merged 23:35 UTC after QA and Security passed 184d4f9. Next DevOps card from PM.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts.
+
+## 2026-10-23 (Claude, later)
+
+- **Done:** tegs merged DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61), after I merged main (#56) into it to clear the conflict. Security and QA passed the delta check.
+- **Next:** no DevOps card is ready on the graph. DEV-2 waits on tegs's AWS accounts. Asked PM for the next card.
+- **Blocked:** nothing. Reminder for tegs: add Zone: Cache Rules Edit to the Cloudflare token before the next edge apply.
+
+## 2026-10-23 (Claude)
+
+- **Done:** DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) is ready for tegs at 302d454, with all 12 CI checks green and Security and QA passes:
+  - Fixed review notes: a 30-day edge TTL, any-case path matching, no caching of 4xx/5xx, and no caching of paths containing "%" or "..".
+  - Ported the Next.js 16.4.2 bump from #56 to clear the dependency audit.
+- **Next:** pick up the next DevOps card from the graph once #61 merges.
+- **Blocked:** nothing. tegs adds Zone: Cache Rules Edit to the Cloudflare token before the next edge apply.
+
+## 2026-10-22 (Claude, evening)
+
+- **Done:** tegs merged SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) (f8d07e9). DEV-5 is up as [#61](https://github.com/rojandhimal/onetickets/pull/61) from fresh main. It's the infra side of S3 banners: the switch, narrower IAM, 30-day version expiry and a Cloudflare cache rule, with no CloudFront. The state graph is updated and Security and QA are asked to review.
+- **Next:** drive #61 green and through review.
+- **Blocked:** nothing. Before the next edge apply, tegs adds Zone: Cache Rules Edit to the Cloudflare token.
+
 ## 2026-10-22 (Claude, later)
 
 - **Done:** Unpaused by PM. SEC-6 [#54](https://github.com/rojandhimal/onetickets/pull/54) is out of draft at 72feb4c, with all 12 CI checks green and BackendDev's pass; Security and QA are asked to review. Main hadn't moved, so no merge was needed.

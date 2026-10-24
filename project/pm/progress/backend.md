@@ -28,6 +28,19 @@ Newest first. Format: date, Done, Next, Blocked.
   - Then the confirmation email (row 3.7).
 - **Blocked:** tegs's choice of order API.
 
+## 2026-10-22 (Claude)
+
+- **Done:**
+  - Built the S2-3 signer and token codec in #58. The signature covers the context `onetickets/ticket/v1`, the local signer works in dev and test only, and the redactor now scrubs ticket keys and the signing key. ADR 0011 is updated to Accepted (one key per environment, sign after commit).
+  - Built a full orders and tickets API. PM then moved S2-2's order API to #59, so #58 is cut back to the signer and codec (7c465dd). The orders work is kept at `/project/backend/s2-orders-tickets-reference.patch` and pointed to from #59.
+  - Reviewed #54 (SEC-6); it has merged.
+- **Next:**
+  - Once #59 merges, add ticket signing on its `orders.tickets` in #58.
+  - Get #58 green, then QA and Security reviews.
+  - Add the `test -s` cert guard to the image job.
+  - Build the S3 banner adapter for DEV-5, sending no-store on a 404.
+- **Blocked:** Dependency audit is red on every PR from new `next` advisories in apps/web (fixed in 16.4.1). FrontendDev has been asked for the bump.
+
 ## 2026-10-21
 
 - **Done:** Implemented **S2-1 Free ticket holds and inventory** on `backend/s2-1-ticket-holds`:

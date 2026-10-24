@@ -2,6 +2,41 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+**Done**
+
+- #71 SEC-23: pass at f388e02. nodemailer 10.0.10 to 10.1.7, exact pin, lockfile integrity matches npm, no code change.
+- #72 SEC-16: changes needed at 9872a88. A failed POST /auth/sign-out still navigates to /signin with the session live; asked for an error state and tests.
+- #72: pass at d018f02. Failed sign-out stays on the page with an alert; drafts still cleared.
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Re-check #59 after fixes.
+
+**Blocked**
+
+- None.
+
+## 2026-10-23 (Claude)
+
+**Done**
+
+- #61 DEV-5: delta check 302d454..28193ce (merge of main). Infra unchanged, diff vs main is infra + graph.jsonl only. Pass holds.
+- S2-4a (#62 draft) plan approved for FrontendDev: 7-day expiry after event end, checked on fetch too, fails closed, offline Remove, tests.
+- #62 S2-4a: pass at 7d8f61d. Expiry fails closed in the worker and the page, offline Remove clears the cache, worker and session keys. Satisfies the ADR 0020 condition for FEATURE_TICKETS.
+- #62: pass holds at d99df5f (copy change, QA fix 4d117c6 shows Remove whenever the order copy is cached, merges of main).
+- #63 DEV-7: pass at 10f6255. CI checks the api image's sslrootcert matches apps/api/certs, fails closed, no new permissions.
+- #63: pass holds at 184d4f9 (QA's pipefail and non-empty-hash fix 13c268d, plus main).
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Re-check #59 after fixes.
+
+**Blocked**
+
+- None.
+
 ## 2026-10-22 (Claude)
 
 - **Done:**
@@ -15,7 +50,18 @@ Newest first. Format: date, Done, Next, Blocked.
     - The worker gets a column-level grant.
     - The order token carries at least 128 bits, is hashed and is never put in a URL.
     - The confirmation response is no-store, and the tickets table gets a status column.
-- **Next:** the S2-3 tickets PR, then the confirmation screen (service worker and CSP), then any S2-2 personal-data PR that has no Security pass.
+  - SEC-6 #54 merged.
+  - S2-2 [#59](https://github.com/rojandhimal/onetickets/pull/59) (the other tool's work; PM asked for a check of the order lookup): **changes needed** at 3c2ff43.
+    - The 40-bit order ref is the only credential for the attendee's name and email. It's guessable with no rate limit, and it ends up in logs, history and Referer. It needs a 128-bit hashed key, sent in a header.
+    - `orders_public_select` and `tickets_public_select` OR with the tenant policy, so any organiser context can read every published event's orders. They need dropping, with a definer lookup by id and key hash in their place.
+    - The insert policies should also check the event's organisation.
+  - #56 key handling OK'd for FrontendDev. Conditions: fragment plus replaceState, sessionStorage only, a header to the API, and no key in Cache Storage. The service worker caches only the order and `/tickets/` assets. "Remove from device" and expiry after the event are an S2-4 card due before launch.
+  - DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61) (banners in S3, infra): **pass** at 3f8f2d9. The task role is limited to banners/* with no list, and the bucket stays private. The edge cache respects origin headers on the web hostnames, and old versions expire after 30 days.
+  - S2-3 confirmation screen [#56](https://github.com/rojandhimal/onetickets/pull/56): **pass** at c3c54ac and ac05895, which includes the Next 16.4.2 bump (lockfile integrity matches npm; fixes 3 GHSAs). One condition: gitleaks is red on three fake test keys, which need allow comments and .gitleaksignore fingerprints. ADR 0020 now commits to remove-from-device and expiry before launch.
+  - #56 re-checked: **pass** at 3336dff (gitleaks green) and 8dfed02 (the api answer wins over the saved copy, and a keyed refusal deletes it). QA's shared-device point: no change needed before merge, but "remove from device" must land before FEATURE_TICKETS goes on with real people.
+  - SEC-21 [#60](https://github.com/rojandhimal/onetickets/pull/60) Next 16.4.2: **pass** at e862049 (integrity matches npm).
+  - S2-3 signing [#58](https://github.com/rojandhimal/onetickets/pull/58): **pass** at eda1451. The token has no personal data and a context-bound signature, the local signer refuses to run outside dev and test, the redactor covers ticket keys, and ADR 0011 is Accepted.
+- **Next:** the orders and tickets diff once tegs picks #58's or #59's; re-check #59.
 - **Blocked:** nothing.
 
 ## 2026-10-21

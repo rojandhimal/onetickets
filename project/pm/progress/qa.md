@@ -2,6 +2,70 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- **Done:**
+  - [#66](https://github.com/rojandhimal/onetickets/pull/66) DES-10 **passes** at c695a7c. Verdict posted after tegs merged it (e0f33b1). Web tests 193/193. The held and sold states follow the handoff. "All tickets taken" has no count because the public DTO has no capacity.
+  - Follow-up for the api: soldOut covers on-sale types only, while spotsLeft sums every type. A hold-full on-sale type plus an off-sale type shows "N spots left".
+  - [#68](https://github.com/rojandhimal/onetickets/pull/68) PM sync was merged before review. Main's graph is restored and valid (121 nodes). Nits: DES-10 and the #66 node, and meta.main.
+  - [#69](https://github.com/rojandhimal/onetickets/pull/69) PM sync **passes** at bc2bb16 (123 nodes, valid). Nits: record qa pass@c695a7c on #66; add a card for the soldOut follow-up.
+    - Passes at 5845310 with the nits fixed. BE-7 has been added for the soldOut follow-up.
+    - 4ad5e65 (tegs merged main in, and #69 merged as 28c1069) passes after merge. No records are lost. meta.main, DES-8 and the frontend role are stale for the next sync.
+  - [#71](https://github.com/rojandhimal/onetickets/pull/71) SEC-23 nodemailer 10.1.7 **passes** at f388e02, as long as the rest of CI goes green. The audit is clean, api tests are 49/49, and a send to Mailpit worked. Nits: the #71 node has no head; meta.main is stale.
+    - Re-check at 86f2e48 (main merged in) passes. Suggestion: keep main's meta line, because it conflicts with #73 if #73 merges first.
+    - 4a8e85c passes: the meta line is restored, and it merges cleanly with #73.
+  - [#70](https://github.com/rojandhimal/onetickets/pull/70) DES-8 hero buttons on the 1040 px column **pass** at d396981. The event-page e2e passes at 375, 800, 1280 and 1600 px, and CI is 7/7 green.
+  - [#72](https://github.com/rojandhimal/onetickets/pull/72) SEC-16 sign out **fails** at 9872a88.
+    - Blocker: if POST /auth/sign-out fails, /signin redirects back to /organiser, so the person is still signed in with no message. The probe is in qa/scripts/qa72.spec.ts.
+    - What works: drafts clear, and the happy-path e2e passes. A second tab holding the db doesn't hang sign-out.
+    - bde4678: **passes**, as long as E2E goes green. A failed sign-out shows an alert and stays on the page. sign-out.spec passes 6/6, unit tests are 199/199, and the retry probe (qa72b) passes.
+  - [#73](https://github.com/rojandhimal/onetickets/pull/73) PM sync and the state.mjs meta stamp **pass** at 5eb3b88. The new test fails on main and passes here (15/15), and a probe confirms only set meta stamps line 1.
+- **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
+- **Blocked:** nothing.
+
+## 2026-10-23 (Claude)
+
+- **Done:** Re-checked [#60](https://github.com/rojandhimal/onetickets/pull/60) for `f227cd1..e862049`: pass.
+  - SEC-21 bumps Next.js to 16.4.2. The lockfile moves only next and @next/*, and the dependency audit is now green.
+  - The graph is valid at 110 nodes.
+  - The pass depends on lint/unit and e2e going green on e862049.
+  - Nit: the #56 pr node lacks the QA fail.
+  - #60 re-checked at cc62030 (main merged in, project/ only): still a pass. Nit: row 3.4 still has the old brightness copy.
+  - #60 at 79e5a22 (D19 agent assignment, one task at a time) needs one fix.
+    - The tool and docs pass: I drove next, claim, release, the stale list and the validate guard on a scratch graph, and the 14 tests pass.
+    - The fix: S2-4a is on the board as [claude] but missing from graph.jsonl.
+    - Asked PM to get tegs's confirmation that "one at a time" means per agent and role.
+    - f0c8c29 (S2-3 released while it waits on the order API) is fine. The S2-4a fix is still open.
+    - Passes at b4bc226, the merged head: S2-4a is now in the graph.
+  - [#62](https://github.com/rojandhimal/onetickets/pull/62) S2-4a remove-from-device and expiry **fails** at 7d8f61d.
+    - What works: the remove flow, focus, expiry in both the page and the worker, and unit tests (189/189).
+    - Blocker: a partial offline save keeps the order on the device with no Remove button. The probe is in qa/scripts/qa62.test.tsx.
+    - Blocker: graph.jsonl conflicts with main.
+    - Copy: "We couldn't remove your tickets." doesn't match the code.
+    - eebd9b7: the copy is fixed. The partial-save blocker is still open, and graph.jsonl conflicts with main again.
+    - d99df5f: **passes**, as long as E2E goes green. hasSavedOrder fixes the partial-save case (the probe passes), it merges cleanly into main, and web tests are 192/192.
+  - [#65](https://github.com/rojandhimal/onetickets/pull/65) PM sync **passes** at 23d630b: the state check is valid, tests are 14/14 and it merges cleanly. Nits: #62 qa node, stale qa role node.
+    - Passes at 0a18399 with the nits fixed. E2E on #62 at d99df5f is green, so the #62 pass has no remaining condition.
+    - 28a4805: the content is correct (#62 merged as f11ab57, S2-4a done), but it conflicts with main in graph.jsonl after #63 merged (bcded67). It needs main merged in and #63 recorded as merged.
+  - [#63](https://github.com/rojandhimal/onetickets/pull/63) DEV-7 CA bundle image check **fails** at 10f6255.
+    - Without pipefail, two empty hashes compare equal, so a tf path naming a file missing from both certs and the image passes.
+    - Fix: pipefail plus test -n on both hashes.
+    - Passes at 184d4f9: pipefail, exactly one sslrootcert and test -n are in, and the empty-hash case now fails. This depends on the api image job.
+  - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
+    - A 404 with a key shows the bad-link message and drops the saved copy.
+    - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.
+    - main is merged in and the ADR is now 0020.
+    - Web unit tests pass 185/185 with my probes. The pass depends on CI going green.
+  - #61 re-checked at d2e620f (the ported Next bump, identical to #60's) and at 302d454 (the cache rule skips % and ..): still a pass. Also at 28193ce (main merged in; infra unchanged).
+  - [#58](https://github.com/rojandhimal/onetickets/pull/58) S2-3 codec and signer pass at eda1451.
+    - Independent probes: verification needs the context, any one-byte flip fails, a foreign key fails, padding bits are rejected and production keys are refused. The probe is in qa/scripts/qa58.test.ts.
+    - Issuing tickets and row 3.7 are still to come.
+    - Checklist row 3.6 wording is out of date.
+    - Re-checked at 1b51537 (docs only: neutral order-API wording and a progress entry): still a pass.
+    - Re-checked at 63f304c (main merged in after #56; only #58's 11 files differ from main): still a pass.
+- **Next:** Re-check #59 when its fixes are pushed. Review #58's issuing follow-up.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 2026-10-22 (Claude)
 
 - **Done:** Reviewed [#55](https://github.com/rojandhimal/onetickets/pull/55) (board sync, working agreement section 4) at 012b235: pass. The rules are consistent across AGENTS.md, agents/README and the working agreement, the board matches main, and there's no personal data or secrets.
@@ -9,6 +73,25 @@ Newest first. Format: date, Done, Next, Blocked.
   - [#54](https://github.com/rojandhimal/onetickets/pull/54#issuecomment-6342929516) SEC-6 passes at 72feb4c. The bundle is byte-identical to AWS's ap-southeast-2 file and ships at /app/certs. The deployed node-postgres refuses a wrong CA and a wrong hostname under verify-full. Optional note: add a CI guard on url_params.
   - #55 re-checked at 8d001c9: still a pass.
   - [#57](https://github.com/rojandhimal/onetickets/pull/57) STATE-1 passes at 60eb483. The brief works, check and lint fail on 6 kinds of graph breakage, the sync round-trips, and the nodes match main and GitHub. Note: record the graph in .sync-state.json, otherwise the first both-sides change conflicts on the whole file.
+  - #55 re-checked at cf466f6: still a pass.
+  - [#60](https://github.com/rojandhimal/onetickets/pull/60#issuecomment-6348982153) passes. Nit: `#55.head` in the graph is stale.
+  - [#59](https://github.com/rojandhimal/onetickets/pull/59#issuecomment-6349089186) S2-2 free checkout **fails** at 3c2ff43. Checks are green and INV-5 holds: 10 parallel posts with one key made 1 order, and 4 keys racing one hold made 1 order plus three 410s. Two blockers:
+    - An anonymous `GET /public/orders/:ref` returns the buyer's email and name. The ref is a 40-bit value in the URL with no rate limit (P.3).
+    - The permissive `orders_public_select` and `tickets_public_select` policies let org B, or a session with no organisation, read org A's orders and emails.
+    - The probe is in qa/scripts/qa59.int.test.ts.
+  - [#61](https://github.com/rojandhimal/onetickets/pull/61#issuecomment-6349201447) DEV-5 banner storage (infra) passes at 3f8f2d9.
+    - The switch defaults to local, the narrower IAM breaks nothing, and the lifecycle only affects banners/.
+    - The Next rewrite passes the API's immutable Cache-Control through with no Set-Cookie, so Cloudflare can cache banners.
+    - Notes: the edge TTL of a year outlives the 30-day retention of deleted banners, and the cache rule is case-sensitive.
+    - The dependency audit is red on main too, from the next@16.4.0 advisories.
+    - Re-checked at fc6758a and still a pass. The edge TTL is now 30 days and the path match uses lower(). Optional: a 404 status TTL.
+    - 5733cda passes too: banner errors (400-599) are never cached at the edge. This depends on CI's edge validate.
+  - [#56](https://github.com/rojandhimal/onetickets/pull/56#issuecomment-6349318895) S2-3 ticket screen **fails** at c3c54ac.
+    - Rows 3.1 to 3.5 pass: unit tests 178/178, and the ticket e2e passes 6/6 at 375 px and 1280 px.
+    - Blocker: the saved offline copy is shown after a server 404 with a key, which covers revoked and expired keys.
+    - Blocker: the saved copy is shown online with no key and no fetch, so a shared phone opening the order from history sees the name, email and QR.
+    - Blocker: docs/adr/README.md conflicts with main, ADR 0019 is already taken (it needs to be 0020), and no CI has run at that head.
+    - The probe is in qa/scripts/qa56.test.tsx.
 - **Next:** The Claude team's S2-3 PRs, checked against the S2-3 rows in qa/sprint-2-checklist.md and the handoff-s2.md fill-ins.
 - **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
 

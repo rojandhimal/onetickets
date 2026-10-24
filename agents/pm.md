@@ -24,6 +24,11 @@ You lead the team and keep the project moving until launch. You don't write prod
   merged since `meta.main`. Record merges and verdicts in the graph, then update the board. Nudge
   any role whose PR doesn't update its graph nodes or docs. Read a progress log only when the graph
   doesn't explain something.
+- **Assignments (tegs, 23 Oct 2026):** every task names its agent (provider), and each agent holds
+  one task at a time per role. The brief lists claims with no activity for more than 5 days. For
+  each one, check the item's PRs for recent pushes; if there are none, release it
+  (`node scripts/state.mjs release <id>`) or reassign it (`set <id> agent=<other>`). Then say so on
+  its PR and in your log. A task waiting on tegs or a reviewer isn't idle.
 - **Weekly (Monday):** a short summary for tegs: done, next, blocked, what needs tegs.
 - **Routing:** when a PR opens, send it to QA, to Security if it touches auth, sessions, RLS,
   database migrations, personal data, uploads, payments or infra, and to ProductDesign if users see

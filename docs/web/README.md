@@ -133,6 +133,16 @@ opens on Drafts when nothing is coming up. Each card has the date, title, a Live
 booked of capacity for live events, and one action: "Open event page", or "Finish setting up",
 which returns to the step the draft was left on. The step is saved as soon as it changes.
 
+The organiser header has "View site" and "Sign out" (SEC-16). Sign out calls `POST /auth/sign-out`,
+then `clearDeviceDrafts()` whether or not the api answered. Only when the api confirms does it load
+`/signin` in full. If the call fails (offline or an error), the session may still be live, so the
+page stays put with "We couldn't sign you out. Check your connection and try again." and the button
+comes back, rather than looking signed out on a shared computer. The api also sends
+`Clear-Site-Data: "storage"`.
+`e2e/tests/sign-out.spec.ts` checks that the drafts database is gone, that the old session cookie no
+longer signs anyone in, and that a failed call (offline or a 500) keeps the organiser on the page with the alert and still
+clears the drafts.
+
 Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
 build made with it off still picks it up when it's turned on.
 
@@ -154,10 +164,23 @@ banner, date, title, organiser, then the key facts (price and spots left, venue 
 cancellations, accessibility). The ticket bar sticks to the bottom on phones and becomes a card in a
 right-hand column from 768 px. Online events never show their link; buyers get it with their ticket.
 
+Sold out and held are kept apart (DES-10, ARCH-2). Only `soldOut` from the api, true when every
+ticket on sale is sold, shows sold out: the bar reads "All tickets taken" (no number; the public api
+has no capacity) with a grey "Sold out" label in place of Get tickets, and the price row reads "Sold
+out; spots that are released go back on sale here." When `spotsLeft` is 0 but nothing is sold out,
+checkout holds have the tickets for now: the bar reads "All taken right now", the price row "All
+taken right now. Check back in a few minutes." and Get tickets stays, so checkout can report what's
+left.
+
 Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
 fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
 or if that fetch fails, it falls back to the template colour.
+Its text uses the page's fonts (DES-9): Bricolage Grotesque 800 and Figtree 700, as static WOFF
+cuts in `src/fonts` (`*-800-latin.woff`, `*-700-latin.woff`, 42 KB together), because the renderer
+can't read WOFF2 or variable fonts. They were made from the site's latin subsets with fontTools
+(`fonttools varLib.instancer`, wght 800 and opsz 96 for Bricolage, wght 700 for Figtree), under
+the same OFL licences. If a file can't be read, the image falls back to the built-in font.
 
 `e2e/tests/event-page.spec.ts` publishes an event through the wizard, then opens its page in a
 fresh browser with no session. It checks the enforced nonce CSP, `private, no-store`, the share
@@ -241,6 +264,14 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 - **Saved copy**: the page always asks the api first (with no key header if it has no key). The
   copy saved on the phone shows only when that request fails. A refused link never shows it, and a
   refused keyed link deletes it.
+- **Remove and expiry** (S2-4a): whenever the order is saved on the device (even if the rest of
+  the save failed), "Remove tickets from this device"
+  appears under Find more events. It opens an inline confirm card. "Remove" deletes the order's
+  saved copy, its page, and the tab's key and stashed order, with or without signal. With no other
+  order saved, it also deletes the cache and unregisters the worker. The page then shows "Removed
+  from this device." in place of the tickets. If storage is blocked, the card says it couldn't remove them
+  and the tickets stay. A saved order is never served after 7 days past its
+  event's end, by the page or the worker. It is dropped on the next visit or when the worker starts.
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."
 - **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar

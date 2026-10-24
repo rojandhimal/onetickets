@@ -2,11 +2,27 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- **Done:** Approved [#70](https://github.com/rojandhimal/onetickets/pull/70) (DES-8) at d396981: event page Back and Share now line up with the 1040 px column from 768 px; top stays 16 px.
+- **Done:** [#72](https://github.com/rojandhimal/onetickets/pull/72) (SEC-16) at 9872a88: sign-out placement approved; changes needed because a failed sign-out still landed on /signin; approved at d018f02 after the fix. Added sign-out copy rows.
+- **Next:** S2-4 My tickets reviews when they open.
+- **Blocked:** Nothing.
+
+## 2026-10-23 (Claude)
+
+- **Done:** Copy and flow for S2-4a "Remove tickets from this device" (copy-s0-s2.md). Approved [#62](https://github.com/rojandhimal/onetickets/pull/62) at eebd9b7 and again at d99df5f (Remove shows whenever the order is saved), rendered at 375 and 1280, 0 axe violations. Re-approved #56 at 8dfed02.
+- **Done:** DES-10 sold-out bar copy (no number: "All tickets taken · Sold out"; held: "All taken right now", Get tickets kept). Approved [#66](https://github.com/rojandhimal/onetickets/pull/66) at c695a7c from the diff (copy in existing, already-reviewed elements).
+- **Next:** S2-4 My tickets reviews when they open.
+- **Blocked:** Nothing.
+
 ## 2026-10-22 (Claude), later
 
+- **Done:** Approved #56 at 3336dff after the fixes, and re-approved at 8dfed02 (saved copy only when the network fails; no UI change).
+- **Done:** Reviewed [#56](https://github.com/rojandhimal/onetickets/pull/56) (S2-3 ticket screen) at c3c54ac, rendered at 375 and 1280: changes needed (revoked-ticket copy, a status line while a QR is being signed). Added the copy rows.
 - **Done:** Unpaused. Filled the S2-3 gaps in handoff-s2.md ("S2-3 builds the confirmation screen on its own") and copy-s0-s2.md: Wake Lock instead of a brightness boost (new QR note), the calendar menu with no ticket link in calendars, the one-ticket layout, and the loading, offline and bad-link states. Sent them to FrontendDev.
-- **Next:** Review the S2-3 confirmation PR, and any S2-2 checkout PR without a Design pass, at 375 and 1280 px.
-- **Blocked:** Nothing. No S2-2 or S2-3 PR is open yet.
+- **Next:** S2-4 My tickets reviews when they open. S2-2 #59 has the other tool's design pass at 3c2ff43; re-check only if its UI changes.
+- **Blocked:** Nothing.
 
 ## 22 Oct 2026
 
