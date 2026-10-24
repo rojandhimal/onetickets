@@ -2,6 +2,22 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+**Done**
+
+- #71 SEC-23: pass at f388e02. nodemailer 10.0.10 to 10.1.7, exact pin, lockfile integrity matches npm, no code change.
+- #72 SEC-16: changes needed at 9872a88. A failed POST /auth/sign-out still navigates to /signin with the session live; asked for an error state and tests.
+- #72: pass at d018f02. Failed sign-out stays on the page with an alert; drafts still cleared.
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Re-check #59 after fixes.
+
+**Blocked**
+
+- None.
+
 ## 2026-10-23 (Claude)
 
 **Done**

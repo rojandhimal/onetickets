@@ -1,7 +1,11 @@
 // Tests for scripts/state.mjs. Run with: node --test scripts/
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   GRAPH,
@@ -223,4 +227,31 @@ test('brief shows each item agent and claims that went quiet', () => {
     out,
     /Claims for PM to check[^\n]*\n {2}S2-2 codex as backend, last active 2026-01-01/,
   );
+});
+
+test('only set meta stamps the meta line, so edits to other nodes leave it alone', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'state-'));
+  mkdirSync(join(dir, 'project/state'), { recursive: true });
+  writeFileSync(join(dir, GRAPH), serialise(base()));
+  const run = (...args) =>
+    execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL('state.mjs', import.meta.url)), ...args],
+      {
+        cwd: dir,
+        env: { ...process.env, STATE_BY: 'codex/backend' },
+      },
+    );
+  const meta = () => parse(readFileSync(join(dir, GRAPH), 'utf8')).nodes[0];
+
+  run('set', 'S2-2', 'status=review');
+  run('add', JSON.stringify({ type: 'risk', id: 'R1', text: 'x', owner: 'qa', status: 'open' }));
+  run('claim', 'S2-2', 'codex');
+  assert.deepEqual(meta(), base()[0]);
+
+  run('set', 'meta', 'main=def5678');
+  assert.equal(meta().main, 'def5678');
+  assert.equal(meta().by, 'codex/backend');
+  assert.notEqual(meta().updated, '2026-10-22');
+  rmSync(dir, { recursive: true });
 });
