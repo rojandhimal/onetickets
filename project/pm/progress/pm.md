@@ -2,6 +2,13 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (01:50 UTC, Claude)
+
+- **Done:** tegs merged #70 (DES-8) as `acf8a74`, then merged main into PM sync #69 on GitHub and merged it as `28c1069`. No records were lost, but the merge put `meta.main` back to `f380c8f`. I've recorded both PRs, marked DES-8 done, added QA to DES-8's reviewers (I had left it off) and set `meta.main` to `28c1069`.
+- **Then:** every `state.mjs set` and `add` stamped the meta line, so any two PRs that touched the graph conflicted on its first line (#69, #70 and #71 all did). Now only `set meta` stamps it, with a test. I also added SEC-24 for DevOps: the dev-only `undici` advisory DevOps found on #71.
+- **Next:** QA reviews this sync. Record #71 (SEC-23) and #72 (SEC-16) when tegs merges them. DevOps can claim SEC-24.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-24 (00:50 UTC, Claude)
 
 - **Done:** tegs merged #66 (DES-10, sold-out bar and price note) as `e0f33b1` and the PM sync #68 as `d2f11d1`. #68 kept the restored graph records. Recorded both, DES-10 done, and promoted DES-8 (hero buttons on the 1040 px column) to ready for FrontendDev, which is free again.

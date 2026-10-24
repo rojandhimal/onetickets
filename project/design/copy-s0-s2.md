@@ -102,6 +102,14 @@ FrontendDev's current strings for all of the above are approved as they are; onl
 | Event page access row, nothing set                  | No accessibility details yet · Booked? Reply to your confirmation email to ask the organiser.                                                                                                                                                                                                                                                                                                                                                     |
 | Event page bar                                      | Get tickets · {n} spots left                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
+**Sign out (SEC-16, organiser header)**
+
+| Where                                                                                                                          | Copy                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Header top row, right                                                                                                          | View site · Sign out (white 14/600 text, 44 px tall, 20 px apart) |
+| While signing out                                                                                                              | Signing out…                                                      |
+| Sign-out request failed (role=alert, white card just below Sign out, right-aligned; stay on the page, button back to Sign out) | We couldn't sign you out. Check your connection and try again.    |
+
 **Errors (Sprint 1)**
 
 | Case                                             | Copy                                                                                                                     |

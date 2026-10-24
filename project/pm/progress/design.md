@@ -2,6 +2,13 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- **Done:** Approved [#70](https://github.com/rojandhimal/onetickets/pull/70) (DES-8) at d396981: event page Back and Share now line up with the 1040 px column from 768 px; top stays 16 px.
+- **Done:** [#72](https://github.com/rojandhimal/onetickets/pull/72) (SEC-16) at 9872a88: sign-out placement approved; changes needed because a failed sign-out still landed on /signin; approved at d018f02 after the fix. Added sign-out copy rows.
+- **Next:** S2-4 My tickets reviews when they open.
+- **Blocked:** Nothing.
+
 ## 2026-10-23 (Claude)
 
 - **Done:** Copy and flow for S2-4a "Remove tickets from this device" (copy-s0-s2.md). Approved [#62](https://github.com/rojandhimal/onetickets/pull/62) at eebd9b7 and again at d99df5f (Remove shows whenever the order is saved), rendered at 375 and 1280, 0 axe violations. Re-approved #56 at 8dfed02.

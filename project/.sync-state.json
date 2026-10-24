@@ -1,7 +1,7 @@
 {
   "design/copy-s0-s2.md": {
-    "repo": "07efcd9834b88e321a296203f008a9848c0ce86ae66c9ff62d8eb7cbc6584efc",
-    "shared": "8fe6c12340d5ab05cce98d7edbbda381034bc3c80728cea9d1cd12108b571ea6"
+    "repo": "74041a617b9c1592cc4f6cb7a631382bf39fd12c333c57a4d64c4e51fb86226a",
+    "shared": "22042efa76c3a005b5b1a7b1702b9a3d62dbbf861565c569628970b2cb18609e"
   },
   "design/handoff-s0.md": {
     "repo": "ab15ba69db9ae13e515346bcc6aa45c12acb23de87e0b9837732292d7408ffe3",
@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "9db1eba6b62921b00d363f1fdd485b9999ad66aa774152f86d1ff133275cbff0",
-    "shared": "8ba376535cb91cbcadca6ca405f6a52a5f576c856caf4e63f898e5d16c169e33"
+    "repo": "bd57c53a0616427feb15f01823c91c210e30101348934fc613416b21b1a165c9",
+    "shared": "4458fe55562c954e6db09620b4a42125c2e43b54401b382c5eee65914ac4a7bf"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -52,32 +52,32 @@
     "shared": "d62d45108f624f3980e24c419f23d2e7a9b0b0207dc7bb1c04990653c961a8ff"
   },
   "pm/progress/design.md": {
-    "repo": "17a3d50fe32b673fb0db209b623ffb593432fc80ee18d4ddf93604448b3059db",
-    "shared": "20af40136bf885a9bd272a85a58bf2e150ac7b844bbbc8eb46ce33308190101b"
+    "repo": "778b430fed9ef282d3c774b11281f91279eb5ed55bec2ddae2d2a041b61a8dda",
+    "shared": "cf13a33d30cb677c56ad21eaecdab2f214768bd15ed1bc425b3f5b678dbbe41f"
   },
   "pm/progress/devops.md": {
-    "repo": "9326ade1570fb116ce557e96397b6b587876c9e0c9b7af78907066c51c29eaa6",
-    "shared": "9326ade1570fb116ce557e96397b6b587876c9e0c9b7af78907066c51c29eaa6"
+    "repo": "9de839a9f708339e809e3a35ebdf65ae922960f29c0328678169d3f5c115fc9c",
+    "shared": "9de839a9f708339e809e3a35ebdf65ae922960f29c0328678169d3f5c115fc9c"
   },
   "pm/progress/docs.md": {
     "repo": "cd7780b485ab452b15b6d3792cce5d7deea537fcf377aa3c8e0821ef7f8d247a",
     "shared": "cb19594e57a256a11b0906a75f6ee5b58d6bfaac8eff86f27efe5396f6ed0397"
   },
   "pm/progress/frontend.md": {
-    "repo": "7c39f14659000ab47871f79836aad3847a5f2d212f8e64f4ea90b31066435989",
-    "shared": "0c5d543d85480bc83faee6b23318029b11f4b966eb083605159bd798b1f59c07"
+    "repo": "a15b988ba3dee797c603fe5eee3a0b739e1f5c082cdaa4bbc58b1a7e4e75ae85",
+    "shared": "51140c4c038422f9fae77f82b3c97b9dad4829536a261ad4ccb5e03616c2a403"
   },
   "pm/progress/pm.md": {
-    "repo": "a366195857cfcb6790050cda45767dfa9114095d1854fc9e485a194145408a14",
-    "shared": "265035c314d243873038f88224724894fde21f820a12bc0add1b455fc05fc066"
+    "repo": "d63deb132c306a4dc12ed10e3b9d895bd1b76b7503e8e0eef4afd35288a09d95",
+    "shared": "4b698afba3c43d0a38a66fa513740720e5e62ff7682cc49f7221629828d995c5"
   },
   "pm/progress/qa.md": {
-    "repo": "aa26c5f4ae0a9bcef73e7bc501e7b46468c7603d5f2468e4621289ca4105ff3b",
-    "shared": "a87a0eb5e976918c050d67cc13cb82528af35ad3ec5613f1c16883ca295e19d6"
+    "repo": "d67a7d83c5befa482502ab323fd85d8bba04f36f528c896418463da8cd46331a",
+    "shared": "d6e88d9dc05e53c735974588be1bee9e6d4918567022ae349afde4ccea0e6f48"
   },
   "pm/progress/security.md": {
-    "repo": "ac8dad1fb2c1226dbc2b1dab88d6e4ef0cc6b7d60c1f16248e66ea37f765aeb7",
-    "shared": "ac8dad1fb2c1226dbc2b1dab88d6e4ef0cc6b7d60c1f16248e66ea37f765aeb7"
+    "repo": "afaf063e8832e928105bcb154891581c75dd143d44ea9d3e5cfb25f8969f387c",
+    "shared": "afaf063e8832e928105bcb154891581c75dd143d44ea9d3e5cfb25f8969f387c"
   },
   "pm/working-agreement.md": {
     "repo": "9bf79b8a7906e4fc48c69d351a7bdd504faa99b02c565b13732a5f5359395a4f",
@@ -132,11 +132,11 @@
     "shared": "2e8dc91da84f8448ee4cbfcf65a030ef1e9545a349435f62b8686b05bdf308e5"
   },
   "state/README.md": {
-    "repo": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f",
-    "shared": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f"
+    "repo": "c79df09c67688172d0f4f4b8aa1abae3270ffff00983a11933a0f992cede50d4",
+    "shared": "c79df09c67688172d0f4f4b8aa1abae3270ffff00983a11933a0f992cede50d4"
   },
   "state/graph.jsonl": {
-    "repo": "a916c76f841d974e4ac49b0681c55b63737d43db4ef60896efcb91bf4af444ca",
-    "shared": "a916c76f841d974e4ac49b0681c55b63737d43db4ef60896efcb91bf4af444ca"
+    "repo": "e348a0a51a8d2fa60d6ede19bcda0bb6168d21f0839f29fad9e440030f7bb293",
+    "shared": "e348a0a51a8d2fa60d6ede19bcda0bb6168d21f0839f29fad9e440030f7bb293"
   }
 }

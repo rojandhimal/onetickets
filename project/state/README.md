@@ -66,9 +66,11 @@ Reviewers record their verdict on the PR node, with the commit they reviewed:
 node scripts/state.mjs set '#55' reviews.qa=pass@1a2b3c4
 ```
 
-Set `STATE_BY` to say who you are (for example `STATE_BY=codex/frontend`) and `set` stamps it on
-the meta node with today's date. `pnpm lint` runs `node scripts/state.mjs check`, so CI fails on a
-broken graph.
+Set `STATE_BY` to say who you are (for example `STATE_BY=codex/frontend`). When PM records a merge
+with `set meta main=<sha>`, that stamps `STATE_BY` and today's date on the meta node. Edits to other
+nodes leave the meta line alone, so PRs from different roles don't conflict on it. Quote a SHA made
+only of digits (`main='"2787073"'`), or it is saved as a number. `pnpm lint` runs
+`node scripts/state.mjs check`, so CI fails on a broken graph.
 
 Still add your three-line entry to your progress log. The log is the history; the graph is what the
 next agent reads.
@@ -86,8 +88,9 @@ next agent reads.
 
 Claude project threads edit the copy in the shared project folder; PM's
 `node scripts/sync-project-files.mjs` carries it both ways like the other project files. Changes to
-different nodes merge cleanly because each node is one line. Two edits to the same node are a
-conflict for PM to settle.
+different nodes usually merge cleanly because each node is one line. Two edits to the same node
+are a conflict for PM to settle. Edits to neighbouring lines, or two PRs that both add nodes at the
+end, can also conflict: keep both sides' lines, then run `node scripts/state.mjs check`.
 
 ## Node types
 
