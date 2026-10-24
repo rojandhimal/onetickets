@@ -65,6 +65,11 @@ test('a published event has a public page anyone can open', async ({ page, conte
     'content',
     /opengraph-image/,
   );
+  // The share image renders with its bundled fonts (DES-9).
+  const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
+  const og = await page.request.get(new URL(ogImage!).pathname);
+  expect(og.status()).toBe(200);
+  expect(og.headers()['content-type']).toBe('image/png');
   // Back and share sit on the content's edges at every width, not the viewport's (DES-8).
   const back = await page.getByRole('link', { name: 'Back to events' }).boundingBox();
   const share = await page.getByRole('button', { name: /Share/ }).boundingBox();

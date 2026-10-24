@@ -176,6 +176,11 @@ Organiser text is plain text and is rendered as text only (SEC-3). The map tile 
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
 fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
 or if that fetch fails, it falls back to the template colour.
+Its text uses the page's fonts (DES-9): Bricolage Grotesque 800 and Figtree 700, as static WOFF
+cuts in `src/fonts` (`*-800-latin.woff`, `*-700-latin.woff`, 42 KB together), because the renderer
+can't read WOFF2 or variable fonts. They were made from the site's latin subsets with fontTools
+(`fonttools varLib.instancer`, wght 800 and opsz 96 for Bricolage, wght 700 for Figtree), under
+the same OFL licences. If a file can't be read, the image falls back to the built-in font.
 
 `e2e/tests/event-page.spec.ts` publishes an event through the wizard, then opens its page in a
 fresh browser with no session. It checks the enforced nonce CSP, `private, no-store`, the share
