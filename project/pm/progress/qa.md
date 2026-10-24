@@ -12,11 +12,14 @@ Newest first. Format: date, Done, Next, Blocked.
     - Passes at 5845310 with the nits fixed. BE-7 has been added for the soldOut follow-up.
     - 4ad5e65 (tegs merged main in, and #69 merged as 28c1069) passes after merge. No records are lost. meta.main, DES-8 and the frontend role are stale for the next sync.
   - [#71](https://github.com/rojandhimal/onetickets/pull/71) SEC-23 nodemailer 10.1.7 **passes** at f388e02, as long as the rest of CI goes green. The audit is clean, api tests are 49/49, and a send to Mailpit worked. Nits: the #71 node has no head; meta.main is stale.
+    - Re-check at 86f2e48 (main merged in) passes. Suggestion: keep main's meta line, because it conflicts with #73 if #73 merges first.
+    - 4a8e85c passes: the meta line is restored, and it merges cleanly with #73.
   - [#70](https://github.com/rojandhimal/onetickets/pull/70) DES-8 hero buttons on the 1040 px column **pass** at d396981. The event-page e2e passes at 375, 800, 1280 and 1600 px, and CI is 7/7 green.
   - [#72](https://github.com/rojandhimal/onetickets/pull/72) SEC-16 sign out **fails** at 9872a88.
     - Blocker: if POST /auth/sign-out fails, /signin redirects back to /organiser, so the person is still signed in with no message. The probe is in qa/scripts/qa72.spec.ts.
     - What works: drafts clear, and the happy-path e2e passes. A second tab holding the db doesn't hang sign-out.
     - bde4678: **passes**, as long as E2E goes green. A failed sign-out shows an alert and stays on the page. sign-out.spec passes 6/6, unit tests are 199/199, and the retry probe (qa72b) passes.
+  - [#73](https://github.com/rojandhimal/onetickets/pull/73) PM sync and the state.mjs meta stamp **pass** at 5eb3b88. The new test fails on main and passes here (15/15), and a probe confirms only set meta stamps line 1.
 - **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
 - **Blocked:** nothing.
 

@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 01:50 UTC, by Claude PM (tegs merged #70 (DES-8) and PM sync #69. In review: #71 (SEC-23) and #72 (SEC-16). Ready: SEC-24 for DevOps and BE-7 for BackendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 15:00 UTC, by Claude PM (tegs merged #71 (SEC-23), #72 (SEC-16) and PM sync #73. Ready: SEC-24 for DevOps and BE-7 for BackendDev. FrontendDev has built DES-9 and opens it from main next. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -11,8 +11,7 @@ Last updated: 24 Oct 2026, 01:50 UTC, by Claude PM (tegs merged #70 (DES-8) and 
 
 **Merge queue for tegs:**
 
-- [#71](https://github.com/rojandhimal/onetickets/pull/71) SEC-23 nodemailer 10.1.7: Security and QA pass (`f388e02`). DevOps is merging main into it for a state-graph conflict
-- [#72](https://github.com/rojandhimal/onetickets/pull/72) SEC-16 Sign out on the organiser dashboard: Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`) once E2E is green
+- _(No open PRs in queue)_
 
 **Review follow-up:** #42 QA-3 post-merge review completed with explicit verdict `QA: pass at 532c207` ([comment](https://github.com/rojandhimal/onetickets/pull/42#issuecomment-6236214571)). All open PRs now have explicit independent QA and Security verdicts.
 
@@ -67,7 +66,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - QA-3 Post-merge DEV-4 review (QA): verify #42 at `532c207` against the Docker-image CI criteria and record an explicit verdict. Security/DevOps passes and seven successful checks are present; they do not replace the required QA review
 - BE-5 Ticket-create retry hardening evaluation (BackendDev with FrontendDev; QA and Security review): compare current main's per-tab queue with a lost successful POST response or two tabs replaying a kept new type (ADR 0016). Reproduce before proposing a narrow fix; evaluate the preserved local idempotency receipt approach without importing its duplicate UI. Use a fresh migration number and current-main tests if adopted. This is a follow-up, not a new Sprint 1 acceptance blocker
 
-- DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
+- DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker. FrontendDev (Claude) built it on 24 Oct: static WOFF cuts of Bricolage 800 and Figtree 700, read once per server, render time and PNG size unchanged; PR opens from main next
 - SEC-20 Contact-email default, part 2 (BackendDev and FrontendDev; QA, Security and ProductDesign review; before Sprint 2 sends attendee emails): part 1 merged in #41, removing the silent publisher-email fallback. Publishing without an email is still allowed. Complete the agreed saved-email publish check (`contact_email` in `missing`, checklist item "Contact email for attendees"), visible editable prefill with the signed-in user's email and Review's "Replies from attendees go to {email} · Change". No backfill for existing drafts
 - SEC-17 Optional hardening from #16 / #19 (BackendDev, Security review): use column-scoped update grants so `ot_app` cannot change `ticket_types.event_id`, and document how owner backfills work under FORCE RLS. [Security notes](/project/pm/progress/security.md); not a Sprint 1 blocker
 - ARCH-1 Blocking fix: Stripe charges use on_behalf_of so the organiser is the seller. Fold into S4-3 acceptance criteria before Sprint 4 planning ([architecture review](https://claude.ai/code/artifact/01a2857b-b93c-4784-bffa-af9f6962663f))
@@ -107,11 +106,13 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-- `[claude]` SEC-23 Bump `nodemailer` to 10.1.7 ([#71](https://github.com/rojandhimal/onetickets/pull/71), DevOps): Security and QA pass (`f388e02`); sign-in email still reaches the local test inbox. The api sends no ticket emails yet
-- `[claude]` SEC-16 Sign out on the organiser dashboard ([#72](https://github.com/rojandhimal/onetickets/pull/72), FrontendDev): "Sign out" next to "View site" calls `POST /auth/sign-out` and clears the device drafts even if that fails. A failed sign-out stays on the page and says "We couldn't sign you out. Check your connection and try again." Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`)
+_(No items currently in review)_
 
 ### Done
 
+- SEC-16 Sign out on the organiser dashboard ([#72](https://github.com/rojandhimal/onetickets/pull/72)), merged 24 Oct as `970aefc`; Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`). "Sign out" next to "View site" calls `POST /auth/sign-out` and clears the device drafts either way. A failed sign-out stays on the page with "We couldn't sign you out. Check your connection and try again."
+- SEC-23 `nodemailer` 10.1.7 ([#71](https://github.com/rojandhimal/onetickets/pull/71)), merged 24 Oct as `185c3b6`; Security pass (`f388e02`), QA pass (`4a8e85c`)
+- PM sync with the meta-line fix ([#73](https://github.com/rojandhimal/onetickets/pull/73)), merged 24 Oct as `06cf06d`; QA pass (`5eb3b88`). `state.mjs` edits no longer rewrite the graph's first line, so role PRs stop conflicting on it
 - DES-8 Event-page Back and Share buttons line up with the 1040 px content column from 768 px ([#70](https://github.com/rojandhimal/onetickets/pull/70)), merged 24 Oct as `acf8a74`; ProductDesign and QA pass (`d396981`)
 - PM sync recording #66 and #68 ([#69](https://github.com/rojandhimal/onetickets/pull/69)), merged 24 Oct as `28c1069`; QA pass (`4ad5e65`, after tegs merged main into it)
 - DES-10 Sold-out bar and price note ([#66](https://github.com/rojandhimal/onetickets/pull/66)), merged 23 Oct as `e0f33b1`; ProductDesign pass (`c695a7c`). Sold out follows `soldOut` (ARCH-2): "All tickets taken" with a grey "Sold out" label. Held (no spots left, not sold out) reads "All taken right now" and keeps Get tickets. QA passed it after merge (`c695a7c`, web tests 193/193)
