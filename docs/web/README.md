@@ -133,6 +133,12 @@ opens on Drafts when nothing is coming up. Each card has the date, title, a Live
 booked of capacity for live events, and one action: "Open event page", or "Finish setting up",
 which returns to the step the draft was left on. The step is saved as soon as it changes.
 
+The organiser header has "View site" and "Sign out" (SEC-16). Sign out calls `POST /auth/sign-out`,
+then `clearDeviceDrafts()` whether or not the api answered, then loads `/signin` in full, so a shared
+computer keeps no session and no offline drafts. The api also sends `Clear-Site-Data: "storage"`.
+`e2e/tests/sign-out.spec.ts` checks that the drafts database is gone and that the old session cookie
+no longer signs anyone in.
+
 Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
 build made with it off still picks it up when it's turned on.
 

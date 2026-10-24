@@ -1,4 +1,5 @@
 import type { ApiErrorBody } from '@onetickets/shared';
+import { clearDeviceDrafts } from './draft-store';
 
 type Failure =
   { ok: false; kind: 'invalid'; message: string } | { ok: false; kind: 'rate-limited' | 'failed' };
@@ -51,3 +52,13 @@ export async function createOrganisation(name: string): Promise<CreateOrganisati
 }
 
 export const GOOGLE_START_URL = '/api/auth/google/start';
+
+/**
+ * Ends the session and wipes what this device keeps (SEC-16). The drafts go even when the api
+ * can't be reached, so the next person on a shared computer never sees them; the api's
+ * `Clear-Site-Data: "storage"` is the backstop when it can.
+ */
+export async function signOut(): Promise<void> {
+  await post('/auth/sign-out', {});
+  await clearDeviceDrafts().catch(() => undefined);
+}
