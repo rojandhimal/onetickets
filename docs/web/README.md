@@ -140,7 +140,8 @@ page stays put with "We couldn't sign you out. Check your connection and try aga
 comes back, rather than looking signed out on a shared computer. The api also sends
 `Clear-Site-Data: "storage"`.
 `e2e/tests/sign-out.spec.ts` checks that the drafts database is gone, that the old session cookie no
-longer signs anyone in, and that a failed call keeps the organiser signed in with the alert.
+longer signs anyone in, and that a failed call (offline or a 500) keeps the organiser on the page with the alert and still
+clears the drafts.
 
 Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
 build made with it off still picks it up when it's turned on.
