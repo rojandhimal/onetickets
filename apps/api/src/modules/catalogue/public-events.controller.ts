@@ -48,13 +48,16 @@ export class PublicEventsController {
     return event;
   }
 
-  /** Banners stored on local disk (development). In AWS they come from the CDN instead. */
+  /**
+   * Banner images, from local disk in development or the uploads bucket in AWS. Cloudflare
+   * caches the 200s; a 404 is never stored, so a banner still being written isn't cached as gone.
+   */
   @Get('banners/:key')
   @Public()
   async banner(@Param('key') key: string, @Res() response: Response): Promise<void> {
     const image = BANNER_KEY.test(key) ? await this.events.bannerBytes(key) : null;
     if (!image) {
-      response.status(404).end();
+      response.status(404).set('cache-control', 'no-store').end();
       return;
     }
     response
