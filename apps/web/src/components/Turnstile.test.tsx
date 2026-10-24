@@ -48,6 +48,7 @@ describe('Turnstile (SEC-10)', () => {
       action: 'signin',
       execution: 'execute',
       appearance: 'interaction-only',
+      size: 'flexible',
       retry: 'never',
     });
     expect(fake.api.execute).not.toHaveBeenCalled();
@@ -78,6 +79,16 @@ describe('Turnstile (SEC-10)', () => {
       await expect(token).resolves.toBeNull();
     },
   );
+
+  it('takes no room in the form until Cloudflare wants an interaction', async () => {
+    const { container } = await mount();
+    const box = container.firstElementChild as HTMLElement;
+    expect(box).not.toBeVisible();
+    act(() => fake.options()['before-interactive-callback']());
+    expect(box).toBeVisible();
+    act(() => fake.options()['after-interactive-callback']());
+    expect(box).not.toBeVisible();
+  });
 
   it('removes the widget when it unmounts', async () => {
     const { unmount } = await mount();

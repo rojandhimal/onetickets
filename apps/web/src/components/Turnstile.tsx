@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 
 // Cloudflare Turnstile (SEC-10). The widget only runs when it's asked for a token, and only shows
 // itself when Cloudflare wants the person to do something.
@@ -13,11 +13,14 @@ type RenderOptions = {
   action: string;
   execution: 'execute';
   appearance: 'interaction-only';
+  size: 'flexible';
   retry: 'never';
   callback: (token: string) => void;
   'error-callback': () => boolean;
   'expired-callback': () => void;
   'timeout-callback': () => void;
+  'before-interactive-callback': () => void;
+  'after-interactive-callback': () => void;
 };
 
 export type TurnstileApi = {
@@ -77,15 +80,17 @@ type Props = {
   siteKey: string;
   /** Shown in Cloudflare's analytics, e.g. `signin`. */
   action: string;
-  className?: string;
   ref?: Ref<TurnstileHandle>;
 };
 
-export function Turnstile({ siteKey, action, className, ref }: Props) {
+export function Turnstile({ siteKey, action, ref }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const rendered = useRef<Widget | null>(null);
   const mounting = useRef<Promise<Widget | null> | null>(null);
   const pending = useRef<((token: string | null) => void) | null>(null);
+  // Hidden until Cloudflare wants an interaction. Turnstile puts a hidden input and frame in the
+  // container even when there's nothing to see, so it would otherwise take a gap in the form.
+  const [interactive, setInteractive] = useState(false);
 
   const settle = (token: string | null) => {
     pending.current?.(token);
@@ -104,6 +109,8 @@ export function Turnstile({ siteKey, action, className, ref }: Props) {
           action,
           execution: 'execute',
           appearance: 'interaction-only',
+          // Fills the form's width when it does show.
+          size: 'flexible',
           // We ask again on the next submit instead of letting it loop.
           retry: 'never',
           callback: (token) => settle(token),
@@ -113,6 +120,8 @@ export function Turnstile({ siteKey, action, className, ref }: Props) {
           },
           'expired-callback': () => settle(null),
           'timeout-callback': () => settle(null),
+          'before-interactive-callback': () => setInteractive(true),
+          'after-interactive-callback': () => setInteractive(false),
         });
         rendered.current = { api, id, used: false };
         return rendered.current;
@@ -148,5 +157,5 @@ export function Turnstile({ siteKey, action, className, ref }: Props) {
     },
   }));
 
-  return <div ref={container} className={className} />;
+  return <div ref={container} hidden={!interactive} />;
 }

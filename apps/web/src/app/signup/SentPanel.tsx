@@ -88,14 +88,7 @@ export function SentPanel({ email, onUseDifferentEmail, turnstileSiteKey = null 
       <p role="status" className={styles.resendStatus}>
         {status === 'sent' ? "Sent again. Check your spam folder if it's not there." : ''}
       </p>
-      {turnstileSiteKey && (
-        <Turnstile
-          ref={turnstile}
-          siteKey={turnstileSiteKey}
-          action="resend"
-          className={styles.turnstile}
-        />
-      )}
+      {turnstileSiteKey && <Turnstile ref={turnstile} siteKey={turnstileSiteKey} action="resend" />}
       {status in resendError && (
         <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
           <Icon name="alert" />

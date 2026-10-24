@@ -21,7 +21,8 @@ const bannerText: Record<Exclude<Banner, null>, string> = {
   link: 'That sign-in link has expired or was already used. Send yourself a new one.',
   'rate-limited': "You've asked for a few links in a row. Wait a minute, then try again.",
   challenge: "We couldn't finish the security check. Try again.",
-  unavailable: "We can't send sign-in links for a moment. Try again in a minute.",
+  unavailable:
+    "We can't send sign-in links for a moment. Try again in a minute, or continue with Google.",
   failed: "We couldn't send the link. Check your connection and try again.",
 };
 
@@ -142,14 +143,7 @@ export function SignupForm({ mode = 'signup', initialError, turnstileSiteKey = n
           )}
         </div>
 
-        {turnstileSiteKey && (
-          <Turnstile
-            ref={turnstile}
-            siteKey={turnstileSiteKey}
-            action={mode}
-            className={styles.turnstile}
-          />
-        )}
+        {turnstileSiteKey && <Turnstile ref={turnstile} siteKey={turnstileSiteKey} action={mode} />}
 
         {isSignup && (
           <div className={`${screen.notice} ${screen.noticeInfo}`}>

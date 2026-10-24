@@ -83,7 +83,7 @@ describe('sign-in form with Turnstile', () => {
     render(<SignupForm initialError={null} turnstileSiteKey={SITE_KEY} />);
     await submit();
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      "We can't send sign-in links for a moment. Try again in a minute.",
+      "We can't send sign-in links for a moment. Try again in a minute, or continue with Google.",
     );
     expect(screen.queryByRole('heading', { name: 'Check your email' })).toBeNull();
   });
