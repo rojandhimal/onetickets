@@ -89,6 +89,10 @@ services:
       # in Secrets Manager.
       MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       # GOOGLE_CLIENT_ID is left unset, so Google sign-in stays off.
+      # Turnstile on sign-in (SEC-10, ADR 0021): off unless .env turns it on. The default secret
+      # is Cloudflare's always-pass test key, which the api refuses in production.
+      TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-false}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
       # Uploaded event banners are kept in the banners volume, so they survive rebuilds.
       # After a publish the api tells the web app to drop its cached public pages, with a
       # secret both share. Locally a fixed value; AWS generates one in Secrets Manager.
@@ -118,6 +122,9 @@ services:
     environment:
       API_URL: http://api.onetickets.internal:3001
       FEATURE_EVENT_WIZARD: ${FEATURE_EVENT_WIZARD:-false}
+      # Cloudflare's always-pass test site key, matching the api's test secret above.
+      TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-false}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
       REVALIDATE_SECRET: local-only-revalidate-secret-0000
     ports:
       - '127.0.0.1:3000:3000'

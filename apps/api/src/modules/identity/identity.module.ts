@@ -16,6 +16,7 @@ import { RateLimiter } from './rate-limiter.js';
 import { RequestOriginMiddleware } from './request-origin.middleware.js';
 import { SessionMiddleware } from './session.middleware.js';
 import { SessionsRepository } from './sessions.repository.js';
+import { loadTurnstileSecret, Turnstile } from './turnstile.js';
 
 @Module({
   imports: [NotificationsModule],
@@ -31,6 +32,7 @@ import { SessionsRepository } from './sessions.repository.js';
     OrganisationsService,
     RateLimiter,
     SessionsRepository,
+    { provide: Turnstile, useFactory: () => new Turnstile(loadTurnstileSecret()) },
     { provide: APP_GUARD, useClass: AccessGuard },
   ],
 })

@@ -2,6 +2,19 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, SEC-10 Turnstile on sign-in)
+
+- **Done:**
+  - #74 (DES-9) merged.
+  - SEC-10 (#77) adds Cloudflare Turnstile to /signin, /signup and resend, behind `TURNSTILE_ENABLED` on both the web app and the api, off by default.
+  - The api checks the token with siteverify before it sends a link, and fails closed with 503 `challenge_unavailable` when Cloudflare can't answer. The per-IP limit is counted before the check, and the per-email limit only after it passes.
+  - The enforced CSP allows challenges.cloudflare.com only on the two sign-in pages with the flag on.
+  - Cloudflare's test keys are used in Docker and tests, and the api refuses them in production.
+  - Written up in ADR 0021.
+  - Checks: unit tests (api, web) and api integration tests pass. A real-browser run with a stand-in Cloudflare script showed no CSP violations at 375 or 1280 px, and the fail-closed message appeared.
+- **Next:** Security, QA and ProductDesign review. Then the ticket screen against the order API tegs keeps.
+- **Blocked:** Real Turnstile keys come from tegs at launch. Nothing blocks the PR.
+
 ## 2026-10-24 (Claude, DES-9 share-image fonts)
 
 - **Done:** #72 (SEC-16) merged. DES-9: the event share image now uses Bricolage Grotesque 800 and Figtree 700, as static WOFF cuts of the site's own latin subsets (42 KB together), read once per server. Render time and PNG size are unchanged (warm about 40 ms, 47 KB). Event page e2e checks the image renders.

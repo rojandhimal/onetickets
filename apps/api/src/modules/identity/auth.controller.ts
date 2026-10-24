@@ -102,7 +102,12 @@ export class AuthController {
     @Req() request: AppRequest,
     @Body(new ZodBody(magicLinkRequest)) body: MagicLinkRequest,
   ): Promise<void> {
-    await this.auth.requestMagicLink(body.email, body.organiserName ?? null, clientIp(request));
+    await this.auth.requestMagicLink(
+      body.email,
+      body.organiserName ?? null,
+      clientIp(request),
+      body.turnstileToken,
+    );
   }
 
   @Post('auth/magic-link/verify')

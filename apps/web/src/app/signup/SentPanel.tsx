@@ -3,27 +3,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
+import { Turnstile, type TurnstileHandle } from '@/components/Turnstile';
 import { requestMagicLink } from '@/lib/auth-client';
 import styles from './signup.module.css';
 
 export const RESEND_AFTER_SECONDS = 30;
 
-type ResendStatus = 'idle' | 'sending' | 'sent' | 'rate-limited' | 'failed';
+type ResendStatus = 'idle' | 'sending' | 'sent' | ResendError;
+type ResendError = 'rate-limited' | 'challenge' | 'unavailable' | 'failed';
 
-const resendError: Record<'rate-limited' | 'failed', string> = {
+const resendError: Record<ResendError, string> = {
   'rate-limited': "You've asked for a few links in a row. Wait a minute, then try again.",
+  challenge: "We couldn't finish the security check. Try again.",
+  unavailable: "We can't send sign-in links for a moment. Try again in a minute.",
   failed: "We couldn't send it again. Check your connection and try again.",
 };
 
 type Props = {
   email: string;
   onUseDifferentEmail: () => void;
+  /** Cloudflare Turnstile site key when SEC-10 is on, else null. */
+  turnstileSiteKey?: string | null;
 };
 
-export function SentPanel({ email, onUseDifferentEmail }: Props) {
+export function SentPanel({ email, onUseDifferentEmail, turnstileSiteKey = null }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(RESEND_AFTER_SECONDS);
   const [status, setStatus] = useState<ResendStatus>('idle');
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   // Move focus to the new state so screen reader and keyboard users follow along.
   useEffect(() => {
@@ -38,9 +45,15 @@ export function SentPanel({ email, onUseDifferentEmail }: Props) {
 
   async function resend() {
     setStatus('sending');
-    const result = await requestMagicLink(email);
+    const token = turnstileSiteKey ? await turnstile.current?.getToken() : undefined;
+    if (turnstileSiteKey && !token) {
+      // Nothing was sent, so they can try again straight away.
+      setStatus('challenge');
+      return;
+    }
+    const result = await requestMagicLink(email, token ?? undefined);
     if (result.ok) setStatus('sent');
-    else setStatus(result.kind === 'rate-limited' ? 'rate-limited' : 'failed');
+    else setStatus(result.kind === 'invalid' ? 'failed' : result.kind);
     setSecondsLeft(RESEND_AFTER_SECONDS);
   }
 
@@ -75,10 +88,18 @@ export function SentPanel({ email, onUseDifferentEmail }: Props) {
       <p role="status" className={styles.resendStatus}>
         {status === 'sent' ? "Sent again. Check your spam folder if it's not there." : ''}
       </p>
-      {(status === 'rate-limited' || status === 'failed') && (
+      {turnstileSiteKey && (
+        <Turnstile
+          ref={turnstile}
+          siteKey={turnstileSiteKey}
+          action="resend"
+          className={styles.turnstile}
+        />
+      )}
+      {status in resendError && (
         <div role="alert" className={`${screen.notice} ${screen.noticeError}`}>
           <Icon name="alert" />
-          <p>{resendError[status]}</p>
+          <p>{resendError[status as ResendError]}</p>
         </div>
       )}
     </main>

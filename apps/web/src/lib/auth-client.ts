@@ -26,11 +26,25 @@ async function failure(res: Response | null): Promise<Failure> {
   return { ok: false, kind: 'failed' };
 }
 
-export type RequestLinkResult = { ok: true } | Failure;
+export type RequestLinkResult =
+  | { ok: true }
+  | Failure
+  // Turnstile (SEC-10): the check failed, or the api couldn't ask Cloudflare. No link was sent.
+  | { ok: false; kind: 'challenge' | 'unavailable' };
 
-export async function requestMagicLink(email: string): Promise<RequestLinkResult> {
-  const res = await post('/auth/magic-link', { email });
-  return res?.ok ? { ok: true } : failure(res);
+/** `turnstileToken` is sent when the page has Turnstile on (SEC-10). */
+export async function requestMagicLink(
+  email: string,
+  turnstileToken?: string,
+): Promise<RequestLinkResult> {
+  const res = await post('/auth/magic-link', { email, turnstileToken });
+  if (res?.ok) return { ok: true };
+  if (res?.status === 403 || res?.status === 503) {
+    const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
+    if (body?.code === 'challenge_failed') return { ok: false, kind: 'challenge' };
+    if (body?.code === 'challenge_unavailable') return { ok: false, kind: 'unavailable' };
+  }
+  return failure(res);
 }
 
 // The session arrives as a cookie; the body isn't needed, so an empty one can't stall sign-in.
