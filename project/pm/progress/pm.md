@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (00:50 UTC, Claude)
+
+- **Done:** tegs merged #66 (DES-10, sold-out bar and price note) as `e0f33b1` and the PM sync #68 as `d2f11d1`. #68 kept the restored graph records. Recorded both, DES-10 done, and promoted DES-8 (hero buttons on the 1040 px column) to ready for FrontendDev, which is free again.
+- **Next:** QA checks #66 after merge, since tegs merged it on Design's pass. DevOps claims SEC-23, FrontendDev claims DES-8.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-23 (23:40 to 23:50 UTC, Claude)
 
 - **Done:** tegs merged #62 as `f11ab57`, so S2-4a is done and the ticket screen meets Security's ADR 0020 condition. Merged main into #65 and recorded it. FrontendDev (Claude) is free, so I pointed it at DES-10, the only unassigned ready frontend item.
