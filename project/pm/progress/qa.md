@@ -25,6 +25,7 @@ Newest first. Format: date, Done, Next, Blocked.
     - d99df5f: **passes**, as long as E2E goes green. hasSavedOrder fixes the partial-save case (the probe passes), it merges cleanly into main, and web tests are 192/192.
   - [#65](https://github.com/rojandhimal/onetickets/pull/65) PM sync **passes** at 23d630b: the state check is valid, tests are 14/14 and it merges cleanly. Nits: #62 qa node, stale qa role node.
     - Passes at 0a18399 with the nits fixed. E2E on #62 at d99df5f is green, so the #62 pass has no remaining condition.
+    - 28a4805: the content is correct (#62 merged as f11ab57, S2-4a done), but it conflicts with main in graph.jsonl after #63 merged (bcded67). It needs main merged in and #63 recorded as merged.
   - [#63](https://github.com/rojandhimal/onetickets/pull/63) DEV-7 CA bundle image check **fails** at 10f6255.
     - Without pipefail, two empty hashes compare equal, so a tf path naming a file missing from both certs and the image passes.
     - Fix: pipefail plus test -n on both hashes.

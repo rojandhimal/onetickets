@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 23 Oct 2026, 23:40 UTC, by Claude PM (tegs merged #62 (S2-4a) as `f11ab57`, after #60 put the agent assignment rule (D19) live: run `node scripts/state.mjs next <agent> <role>` at the start of a session. DEV-7 (#63) is ready for tegs. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 23 Oct 2026, 23:55 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65 (PM sync) and #67 (SEC-22, the dependency audit fix) tonight. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -65,7 +65,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 - QA-3 Post-merge DEV-4 review (QA): verify #42 at `532c207` against the Docker-image CI criteria and record an explicit verdict. Security/DevOps passes and seven successful checks are present; they do not replace the required QA review
 - BE-5 Ticket-create retry hardening evaluation (BackendDev with FrontendDev; QA and Security review): compare current main's per-tab queue with a lost successful POST response or two tabs replaying a kept new type (ADR 0016). Reproduce before proposing a narrow fix; evaluate the preserved local idempotency receipt approach without importing its duplicate UI. Use a fresh migration number and current-main tests if adopted. This is a follow-up, not a new Sprint 1 acceptance blocker
-- DEV-6 SEC-5 follow-ups (DevOps, before staging / any dual-stack change): document that Free combines sign-in and CSP reports in one 20-per-10-second counter (shared-NAT impact), and add Cloudflare IPv6 ranges if the ALB becomes dual-stack. Other #39 QA notes are already resolved or covered by the README: target health checks bypass listener rules, path matching handles case/slashes and ignores query strings, and ranges must be checked before apply
 
 - DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 - DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker
@@ -96,6 +95,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
+- `[unassigned]` SEC-23 Bump `nodemailer` to 10.1.4 or later for its moderate advisory (DevOps; Security and QA review). Follow-up from #67; check sign-in and ticket emails still reach the local test inbox
 - `[unassigned]` DES-10 Before enabling S2 booking (FrontendDev, ProductDesign and QA): implement the sold-out bar and price-note copy from the same review; preserve ARCH-2's distinction between held and sold tickets
 
 ### In progress
@@ -108,10 +108,13 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-- `[claude]` **DEV-7 CI check that the api image carries the RDS CA bundle** (DevOps; QA and Security review), [PR #63](https://github.com/rojandhimal/onetickets/pull/63). Follow-up to SEC-6. Security passed at `10f6255`. QA failed it there: without `pipefail`, two empty hashes compare equal, so a missing certificate file passes. DevOps fixed it, and QA passed `184d4f9` with all 12 checks green. Security's pass holds at `184d4f9`, so it's ready for tegs
+_(No items currently in review)_
 
 ### Done
 
+- SEC-22 High advisories failing Dependency audit ([#67](https://github.com/rojandhimal/onetickets/pull/67), from tegs's CI-fix thread), merged 23 Oct as `f380c8f`: `zod` `^4.6.6` (GHSA-mrhx-c7xc-m3w5), `body-parser` 2.4.0 (GHSA-27r3-jxmh-p828) and a `multer` `^2.5.0` override until Nest ships the fix. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)
+- PM sync after the D19 merge ([#65](https://github.com/rojandhimal/onetickets/pull/65)), merged 23 Oct as `04e7da7`; QA pass (`0a18399`). Its last records were lost when main was merged into it on GitHub, so this board and the graph restore them
+- DEV-7 CI check that the api image carries the RDS CA bundle ([#63](https://github.com/rojandhimal/onetickets/pull/63)), merged 23 Oct as `bcded67`; QA and Security pass (`184d4f9`). CI fails if the certificate `sslrootcert` names is missing from the image or differs from `apps/api/certs`
 - S2-4a Remove from this device and expiring saved tickets ([#62](https://github.com/rojandhimal/onetickets/pull/62)), merged 23 Oct as `f11ab57`; QA, Security and ProductDesign pass (`d99df5f`), 7 CI checks green. "Remove tickets from this device" on the ticket screen deletes the saved order, its page and the tab's key, and a saved order is never served more than 7 days after its event ends. This meets Security's ADR 0020 condition for turning `FEATURE_TICKETS` on
 - D19 agent assignment rule and PM sync ([#60](https://github.com/rojandhimal/onetickets/pull/60)), merged 23 Oct as `2787073`: every task names its agent, one task at a time per agent and role, `next`, `claim` and `release` in `scripts/state.mjs`, and PM releases claims idle for more than 5 days. QA pass at the merged head `b4bc226`, which added S2-4a to the graph
 - S2-3 parts 1 and 2: ticket screen ([#56](https://github.com/rojandhimal/onetickets/pull/56), `da8d689`; QA, Security and Design pass at `8dfed02`) and ticket signing ([#58](https://github.com/rojandhimal/onetickets/pull/58), `0a4ce89`; QA and Security pass at `eda1451`), merged 23 Oct. The story stays in progress for issuing and the email
@@ -127,7 +130,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - BE-1 Catalogue backend hardening ([#46](https://github.com/rojandhimal/onetickets/pull/46)), merged 21 Oct as `afb1f52`; QA and Security pass, all 7 checks green
 - Sprint 1 acceptance rollup ([#49](https://github.com/rojandhimal/onetickets/pull/49)), merged 21 Oct as `88a4486`; QA and Security pass
 - S1-5 Browse upcoming events ([#44](https://github.com/rojandhimal/onetickets/pull/44)), merged 18 Oct as `869f8b6`; QA pass (`4745b87`), ProductDesign approved (`4745b87`), Security pass (`4745b87`), seven CI checks green. Closes Sprint 1 feature development
-- DEV-6 SEC-5 follow-ups ([#45](https://github.com/rojandhimal/onetickets/pull/45)), merged 18 Oct as `8655fc8`; QA pass (`f3ed17f`), Security pass (`f3ed17f`), 12 CI checks green. Cloudflare IPv6 ALB ingress added and Free rate-limit counter documented
 - DEV-4 Docker API/web image builds in PR CI ([#42](https://github.com/rojandhimal/onetickets/pull/42)), merged 17 Oct at `b839748`; Security and DevOps passed `532c207`, QA-3 post-merge pass completed at `532c207`, seven checks green
 - SEC-5 Cloudflare edge protection ([#39](https://github.com/rojandhimal/onetickets/pull/39)), merged 17 Oct at `2c05228`; [QA pass](https://github.com/rojandhimal/onetickets/pull/39#issuecomment-6214319585) and Security pass at `2a21efc`, ten checks green. Written infrastructure only; owner token/DNS steps updated, Free plan retained, Pro not authorised
 - SEC-20 part 1 ([#41](https://github.com/rojandhimal/onetickets/pull/41)), merged 17 Oct at `bb50123`; [QA pass](https://github.com/rojandhimal/onetickets/pull/41#issuecomment-6219658433) and Security pass at `3c69b6f`, five checks green. Empty contact email stays empty; required-email UI/API work remains under part 2

@@ -2,10 +2,14 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
-## 2026-10-23 (23:40 UTC, Claude)
+## 2026-10-23 (23:40 to 23:50 UTC, Claude)
 
 - **Done:** tegs merged #62 as `f11ab57`, so S2-4a is done and the ticket screen meets Security's ADR 0020 condition. Merged main into #65 and recorded it. FrontendDev (Claude) is free, so I pointed it at DES-10, the only unassigned ready frontend item.
-- **Next:** tegs merges #63 and #65. FrontendDev claims DES-10.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). tegs's CI-fix thread already opened #67 with the fix, so I recorded it as SEC-22 (DevOps, Security and QA review). tegs merged #65 as `04e7da7`, but the main merge on GitHub kept main's older graph lines, so this sync restores #62, #63, S2-4a, DEV-7 and the role lines. Removed the stale DEV-6 backlog card (done in #45).
+- **Then:** tegs merged #67 as `f380c8f`, so SEC-22 is done and Dependency audit is green again.
+- **Next:** QA reviews this sync. FrontendDev claims DES-10. DevOps (free) can claim SEC-23, the `nodemailer` follow-up I added as ready.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). Opened SEC-22 for DevOps, the free role, with Security and QA review. Removed the stale DEV-6 backlog card (done in #45).
+- **Next:** DevOps lands SEC-22, then I merge main into #65 so it goes green. FrontendDev claims DES-10.
 - **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
 
 ## 2026-10-23 (19:50 UTC, Claude)
