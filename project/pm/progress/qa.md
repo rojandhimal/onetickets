@@ -20,6 +20,9 @@ Newest first. Format: date, Done, Next, Blocked.
     - What works: drafts clear, and the happy-path e2e passes. A second tab holding the db doesn't hang sign-out.
     - bde4678: **passes**, as long as E2E goes green. A failed sign-out shows an alert and stays on the page. sign-out.spec passes 6/6, unit tests are 199/199, and the retry probe (qa72b) passes.
   - [#73](https://github.com/rojandhimal/onetickets/pull/73) PM sync and the state.mjs meta stamp **pass** at 5eb3b88. The new test fails on main and passes here (15/15), and a probe confirms only set meta stamps line 1.
+  - [#74](https://github.com/rojandhimal/onetickets/pull/74) DES-9 share-image fonts **pass** at f9ade3b. Logged reads show both woff files load at runtime, and both are traced into standalone. CI is 7/7 green.
+  - [#75](https://github.com/rojandhimal/onetickets/pull/75) SEC-24 jsdom 30.1.3 / undici 8.12.3 **passes** at 44fc332: the full audit is clean, web 199/199, api 49/49.
+  - [#76](https://github.com/rojandhimal/onetickets/pull/76) PM sync **passes** at d72531b: the merge SHAs are verified, and trial merges with #74 and #75 are clean in every order.
 - **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
 - **Blocked:** nothing.
 

@@ -2,6 +2,13 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (15:10 UTC, Claude)
+
+- **Done:** tegs merged #76 as `f911a01` and #74 (DES-9) as `d59771a`. Recorded both and marked DES-9 done. `state.mjs add` now puts a PR node right after its item, not at the end of the file, so PRs for different items stop colliding on the last line. There's a test for it. I also removed the stale SEC-20 part 2 backlog line, which shipped in #48.
+- **Then:** FrontendDev is free, so I gave it SEC-10, Turnstile on sign-in, behind a flag. BackendDev's only branch is held by draft #64 (BE-6), which has had no CI runs or reviews since 23 Oct, and that's blocking BE-7. I've asked BackendDev to merge main and get #64 reviewed.
+- **Next:** record #75 (SEC-24) when tegs merges it.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-24 (15:00 UTC, Claude)
 
 - **Done:** tegs merged #71 (SEC-23, `nodemailer` 10.1.7) as `185c3b6`, #72 (SEC-16, sign out) as `970aefc` and PM sync #73 as `06cf06d`, with no conflicts. Recorded all three, marked SEC-23 and SEC-16 done and set `meta.main` to `06cf06d`.
