@@ -2,6 +2,15 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude), BE-7
+
+- **Done:** #64 (BE-6, S3 banner adapter) merged.
+- **Done:** BE-7. The public event's `spotsLeft` now counts the same on-sale types as `soldOut`.
+  Both come from `eventAvailability` in `catalogue/sales-window.ts`, with unit tests for QA's case
+  from #66.
+- **Next:** QA review. After that, S2-3 issuing once tegs picks the order API.
+- **Blocked:** nothing.
+
 ## 2026-10-23 (Claude), BE-6
 
 - **Done:** BE-6, the S3 banner adapter, in #64.
