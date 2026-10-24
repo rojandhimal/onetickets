@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 00:50 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65, #66 (DES-10), #67 (SEC-22, the dependency audit fix) and #68 overnight. Ready: SEC-23 for DevOps, DES-8 for FrontendDev and BE-7 for BackendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 01:50 UTC, by Claude PM (tegs merged #70 (DES-8) and PM sync #69. In review: #71 (SEC-23) and #72 (SEC-16). Ready: SEC-24 for DevOps and BE-7 for BackendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -11,7 +11,8 @@ Last updated: 24 Oct 2026, 00:50 UTC, by Claude PM (tegs merged #62 (S2-4a), #63
 
 **Merge queue for tegs:**
 
-- _(No open PRs in queue)_
+- [#71](https://github.com/rojandhimal/onetickets/pull/71) SEC-23 nodemailer 10.1.7: Security and QA pass (`f388e02`). DevOps is merging main into it for a state-graph conflict
+- [#72](https://github.com/rojandhimal/onetickets/pull/72) SEC-16 Sign out on the organiser dashboard: Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`) once E2E is green
 
 **Review follow-up:** #42 QA-3 post-merge review completed with explicit verdict `QA: pass at 532c207` ([comment](https://github.com/rojandhimal/onetickets/pull/42#issuecomment-6236214571)). All open PRs now have explicit independent QA and Security verdicts.
 
@@ -84,7 +85,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-14 Must-have before Sprint 2 free checkout ships: enforce CSP across the whole site, not only /e/:slug, and review 'unsafe-inline' styles (ADR 0018) (FrontendDev, Security)
 - DEV-2 After AWS accounts exist: AWS Agent Toolkit on tegs's machine with a read-only staging profile, for logs, costs and failed deploys. Not in the repo, not for the cloud threads (DevOps)
 - SEC-15 Before launch: per-user rate limit on banner uploads and image processing concurrency 1, so one account can't starve the api (BackendDev)
-- SEC-16 When the web sign-out control is built: call clearDeviceDrafts() (FrontendDev). The api side, Clear-Site-Data on sign-out, shipped in #16
 - DES-7 Sprint 10 designs (canvas v29, [handoff-s10.md](/project/design/handoff-s10.md)). Defaults to confirm with tegs before Sprint 10: the founding offer waives only the OneTickets fee (card fees still apply); the data export link expires after 7 days. The Eventbrite and TryBooking export steps need checking before launch
 - BE-1 From QA's #16 and #23 reviews, not blocking (BackendDev unless noted). Organisation-name cleanup (#34) and DEV-4 (#42) have merged. Remaining: live events that move into the past, server-side place resolution and a narrower public projection than the events_public row policy; coordinate with SEC-20 part 2
 - ARCH-5 Before the Sprint 9 load test: if QA 3.3 (p75 LCP < 1.5 s on 4G) misses on staging, revisit event-page caching: hash-based CSP or edge-cached HTML instead of private, no-store (FrontendDev, Security)
@@ -94,9 +94,8 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
-- `[unassigned]` SEC-23 Bump `nodemailer` to 10.1.4 or later for its moderate advisory (DevOps; Security and QA review). Follow-up from #67; check sign-in and ticket emails still reach the local test inbox
+- `[unassigned]` SEC-24 Bump `undici` to 8.12.2 or later in the web app's dev tools (DevOps; Security and QA review). Found on #71: the full `pnpm audit` lists `undici` 8.11.2 through `apps/web` > `jsdom`, one high (GHSA-xjj6-f33q-929c) and two moderate (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472). It is a dev dependency, so the production audit and CI stay green. Bump `jsdom`, or add a pnpm override if no `jsdom` release carries the fix
 - `[unassigned]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` (BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
-- `[unassigned]` DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 
 ### In progress
 
@@ -108,10 +107,13 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-_(No items currently in review)_
+- `[claude]` SEC-23 Bump `nodemailer` to 10.1.7 ([#71](https://github.com/rojandhimal/onetickets/pull/71), DevOps): Security and QA pass (`f388e02`); sign-in email still reaches the local test inbox. The api sends no ticket emails yet
+- `[claude]` SEC-16 Sign out on the organiser dashboard ([#72](https://github.com/rojandhimal/onetickets/pull/72), FrontendDev): "Sign out" next to "View site" calls `POST /auth/sign-out` and clears the device drafts even if that fails. A failed sign-out stays on the page and says "We couldn't sign you out. Check your connection and try again." Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`)
 
 ### Done
 
+- DES-8 Event-page Back and Share buttons line up with the 1040 px content column from 768 px ([#70](https://github.com/rojandhimal/onetickets/pull/70)), merged 24 Oct as `acf8a74`; ProductDesign and QA pass (`d396981`)
+- PM sync recording #66 and #68 ([#69](https://github.com/rojandhimal/onetickets/pull/69)), merged 24 Oct as `28c1069`; QA pass (`4ad5e65`, after tegs merged main into it)
 - DES-10 Sold-out bar and price note ([#66](https://github.com/rojandhimal/onetickets/pull/66)), merged 23 Oct as `e0f33b1`; ProductDesign pass (`c695a7c`). Sold out follows `soldOut` (ARCH-2): "All tickets taken" with a grey "Sold out" label. Held (no spots left, not sold out) reads "All taken right now" and keeps Get tickets. QA passed it after merge (`c695a7c`, web tests 193/193)
 - PM sync restoring the graph records lost in #65 ([#68](https://github.com/rojandhimal/onetickets/pull/68)), merged 24 Oct as `d2f11d1`
 - SEC-22 High advisories failing Dependency audit ([#67](https://github.com/rojandhimal/onetickets/pull/67), from tegs's CI-fix thread), merged 23 Oct as `f380c8f`: `zod` `^4.6.6` (GHSA-mrhx-c7xc-m3w5), `body-parser` 2.4.0 (GHSA-27r3-jxmh-p828) and a `multer` `^2.5.0` override until Nest ships the fix. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)

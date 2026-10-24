@@ -19,7 +19,8 @@
 //   node scripts/state.mjs claim <id> [agent] take an item: one at a time per agent and role
 //   node scripts/state.mjs release <id>       PM: take the agent off an item (inactive > 5 days)
 //   node scripts/state.mjs check              validate; exits 1 on an error (runs in pnpm lint)
-// set and add also stamp meta.updated with today's date and meta.by with $STATE_BY when it is set.
+// set meta also stamps meta.updated with today's date and meta.by with $STATE_BY when it is set.
+// Other edits leave the meta line alone, so PRs that change different nodes don't collide on it.
 // $STATE_BY is <agent>/<role>, e.g. codex/frontend; next and claim read their defaults from it.
 
 import { execFileSync } from 'node:child_process';
@@ -498,7 +499,6 @@ function main(argv) {
   if (parseErrors.length) fail(parseErrors);
 
   const save = () => {
-    stamp(nodes);
     const errors = validate(nodes);
     if (errors.length) fail(['Not saved:', ...errors]);
     writeFileSync(GRAPH, serialise(nodes));
@@ -557,7 +557,8 @@ function main(argv) {
       if (!node) fail([`no node "${id}"; add it with: node scripts/state.mjs add '<json>'`]);
       const before = node.agent;
       for (const edit of edits) applyEdit(node, edit);
-      if (node.type !== 'meta' && node.type !== 'decision') node.updated = today();
+      if (node.type === 'meta') stamp(nodes);
+      else if (node.type !== 'decision') node.updated = today();
       stampClaim(
         node,
         before,
