@@ -323,6 +323,12 @@
   .hero {
     height: 320px;
   }
+  /* Back and share line up with the edges of the 1040 px column below (DES-8): its 24 px padding,
+     plus whatever the viewport has beyond 1040. */
+  .heroButtons {
+    left: max(24px, calc((100% - 1040px) / 2 + 24px));
+    right: max(24px, calc((100% - 1040px) / 2 + 24px));
+  }
   .layout {
     max-width: 1040px;
     display: grid;
