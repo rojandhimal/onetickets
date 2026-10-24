@@ -104,7 +104,7 @@ Work the app needs from AWS that isn't built yet. Each item lands with the featu
   - The task role can get, put and delete only under `banners/` (no list, so a missing key reads as AccessDenied, not NoSuchKey).
   - Replaced and deleted objects are kept as old versions for 30 days, then removed.
 
-  Still to do, then set `banner_storage = "s3"` in both environments: BackendDev's S3 adapter for `BannerStorage` in `apps/api/src/modules/catalogue/banner-storage.ts`. Contract:
+  The api's S3 adapter (`S3BannerStorage` in `apps/api/src/modules/catalogue/banner-storage.ts`, BE-6) follows this contract, so `banner_storage = "s3"` can be set in both environments:
   - Key `banners/<key>`, with the same `BANNER_KEY` check as the local store.
   - `put` sets `ContentType` (`image/webp`, or `image/jpeg` for `-og.jpg`). The bucket encrypts with the environment's KMS key, which the task role can use.
   - `read` returns the bytes and treats NoSuchKey and AccessDenied as `null`, so the API's banner route still answers 404.

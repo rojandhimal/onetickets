@@ -16,13 +16,14 @@ the organiser routes; the public event page and browse use the public ones.
 
 ## Public surface
 
-| Export                   | What it does                                                 |
-| ------------------------ | ------------------------------------------------------------ |
-| `CatalogueModule`        | The Nest module with the routes below                        |
-| `EventsService`          | Public methods for events, browse, and ticket type summary   |
-| `TicketTypeSummary`      | Summary interface exported for inventory holds validation    |
-| `BannerStorage`          | Interface for where banners live (local disk now, S3 in AWS) |
-| `LocalDiskBannerStorage` | The development implementation, under `BANNER_DIR`           |
+| Export                   | What it does                                                   |
+| ------------------------ | -------------------------------------------------------------- |
+| `CatalogueModule`        | The Nest module with the routes below                          |
+| `EventsService`          | Public methods for events, browse, and ticket type summary     |
+| `TicketTypeSummary`      | Summary interface exported for inventory holds validation      |
+| `BannerStorage`          | Interface for where banners live (local disk or S3)            |
+| `LocalDiskBannerStorage` | The development implementation, under `BANNER_DIR`             |
+| `S3BannerStorage`        | AWS: the uploads bucket under `banners/` (`BANNER_STORAGE=s3`) |
 
 ## HTTP endpoints
 
