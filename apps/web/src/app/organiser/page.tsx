@@ -13,6 +13,7 @@ import { welcomeLine } from '@/lib/greeting';
 import { pickView, splitEvents } from '@/lib/organiser-events';
 import { EVENT_TEMPLATES, newEventHref } from '@/lib/templates';
 import { EventsSection } from './EventsSection';
+import { SignOutButton } from './SignOutButton';
 import styles from './organiser.module.css';
 
 export const metadata: Metadata = { title: 'Organiser home' };
@@ -48,9 +49,12 @@ export default async function OrganiserHomePage({
         <div className={screen.headerInner}>
           <div className={styles.topRow}>
             <Logo />
-            <a href="/" className={styles.viewSite}>
-              View site
-            </a>
+            <div className={styles.headerLinks}>
+              <a href="/" className={styles.headerLink}>
+                View site
+              </a>
+              <SignOutButton />
+            </div>
           </div>
           <div className={styles.greeting}>
             <span className={styles.orgName}>{organisation.name}</span>
