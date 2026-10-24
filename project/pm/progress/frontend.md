@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, DES-9 share-image fonts)
+
+- **Done:** #72 (SEC-16) merged. DES-9: the event share image now uses Bricolage Grotesque 800 and Figtree 700, as static WOFF cuts of the site's own latin subsets (42 KB together), read once per server. Render time and PNG size are unchanged (warm about 40 ms, 47 KB). Event page e2e checks the image renders.
+- **Next:** ProductDesign and QA review. Then wire the ticket screen to real orders once tegs picks the order API.
+- **Blocked:** Nothing.
+
 ## 2026-10-24 (Claude, SEC-16 organiser sign-out)
 
 - **Done:** #70 (DES-8) merged. SEC-16: "Sign out" in the organiser header calls `POST /auth/sign-out`, then `clearDeviceDrafts()` even when the api fails or is offline, then loads `/signin`. Unit tests for the failure paths, and `e2e/tests/sign-out.spec.ts` at 375 and 1280 px (drafts database gone, old session cookie no longer signs in).
