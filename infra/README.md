@@ -16,6 +16,7 @@ Terraform for OneTickets on AWS, in Sydney (`ap-southeast-2`).
 | `modules/database/`           | RDS PostgreSQL 16, encrypted, TLS enforced, with two login secrets: the schema owner (migrations only) and `onetickets_app` (the API).                                                                        |
 | `modules/app/`                | ECR repositories, ECS Fargate cluster, load balancer with HTTPS, `api` and `web` services, the `migrate` and `db-roles` tasks, private uploads bucket.                                                        |
 | `modules/email/`              | Amazon SES sending domain with DKIM, an SPF-aligned MAIL FROM domain and a DMARC policy.                                                                                                                      |
+| `modules/ticket-signing/`     | Ticket-signing key (Ed25519 in KMS, ADR 0011) with its generations and aliases, and the sign-only task role for the signing worker.                                                                           |
 | `modules/github-deploy-role/` | IAM role GitHub Actions assumes over OIDC to deploy. No long-lived AWS keys anywhere.                                                                                                                         |
 | `modules/alarms/`             | Email alerts for API 5xx above 1%, API p95 above 300 ms, no healthy tasks, database CPU and storage, and the sign-in email cap being reached.                                                                 |
 | `modules/schedule/`           | Staging's out-of-hours schedule: stops the database and scales the services to zero overnight and at weekends.                                                                                                |
@@ -167,13 +168,27 @@ Security's SEC-5 conditions, which ship together:
 
 To turn Cloudflare off for an environment (for example to debug the load balancer directly), set `behind_cloudflare = false` on its environment module: that opens the load balancer to `ingress_cidrs` (and `ingress_ipv6_cidrs` if dual-stack), drops the header check and sets `TRUST_PROXY_HOPS=1` in one apply. Then run the Deploy workflow so the tasks get the new count.
 
+## Ticket-signing key
+
+`modules/ticket-signing` holds the key that signs QR tickets ([ADR 0011](../docs/adr/0011-signed-offline-qr-tickets.md)). Each environment gets:
+
+- **An Ed25519 key in KMS** (`ECC_NIST_EDWARDS25519`, `SIGN_VERIFY`), aliased `alias/onetickets-<env>-ticket-signing`. The signing worker signs through the alias.
+- **A task role for the signing worker**, `onetickets-<env>-ticket-signer`. It may call `kms:Sign` on the active key and `kms:GetPublicKey` on every generation, and nothing else. There's no ECS service for it yet; BackendDev writes the worker. When its task definition lands, the role also goes in the deploy role's `pass_role_arns`.
+- **Signing only through that role.** The key policy gives the account everything needed to manage the key, but not `kms:Sign`. So no IAM policy can let the api, or anything else, sign. The signer may only sign pure Ed25519 over the raw message (`ED25519_SHA_512`, `RAW`), which is what the ticket format uses. The module's `terraform test` checks those policies on every pull request.
+
+**Rotation.** KMS can't rotate asymmetric keys, so rotation is a new generation. Each ticket carries its key id (the first 8 bytes of the SHA-256 of the public key), so old and new tickets verify side by side.
+
+1. Add a generation at the end of `ticket_signing_key_generations` on the environment module, for example `["2026-10", "2027-10"]`, and apply. The new key is created, the alias moves to it, and only it can sign from then on. Older generations keep `GetPublicKey`, so the scanner still verifies tickets they signed.
+2. Make a new key at least yearly, and at once on any suspicion of compromise.
+3. To retire an old generation, first reissue every live ticket it signed and make sure the scanner refuses its key id. Then remove it from the list. KMS waits 30 days before deleting the key, and `CancelKeyDeletion` brings it back within that window.
+
 ## Local development
 
 Local development and CI use docker compose (Postgres) rather than an AWS account or LocalStack:
 
 - LocalStack's free tier is for non-commercial use only, and it does not include SES API v2, which the API sends mail through, or RDS and ECS.
 - Email uses a local transport (`MAIL_TRANSPORT` other than `ses`) so nothing is sent.
-- Ticket QR signing should sit behind an interface with a local Ed25519 key for development and tests, and AWS KMS (which supports Ed25519 signing in Sydney) in staging and production. Staging is where the real KMS and SES paths are tested.
+- Ticket QR signing sits behind an interface: a local Ed25519 key (`TICKET_SIGNING_KEY`) in development and tests, and the KMS key below in staging and production. Staging is where the real KMS and SES paths are tested.
 
 ## Rough monthly cost
 
@@ -181,7 +196,9 @@ From list prices in Sydney, before Sentry and email. This is an estimate, not a 
 
 | Environment | About      | Main costs                                                                                                             |
 | ----------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| staging     | US$45-50   | Load balancer (~US$21, runs all the time), public IPv4 addresses (~US$9), database and tasks only in working hours     |
-| production  | US$330     | NAT gateways, load balancer, Multi-AZ database                                                                         |
+| staging     | US$46-51   | Load balancer (~US$21, runs all the time), public IPv4 addresses (~US$9), database and tasks only in working hours     |
+| production  | US$331     | NAT gateways, load balancer, Multi-AZ database                                                                         |
 | Cloudflare  | US$0       | Free plan covers everything in `infra/edge`. Pro (about US$20-25 a month for the zone) only buys stricter rate limits. |
-| total       | US$375-380 | The organization budget alert is set at US$450.                                                                        |
+| total       | US$377-382 | The organization budget alert is set at US$450.                                                                        |
+
+Each environment's ticket-signing key adds about US$1 a month, plus US$1 for each older generation still kept for verification, and US$0.15 per 10,000 signatures (about 7 cents for 5,000 tickets).

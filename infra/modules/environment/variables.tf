@@ -182,3 +182,9 @@ variable "banner_storage" {
   type        = string
   default     = "local"
 }
+
+variable "ticket_signing_key_generations" {
+  description = "Ticket-signing key generations, oldest first; the last one signs. Add one to rotate (see infra/README.md)."
+  type        = list(string)
+  default     = ["2026-10"]
+}

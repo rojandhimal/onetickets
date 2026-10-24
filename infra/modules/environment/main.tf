@@ -135,6 +135,13 @@ module "app" {
   email_domain              = var.email_domain
 }
 
+module "ticket_signing" {
+  source = "../ticket-signing"
+
+  name        = local.name
+  generations = var.ticket_signing_key_generations
+}
+
 module "power_schedule" {
   source = "../schedule"
   count  = var.power_schedule == null ? 0 : 1

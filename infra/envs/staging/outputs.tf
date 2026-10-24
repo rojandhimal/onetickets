@@ -43,3 +43,11 @@ output "origin_verify_header" {
   value     = module.environment.origin_verify_header
   sensitive = true
 }
+
+output "ticket_signer_role_arn" {
+  value = module.environment.ticket_signer_role_arn
+}
+
+output "ticket_signing_alias" {
+  value = module.environment.ticket_signing_alias
+}
