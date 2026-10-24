@@ -25,6 +25,8 @@ Newest first. Format: date, Done, Next, Blocked.
   - [#76](https://github.com/rojandhimal/onetickets/pull/76) PM sync **passes** at d72531b: the merge SHAs are verified, and trial merges with #74 and #75 are clean in every order.
   - [#78](https://github.com/rojandhimal/onetickets/pull/78) PM sync and the insertNode change to `add` **pass** at 31083a5: tests 16/16, 132 nodes valid, trial merges with #75 and #77 clean.
     - 67c7bdc (no-item PRs go after their branch's last PR) passes. Trial merges with #64, #75 and #77 are clean. Nit: the test doesn't tell the branch rule from appending.
+  - [#79](https://github.com/rojandhimal/onetickets/pull/79) BE-7 spotsLeft over on-sale types **passes** at 0dc9c73, as long as the rest of CI goes green: unit 60/60, integration 128/128.
+  - Docs finding: AGENTS.md's integration URL user `onetickets` fails auth. The owner is onetickets_owner. Sent to PM.
 - **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
 - **Blocked:** nothing.
 

@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 15:20 UTC, by Claude PM (tegs merged #75 (SEC-24). DEV-8 is ready for DevOps. FrontendDev is on SEC-10 (#77); #64 (BE-6) is out of draft, and BE-7 follows it. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 15:25 UTC, by Claude PM (tegs merged #75 (SEC-24) and #64 (BE-6). #64 merged before QA or Security recorded a verdict, so both are asked for a post-merge review. DEV-8 is ready for DevOps. FrontendDev is on SEC-10 (#77), and BE-7 is in review (#79). The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -91,7 +91,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 ### Ready
 
 - `[unassigned]` DEV-8 Ticket-signing key in Terraform (DevOps; Security and QA review). Per ADR 0011: one Ed25519 KMS signing key per environment with an alias, and a separate task role for the signing worker that may only call `kms:Sign` and `kms:GetPublicKey` on it. The api's task role gets no `kms:Sign`. No ECS service until BackendDev writes the worker. Written only, never applied; rotation by key id goes in `infra/README.md` and the key in the cost estimate (about US$1 a month per environment)
-- `[unassigned]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` (BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
 
 ### In progress
 
@@ -103,10 +102,11 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Review
 
-- `[claude]` **BE-6 S3 banner adapter for `BANNER_STORAGE=s3`** ([#64](https://github.com/rojandhimal/onetickets/pull/64), BackendDev; QA and Security review). The api side of DEV-5, needed before the first AWS staging. Out of draft; BE-7 follows on the same branch once it merges
+- `[claude]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` ([#79](https://github.com/rojandhimal/onetickets/pull/79), BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
 
 ### Done
 
+- BE-6 S3 banner adapter for `BANNER_STORAGE=s3` ([#64](https://github.com/rojandhimal/onetickets/pull/64)), merged 24 Oct as `ee6a085`. The api side of DEV-5: banners at `banners/<key>` in the uploads bucket when `BANNER_STORAGE=s3`. Merged before QA or Security recorded a verdict; post-merge QA and Security reviews at `dcb79dc` are asked for
 - SEC-24 `jsdom` 30.1.3, so `undici` is 8.12.3 ([#75](https://github.com/rojandhimal/onetickets/pull/75)), merged 24 Oct as `f85c097`; Security pass (`afeac8f`), QA pass (`44fc332`). The full `pnpm audit`, dev dependencies included, is clean
 - DES-9 Share image uses the page's fonts ([#74](https://github.com/rojandhimal/onetickets/pull/74)), merged 24 Oct as `d59771a`; ProductDesign and QA pass (`f9ade3b`). Static WOFF cuts of Bricolage 800 and Figtree 700 (42 KB), read once per server; render time and PNG size unchanged
 - PM sync recording #71 to #73 ([#76](https://github.com/rojandhimal/onetickets/pull/76)), merged 24 Oct as `f911a01`; QA pass (`d72531b`)

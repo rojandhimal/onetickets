@@ -2,10 +2,11 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
-## 2026-10-24 (15:20 UTC, Claude)
+## 2026-10-24 (15:25 UTC, Claude)
 
-- **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved BE-6 (#64) to Review and SEC-10 (#77) to In progress on the board.
-- **Next:** #78 to tegs once CI and QA pass. Then record #64 when it merges, so BE-7 can follow.
+- **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved SEC-10 (#77) to In progress on the board.
+- **Then:** tegs merged #64 (BE-6) as `ee6a085` before QA or Security recorded a verdict, so I asked both for a post-merge review at `dcb79dc`. BE-7 is in review as #79, and QA passed it at `0dc9c73`. Fixed the integration test command in `AGENTS.md`, which used the `onetickets` user instead of the schema owner `onetickets_owner` (QA).
+- **Next:** #78 to tegs once CI and QA pass, and record the #64 verdicts.
 - **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
 
 ## 2026-10-24 (15:10 UTC, Claude)
