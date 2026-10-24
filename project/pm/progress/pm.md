@@ -5,7 +5,8 @@ Newest first. Format: date, Done, Next, Blocked.
 ## 2026-10-24 (00:50 UTC, Claude)
 
 - **Done:** tegs merged #66 (DES-10, sold-out bar and price note) as `e0f33b1` and the PM sync #68 as `d2f11d1`. #68 kept the restored graph records. Recorded both, DES-10 done, and promoted DES-8 (hero buttons on the 1040 px column) to ready for FrontendDev, which is free again.
-- **Next:** QA checks #66 after merge, since tegs merged it on Design's pass. DevOps claims SEC-23, FrontendDev claims DES-8.
+- **Then:** QA passed #66 after merge. From QA's review, added BE-7 (event `spotsLeft` should count only on-sale types, like `soldOut`) as ready for BackendDev.
+- **Next:** DevOps claims SEC-23, FrontendDev DES-8, BackendDev BE-7.
 - **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
 
 ## 2026-10-23 (23:40 to 23:50 UTC, Claude)

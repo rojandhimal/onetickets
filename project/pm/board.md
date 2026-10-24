@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 00:50 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65, #66 (DES-10), #67 (SEC-22, the dependency audit fix) and #68 overnight. Ready: SEC-23 for DevOps and DES-8 for FrontendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 00:50 UTC, by Claude PM (tegs merged #62 (S2-4a), #63 (DEV-7), #65, #66 (DES-10), #67 (SEC-22, the dependency audit fix) and #68 overnight. Ready: SEC-23 for DevOps, DES-8 for FrontendDev and BE-7 for BackendDev. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -95,6 +95,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 ### Ready
 
 - `[unassigned]` SEC-23 Bump `nodemailer` to 10.1.4 or later for its moderate advisory (DevOps; Security and QA review). Follow-up from #67; check sign-in and ticket emails still reach the local test inbox
+- `[unassigned]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` (BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
 - `[unassigned]` DES-8 Non-blocking #23 follow-up (FrontendDev, ProductDesign review): align wide-screen hero buttons to the 1040 px content column when next touching that layout. [Design review](https://github.com/rojandhimal/onetickets/pull/23#issuecomment-6205215064)
 
 ### In progress
@@ -111,7 +112,7 @@ _(No items currently in review)_
 
 ### Done
 
-- DES-10 Sold-out bar and price note ([#66](https://github.com/rojandhimal/onetickets/pull/66)), merged 23 Oct as `e0f33b1`; ProductDesign pass (`c695a7c`). Sold out follows `soldOut` (ARCH-2): "All tickets taken" with a grey "Sold out" label. Held (no spots left, not sold out) reads "All taken right now" and keeps Get tickets. Merged before QA recorded a verdict, so QA checks it after merge
+- DES-10 Sold-out bar and price note ([#66](https://github.com/rojandhimal/onetickets/pull/66)), merged 23 Oct as `e0f33b1`; ProductDesign pass (`c695a7c`). Sold out follows `soldOut` (ARCH-2): "All tickets taken" with a grey "Sold out" label. Held (no spots left, not sold out) reads "All taken right now" and keeps Get tickets. QA passed it after merge (`c695a7c`, web tests 193/193)
 - PM sync restoring the graph records lost in #65 ([#68](https://github.com/rojandhimal/onetickets/pull/68)), merged 24 Oct as `d2f11d1`
 - SEC-22 High advisories failing Dependency audit ([#67](https://github.com/rojandhimal/onetickets/pull/67), from tegs's CI-fix thread), merged 23 Oct as `f380c8f`: `zod` `^4.6.6` (GHSA-mrhx-c7xc-m3w5), `body-parser` 2.4.0 (GHSA-27r3-jxmh-p828) and a `multer` `^2.5.0` override until Nest ships the fix. Follow-up: `nodemailer` 10.0.10 has a moderate advisory (fixed in 10.1.4)
 - PM sync after the D19 merge ([#65](https://github.com/rojandhimal/onetickets/pull/65)), merged 23 Oct as `04e7da7`; QA pass (`0a18399`). Its last records were lost when main was merged into it on GitHub, so this board and the graph restore them

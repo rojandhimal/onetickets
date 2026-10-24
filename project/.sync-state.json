@@ -40,8 +40,8 @@
     "shared": "22f7c42ba3b1f79cf66d10667a4db485bec43f0919b6f383addb5229037b1f77"
   },
   "pm/board.md": {
-    "repo": "21cb5d0bef72064c7b72771fcd59f320865b2df1349be0e91c3a8ef20e134dbd",
-    "shared": "2f54dbd5c4a86d8c26190eb841cd676e03ed4d1b29dcffe6361fa1163dc4ffe8"
+    "repo": "9db1eba6b62921b00d363f1fdd485b9999ad66aa774152f86d1ff133275cbff0",
+    "shared": "8ba376535cb91cbcadca6ca405f6a52a5f576c856caf4e63f898e5d16c169e33"
   },
   "pm/owner-setup.md": {
     "repo": "0b8e4d4f69a5a27a332a703989c55d2b02300b38d67e57bcf6a035751b7a8775",
@@ -68,12 +68,12 @@
     "shared": "0c5d543d85480bc83faee6b23318029b11f4b966eb083605159bd798b1f59c07"
   },
   "pm/progress/pm.md": {
-    "repo": "6030923b4beca9e52a33ea8539335d59d236645f6ce3c78d84bb1dda593fcd94",
-    "shared": "c4a8edcde165b32e8ad8ca63a2cbbacc5486f70bbba0a299475b486a0ce179bf"
+    "repo": "a366195857cfcb6790050cda45767dfa9114095d1854fc9e485a194145408a14",
+    "shared": "265035c314d243873038f88224724894fde21f820a12bc0add1b455fc05fc066"
   },
   "pm/progress/qa.md": {
-    "repo": "7ba9c130eda09d8bcf3c7bd5b441b515c4463fd49bfaad81d5a4d9ac817edfcf",
-    "shared": "4c6a628b801d0c9cee44c10bb3088c03c613efc6e4f16dfca2cbf54db5883845"
+    "repo": "52e4696b9a34880ea667b97369823f6449a18b15d730f59baa79f9d22b7b4fff",
+    "shared": "30f29f6b34fb525c923a974d4d9c45c05f2002ad6738f2c4e7f0111f20ce165f"
   },
   "pm/progress/security.md": {
     "repo": "ac8dad1fb2c1226dbc2b1dab88d6e4ef0cc6b7d60c1f16248e66ea37f765aeb7",
@@ -136,7 +136,7 @@
     "shared": "ebbafebacee9d15c518d3bcba859919396f7fd4eeaacd7e86106f5b5a879d62f"
   },
   "state/graph.jsonl": {
-    "repo": "5521361e9a2db39ef54d39ff48e3cc356ee06e72c55121ef4725e1654e03cd9e",
-    "shared": "5521361e9a2db39ef54d39ff48e3cc356ee06e72c55121ef4725e1654e03cd9e"
+    "repo": "9b553e95e4aa93662f74ca814276ae0976e8b18f36fb6d9431ed0b44d5a2e1cd",
+    "shared": "9b553e95e4aa93662f74ca814276ae0976e8b18f36fb6d9431ed0b44d5a2e1cd"
   }
 }
