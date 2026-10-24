@@ -29,6 +29,26 @@
 .headerLink:disabled {
   cursor: progress;
 }
+.signOut {
+  position: relative;
+}
+/* Under the button, over the header's indigo, so it reads as an error and not as header text. */
+.signOutError {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 1;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgb(22 22 29 / 0.2);
+}
 
 .greeting {
   display: flex;

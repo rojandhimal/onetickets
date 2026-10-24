@@ -37,3 +37,17 @@ test('signing out ends the session and clears drafts kept on this device', async
   await page.goto('/organiser');
   await page.waitForURL(/\/signin/);
 });
+
+test('a sign-out that does not reach the api says so and keeps the page', async ({ page }) => {
+  await signUpOrganiser(page);
+  await page.route('**/api/auth/sign-out', (route) => route.abort('internetdisconnected'));
+
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  // Next's route announcer is also role=alert, so find ours by its words.
+  await expect(page.getByRole('alert').filter({ hasText: "We couldn't sign you out." })).toHaveText(
+    "We couldn't sign you out. Check your connection and try again.",
+  );
+  await expect(page).toHaveURL(/\/organiser$/);
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeEnabled();
+  await expectAccessible(page);
+});

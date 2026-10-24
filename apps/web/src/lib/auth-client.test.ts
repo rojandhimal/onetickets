@@ -14,7 +14,7 @@ describe('signOut (SEC-16)', () => {
   it('ends the session, then clears drafts on this device', async () => {
     const fetch = vi.fn(async () => new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetch);
-    await signOut();
+    await expect(signOut()).resolves.toBe(true);
     expect(fetch).toHaveBeenCalledWith(
       '/api/auth/sign-out',
       expect.objectContaining({ method: 'POST' }),
@@ -44,6 +44,6 @@ describe('signOut (SEC-16)', () => {
       vi.fn(async () => new Response(null, { status: 204 })),
     );
     clearDeviceDrafts.mockRejectedValueOnce(new Error('blocked'));
-    await expect(signOut()).resolves.toBeUndefined();
+    await expect(signOut()).resolves.toBe(true);
   });
 });

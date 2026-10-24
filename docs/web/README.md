@@ -134,10 +134,13 @@ booked of capacity for live events, and one action: "Open event page", or "Finis
 which returns to the step the draft was left on. The step is saved as soon as it changes.
 
 The organiser header has "View site" and "Sign out" (SEC-16). Sign out calls `POST /auth/sign-out`,
-then `clearDeviceDrafts()` whether or not the api answered, then loads `/signin` in full, so a shared
-computer keeps no session and no offline drafts. The api also sends `Clear-Site-Data: "storage"`.
-`e2e/tests/sign-out.spec.ts` checks that the drafts database is gone and that the old session cookie
-no longer signs anyone in.
+then `clearDeviceDrafts()` whether or not the api answered. Only when the api confirms does it load
+`/signin` in full. If the call fails (offline or an error), the session may still be live, so the
+page stays put with "We couldn't sign you out. Check your connection and try again." and the button
+comes back, rather than looking signed out on a shared computer. The api also sends
+`Clear-Site-Data: "storage"`.
+`e2e/tests/sign-out.spec.ts` checks that the drafts database is gone, that the old session cookie no
+longer signs anyone in, and that a failed call keeps the organiser signed in with the alert.
 
 Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
 build made with it off still picks it up when it's turned on.

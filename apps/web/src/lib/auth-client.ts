@@ -56,9 +56,11 @@ export const GOOGLE_START_URL = '/api/auth/google/start';
 /**
  * Ends the session and wipes what this device keeps (SEC-16). The drafts go even when the api
  * can't be reached, so the next person on a shared computer never sees them; the api's
- * `Clear-Site-Data: "storage"` is the backstop when it can.
+ * `Clear-Site-Data: "storage"` is the backstop when it can. Resolves `false` when the api didn't
+ * confirm, because the session may still be live and the person must not be told they're out.
  */
-export async function signOut(): Promise<void> {
-  await post('/auth/sign-out', {});
+export async function signOut(): Promise<boolean> {
+  const res = await post('/auth/sign-out', {});
   await clearDeviceDrafts().catch(() => undefined);
+  return res?.ok ?? false;
 }
