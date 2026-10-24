@@ -40,6 +40,26 @@ jobs:
           terraform init -backend=false -input=false
           terraform validate
 
+  test:
+    name: Terraform tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [ticket-signing]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.13.3
+      # Plans with fake credentials and checks the result; no AWS access.
+      - name: Test
+        working-directory: infra/modules/${{ matrix.module }}
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+
   scripts:
     name: Shell scripts
     runs-on: ubuntu-latest

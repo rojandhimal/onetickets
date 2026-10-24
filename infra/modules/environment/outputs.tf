@@ -59,3 +59,12 @@ output "origin_verify_header" {
   value     = module.app.origin_verify_header
   sensitive = true
 }
+
+output "ticket_signer_role_arn" {
+  description = "Task role for the ticket-signing worker (ADR 0011)."
+  value       = module.ticket_signing.signer_role_arn
+}
+
+output "ticket_signing_alias" {
+  value = module.ticket_signing.active_alias
+}
