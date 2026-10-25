@@ -12,6 +12,7 @@ import {
   applyEdit,
   brief,
   claim,
+  insertNode,
   next,
   parse,
   release,
@@ -254,4 +255,35 @@ test('only set meta stamps the meta line, so edits to other nodes leave it alone
   assert.equal(meta().by, 'codex/backend');
   assert.notEqual(meta().updated, '2026-10-22');
   rmSync(dir, { recursive: true });
+});
+
+test('insertNode puts a PR after its item and the PRs already there, or its branch, else last', () => {
+  const nodes = base();
+  const pr = (id, item) => ({ type: 'pr', id, title: id, item, branch: 'b', state: 'open' });
+  insertNode(nodes, pr('#51', 'S2-2'));
+  insertNode(nodes, pr('#52', 'S2-1'));
+  insertNode(nodes, { type: 'risk', id: 'R1', text: 'x', owner: 'qa', status: 'open' });
+  insertNode(nodes, pr('#53', 'none'));
+  insertNode(nodes, { type: 'risk', id: 'R2', text: 'x', owner: 'qa', status: 'open' });
+  insertNode(nodes, { ...pr('#54'), branch: 'b' });
+  insertNode(nodes, { ...pr('#55'), branch: 'other' });
+  assert.deepEqual(
+    nodes.map((n) => n.id),
+    [
+      'meta',
+      'S2',
+      'backend',
+      'qa',
+      'S2-1',
+      'S2-2',
+      '#51',
+      '#50',
+      '#52',
+      'R1',
+      '#53',
+      '#54',
+      'R2',
+      '#55',
+    ],
+  );
 });

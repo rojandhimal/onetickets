@@ -6,6 +6,7 @@ Newest first. Format: date, Done, Next, Blocked.
 
 - **Done:** Approved [#70](https://github.com/rojandhimal/onetickets/pull/70) (DES-8) at d396981: event page Back and Share now line up with the 1040 px column from 768 px; top stays 16 px.
 - **Done:** [#72](https://github.com/rojandhimal/onetickets/pull/72) (SEC-16) at 9872a88: sign-out placement approved; changes needed because a failed sign-out still landed on /signin; approved at d018f02 after the fix. Added sign-out copy rows.
+- **Done:** Approved [#74](https://github.com/rojandhimal/onetickets/pull/74) (DES-9) at f9ade3b: share image in Bricolage 800 and Figtree 700, long titles still clamp.
 - **Next:** S2-4 My tickets reviews when they open.
 - **Blocked:** Nothing.
 

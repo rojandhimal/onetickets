@@ -102,6 +102,14 @@ FrontendDev's current strings for all of the above are approved as they are; onl
 | Event page access row, nothing set                  | No accessibility details yet · Booked? Reply to your confirmation email to ask the organiser.                                                                                                                                                                                                                                                                                                                                                     |
 | Event page bar                                      | Get tickets · {n} spots left                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
+**Sign-in security check (SEC-10, Turnstile)**
+
+| Where                                                        | Copy                                                                                      |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Security check failed (alert)                                | We couldn't finish the security check. Try again.                                         |
+| Link sending paused (alert, sign-in and sign-up)             | We can't send sign-in links for a moment. Try again in a minute, or continue with Google. |
+| Same, on "Check your email" (resend; no Google button there) | We can't send sign-in links for a moment. Try again in a minute.                          |
+
 **Sign out (SEC-16, organiser header)**
 
 | Where                                                                                                                          | Copy                                                              |

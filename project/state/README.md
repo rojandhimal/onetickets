@@ -88,9 +88,11 @@ next agent reads.
 
 Claude project threads edit the copy in the shared project folder; PM's
 `node scripts/sync-project-files.mjs` carries it both ways like the other project files. Changes to
-different nodes usually merge cleanly because each node is one line. Two edits to the same node
-are a conflict for PM to settle. Edits to neighbouring lines, or two PRs that both add nodes at the
-end, can also conflict: keep both sides' lines, then run `node scripts/state.mjs check`.
+different nodes usually merge cleanly because each node is one line, and `add` puts a PR node
+after its item (or, with no item, after the last PR from its branch) rather than at the end of the
+file. Two edits to the same node are a conflict for PM
+to settle. Edits to neighbouring lines, or two PRs that both add items or decisions at the end, can
+also conflict: keep both sides' lines, then run `node scripts/state.mjs check`.
 
 ## Node types
 

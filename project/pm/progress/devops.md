@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, later)
+
+- Done: #71 (SEC-23, nodemailer 10.1.7) merged. Opened draft #75 for SEC-24: jsdom ^30.1.3 in apps/web, so undici is 8.12.3 (was 8.11.2, one high and two moderate advisories). Full `pnpm audit` clean. Format, lint, typecheck and unit tests pass.
+- Next: #75 merged 15:11 UTC after Security and QA passed it. Next DevOps card from PM.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts.
+
 ## 2026-10-24 (Claude)
 
 - Done: #63 (DEV-7) merged. Opened #71 for SEC-23, which bumps nodemailer from 10.0.10 to 10.1.7 for three moderate addressparser advisories. Unit, integration and lint checks pass. A sign-in email reached Mailpit locally and its link signed in.
