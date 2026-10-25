@@ -4,6 +4,7 @@ import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
 import { parseInitialError } from '@/lib/auth-errors';
+import { turnstileSiteKey } from '@/lib/flags';
 import { SignupForm } from './SignupForm';
 import local from './signup.module.css';
 
@@ -29,7 +30,7 @@ export default async function SignupPage({ searchParams }: Props) {
           </div>
         </div>
       </header>
-      <SignupForm initialError={parseInitialError(error)} />
+      <SignupForm initialError={parseInitialError(error)} turnstileSiteKey={turnstileSiteKey()} />
     </div>
   );
 }

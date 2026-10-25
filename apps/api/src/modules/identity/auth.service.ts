@@ -6,12 +6,13 @@ import { setScope, UnitOfWork } from '../../database/database.module.js';
 import { Mailer } from '../notifications/index.js';
 import { AUTH_CONFIG, type AuthConfig } from './auth.config.js';
 import type { AuthContext } from './auth-context.js';
-import { ApiError } from './errors.js';
+import { ApiError, challengeFailed, challengeUnavailable } from './errors.js';
 import { MagicLinksRepository } from './magic-links.repository.js';
 import { MembershipsRepository } from './memberships.repository.js';
 import { RateLimiter } from './rate-limiter.js';
 import { rateKey } from './secrets.js';
 import { SessionsRepository } from './sessions.repository.js';
+import { Turnstile } from './turnstile.js';
 
 const FIFTEEN_MINUTES = 15 * 60_000;
 const ONE_HOUR = 60 * 60_000;
@@ -26,17 +27,32 @@ export class AuthService {
     private readonly magicLinks: MagicLinksRepository,
     private readonly sessions: SessionsRepository,
     private readonly memberships: MembershipsRepository,
+    private readonly turnstile: Turnstile,
   ) {}
 
   /**
    * Emails a sign-in link. Known and unknown emails take the same path and get the same
    * answer, so the response says nothing about who has an account.
    */
-  async requestMagicLink(email: string, organiserName: string | null, ip: string): Promise<void> {
-    await this.limiter.hit(
-      { key: rateKey('link:email', email), max: 5, windowMs: FIFTEEN_MINUTES },
-      { key: rateKey('link:ip', ip), max: 30, windowMs: FIFTEEN_MINUTES },
-    );
+  async requestMagicLink(
+    email: string,
+    organiserName: string | null,
+    ip: string,
+    turnstileToken?: string,
+  ): Promise<void> {
+    const perEmail = { key: rateKey('link:email', email), max: 5, windowMs: FIFTEEN_MINUTES };
+    const perIp = { key: rateKey('link:ip', ip), max: 30, windowMs: FIFTEEN_MINUTES };
+    if (this.turnstile.enabled) {
+      // Per-IP first, so a flood can't make us ask Cloudflare without limit. Per-email only once
+      // the check passes, so failed attempts can't use up someone else's sign-in links.
+      await this.limiter.hit(perIp);
+      const outcome = await this.turnstile.verify(turnstileToken);
+      if (outcome === 'unavailable') throw challengeUnavailable();
+      if (outcome === 'failed') throw challengeFailed();
+      await this.limiter.hit(perEmail);
+    } else {
+      await this.limiter.hit(perEmail, perIp);
+    }
     // A ceiling on everything we send, so no mix of addresses and IPs can burn SES reputation.
     // Checked after the per-email and per-IP limits so blocked requests don't use it up.
     await this.limiter.hit({

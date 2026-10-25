@@ -36,3 +36,14 @@ export const noAccessPolicy = () =>
 
 export const invalidField = (field: string, message = 'Required.') =>
   new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, 'invalid_request', message, field);
+
+// Turnstile (SEC-10). Neither sends a sign-in link; the web app asks the person to try again.
+export const challengeFailed = () =>
+  new ApiError(HttpStatus.FORBIDDEN, 'challenge_failed', 'Complete the check and try again.');
+
+export const challengeUnavailable = () =>
+  new ApiError(
+    HttpStatus.SERVICE_UNAVAILABLE,
+    'challenge_unavailable',
+    "We couldn't check this request right now. Try again in a minute.",
+  );
