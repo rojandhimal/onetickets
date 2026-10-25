@@ -2,6 +2,18 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-26 (S2-2 checkout rework & QA/Security blocker resolution, #59)
+
+- **Done:** Addressed Claude QA's fail review and Security findings on PR #59:
+  1. Replaced unauthenticated `/tickets/:orderRef` lookup with 256-bit URL-safe ticket key passed in URL hash fragment (`/tickets/:orderId#key=...`) and stored as SHA-256 hash in `checkout.order_keys`. Unauthenticated public lookup dropped; read requires bearer token.
+  2. Replaced `orders_public_select` with strict RLS policies on `checkout.orders` (`orders_tenant` and `orders_buyer`).
+  3. Integrated with `stashConfirmedOrder` and `confirmationPath` from `@onetickets/shared` and PR #56's `/tickets/[orderId]` ticket screen.
+  4. Placed checkout page `/e/[slug]/tickets` behind `FEATURE_BOOKING` runtime flag.
+  5. Trimmed footnote copy per ProductDesign's review.
+  6. All 46 Playwright E2E tests, 146 integration tests against PostgreSQL, 200 web unit tests, 49 api unit tests, 43 shared tests pass with 0 axe violations.
+- **Next:** Push to `frontend/s2-2-free-checkout`, update PR #59, request QA and Security re-reviews for diff `3c2ff43..head`.
+- **Blocked:** None.
+
 ## 2026-10-23 (Claude, S2-3 QA fixes, #56)
 
 - **Done:** Fixed QA's two findings on #56. The page now always asks the api first (with no key header when it has none), and shows the copy saved on the phone only when that request fails. A refused keyed link deletes the saved copy. Earlier, on 22 Oct: bumped Next to 16.4.2 for three advisories, fixed the gitleaks false positives the repo's way, renumbered the ADR to 0020, and applied Design's revoked and QR-pending copy. Security and Design passed at 3336dff. All checks and 44/44 e2e pass.

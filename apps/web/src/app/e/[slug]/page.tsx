@@ -208,7 +208,9 @@ export default async function EventPage({ params }: Props) {
             <span className={styles.barAmount}>{price}</span>
             <span className={styles.barSpots}>{spotsLine(event.spotsLeft)}</span>
           </div>
-          {isBookingEnabled() ? (
+          {event.soldOut ? (
+            <span className={styles.soon}>Sold out</span>
+          ) : isBookingEnabled() ? (
             <a href={`/e/${encodeURIComponent(event.slug)}/tickets`} className={styles.getTickets}>
               Get tickets
             </a>

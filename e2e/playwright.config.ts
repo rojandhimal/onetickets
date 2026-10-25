@@ -62,6 +62,7 @@ export default defineConfig({
       env: {
         API_URL: apiUrl,
         FEATURE_EVENT_WIZARD: 'true',
+        FEATURE_BOOKING: 'true',
         FEATURE_TICKETS: 'true',
         REVALIDATE_SECRET: revalidateSecret,
       },
