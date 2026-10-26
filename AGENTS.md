@@ -60,7 +60,7 @@ Node 22 (`.nvmrc`), pnpm 10 (`corepack enable`), Docker.
 pnpm install
 docker compose up --build            # whole app: web :3000, test inbox :8025
 pnpm format:check && pnpm lint && pnpm typecheck && pnpm test
-MIGRATION_DATABASE_URL=postgres://onetickets:onetickets@localhost:5432/onetickets pnpm test:integration
+MIGRATION_DATABASE_URL=postgres://onetickets_owner:onetickets_owner@localhost:5432/onetickets pnpm test:integration
 pnpm build && ./e2e/setup-db.sh && pnpm e2e
 ```
 

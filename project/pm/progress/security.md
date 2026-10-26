@@ -2,6 +2,23 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+**Done**
+
+- #71 SEC-23: pass at f388e02. nodemailer 10.0.10 to 10.1.7, exact pin, lockfile integrity matches npm, no code change.
+- #72 SEC-16: changes needed at 9872a88. A failed POST /auth/sign-out still navigates to /signin with the session live; asked for an error state and tests.
+- #72: pass at d018f02. Failed sign-out stays on the page with an alert; drafts still cleared.
+- #75 SEC-24: pass at afeac8f. jsdom 30.1.3 / undici 8.12.3 / dom-selector 10.0.5, dev-only, integrities match npm.
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Re-check #59 after fixes.
+
+**Blocked**
+
+- None.
+
 ## 2026-10-23 (Claude)
 
 **Done**
@@ -9,7 +26,9 @@ Newest first. Format: date, Done, Next, Blocked.
 - #61 DEV-5: delta check 302d454..28193ce (merge of main). Infra unchanged, diff vs main is infra + graph.jsonl only. Pass holds.
 - S2-4a (#62 draft) plan approved for FrontendDev: 7-day expiry after event end, checked on fetch too, fails closed, offline Remove, tests.
 - #62 S2-4a: pass at 7d8f61d. Expiry fails closed in the worker and the page, offline Remove clears the cache, worker and session keys. Satisfies the ADR 0020 condition for FEATURE_TICKETS.
+- #62: pass holds at d99df5f (copy change, QA fix 4d117c6 shows Remove whenever the order copy is cached, merges of main).
 - #63 DEV-7: pass at 10f6255. CI checks the api image's sslrootcert matches apps/api/certs, fails closed, no new permissions.
+- #63: pass holds at 184d4f9 (QA's pipefail and non-empty-hash fix 13c268d, plus main).
 
 **Next**
 

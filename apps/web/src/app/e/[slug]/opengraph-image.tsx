@@ -1,8 +1,13 @@
+import { readFile } from 'node:fs/promises';
 import { ImageResponse } from 'next/og';
+
 import { TEMPLATE_WORDS, priceLabel } from '@/lib/event-page';
 import { isEventBannerShown } from '@/lib/flags';
 import { getPublicEvent } from '@/lib/public-events';
 import { eventEyebrow } from '@/lib/zoned-time';
+
+/** What the renderer takes in `fonts`; next/og doesn't export the type. */
+type Font = { name: string; data: Buffer; weight: 700 | 800; style: 'normal' };
 
 // Rich link preview, design artboard 2b: the banner full bleed with a white ticket-stub caption.
 export const size = { width: 1200, height: 630 };
@@ -16,6 +21,39 @@ const TINTS: Record<string, { ground: string; ink: string }> = {
   meetup: { ground: '#D7F2E6', ink: '#0B5A3A' },
   blank: { ground: '#D7F2E6', ink: '#0B5A3A' },
 };
+
+/**
+ * The page's own fonts (DES-9): Figtree 700 for the caption and Bricolage Grotesque 800 for the
+ * rest. The renderer can't read WOFF2 or variable fonts, so these are static weights cut from the
+ * site's latin subsets (42 KB together), read once per server. If one can't be read, the image
+ * still renders with the renderer's built-in font.
+ */
+// Literal URLs, so the build copies the files next to the route.
+const FONT_FILES = [
+  {
+    name: 'Figtree',
+    url: new URL('../../../fonts/Figtree-700-latin.woff', import.meta.url),
+    weight: 700,
+  },
+  {
+    name: 'Bricolage Grotesque',
+    url: new URL('../../../fonts/BricolageGrotesque-800-latin.woff', import.meta.url),
+    weight: 800,
+  },
+] as const;
+let fonts: Promise<Font[]> | null = null;
+function loadFonts(): Promise<Font[]> {
+  fonts ??= Promise.all(
+    FONT_FILES.map(({ name, url, weight }) =>
+      readFile(url).then(
+        (data): Font => ({ name, data, weight, style: 'normal' }),
+        () => null,
+      ),
+    ),
+  ).then((loaded) => loaded.filter((f): f is Font => f !== null));
+  return fonts;
+}
+const DISPLAY = { fontFamily: 'Bricolage Grotesque' };
 
 /**
  * The banner as a data URL. The renderer won't fetch private addresses (like the api inside our
@@ -54,6 +92,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const where = event.venue.kind === 'online' ? 'Online' : event.venue.suburb;
   const caption = `${eventEyebrow(event.startsAt, event.timeZone)} · ${where}`.toUpperCase();
   const title = event.name.length > 70 ? `${event.name.slice(0, 68).trimEnd()}…` : event.name;
+  const loaded = await loadFonts();
 
   return new ImageResponse(
     <div
@@ -84,6 +123,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             position: 'absolute',
             left: 48,
             top: 40,
+            ...DISPLAY,
             fontSize: 120,
             fontWeight: 800,
             letterSpacing: -4,
@@ -118,6 +158,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           </div>
           <div
             style={{
+              ...DISPLAY,
               fontSize: 56,
               fontWeight: 800,
               lineHeight: 1.05,
@@ -139,7 +180,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             padding: '30px 28px',
           }}
         >
-          <div style={{ fontSize: 48, fontWeight: 800 }}>
+          <div style={{ ...DISPLAY, fontSize: 48, fontWeight: 800 }}>
             {priceLabel(event.priceFromAllInCents)}
           </div>
           <div
@@ -147,6 +188,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
               display: 'flex',
               alignItems: 'center',
               gap: 10,
+              ...DISPLAY,
               fontSize: 24,
               fontWeight: 800,
             }}
@@ -162,6 +204,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      fonts: loaded.length ? loaded : undefined,
+    },
   );
 }

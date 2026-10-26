@@ -29,13 +29,19 @@ export function cspReportUri(dsn = parseDsn()): string | null {
 
 export const CSP_REPORT_PATH = '/csp-report';
 
+/** Where Cloudflare Turnstile's script and challenge frame come from (SEC-10). */
+export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // Turnstile (SEC-10) is listed everywhere here: this policy only reports, and its paths can't
+  // vary at run time. The enforced policy (strictSiteCsp) allows it only on the sign-in pages.
+  `script-src 'self' 'unsafe-inline' ${TURNSTILE_ORIGIN}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src 'self'${sentryOrigin()}`,
+  `frame-src ${TURNSTILE_ORIGIN}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -61,14 +67,21 @@ export const verifyPageHeaders: Header[] = [{ key: 'Referrer-Policy', value: 'no
  * its own scripts when it sees the nonce in the request's CSP header. Styles stay 'unsafe-inline'
  * for React style attributes such as the banner focal point: style injection can't run code.
  */
-export function strictSiteCsp(nonce: string, opts: { dev?: boolean } = {}): string {
+export function strictSiteCsp(
+  nonce: string,
+  opts: { dev?: boolean; turnstile?: boolean } = {},
+): string {
+  // The Turnstile widget (SEC-10): its script, which our own trusted code inserts, and the
+  // challenge frame. Hosts in script-src are for browsers without 'strict-dynamic'.
+  const turnstile = opts.turnstile ? ` ${TURNSTILE_ORIGIN}` : '';
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${opts.dev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${turnstile}${opts.dev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self'",
     `connect-src 'self'${sentryOrigin()}`,
+    ...(opts.turnstile ? [`frame-src ${TURNSTILE_ORIGIN}`] : []),
     "frame-ancestors 'none'",
     "base-uri 'none'",
     "form-action 'self'",

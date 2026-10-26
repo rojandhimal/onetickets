@@ -38,9 +38,9 @@ again online, so two saves can race.
 - Computers get shared, so each entry records the organiser's user id and when it was saved
   (Security review of #17). When the wizard opens for a different organiser, the whole database is
   deleted before anything is read. Entries older than 7 days are dropped. `clearDeviceDrafts()`
-  deletes the database outright. The web app has no sign-out control yet; when it gets one, it calls
-  this, and the api's `POST /auth/sign-out` is asked to send `Clear-Site-Data: "storage"` as a
-  backstop.
+  deletes the database outright. "Sign out" in the organiser header (SEC-16) calls
+  `POST /auth/sign-out` and then this, even when the api can't be reached, and the api's
+  `Clear-Site-Data: "storage"` is the backstop.
 - A field the api refuses with 422 is dropped from the queue so the rest still saves.
 - Ticket type edits (S1-2 follow-up from QA's #31 review) use the same store under the key
   `{eventId}:ticket`, one entry per type id (or `new` for a type not created yet), holding the form

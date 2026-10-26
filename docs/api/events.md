@@ -106,9 +106,13 @@ No session needed. Only published events are visible; drafts are `404 event_not_
 - **Sold out vs held (ARCH-2 / DES-10).** `PublicTicketTypeDto.soldOut` is true only when
   `sold >= capacity`. When `spotsLeft === 0` but `soldOut === false`, tickets are currently held by
   checkout sessions ("All taken right now. Check back in a few minutes."), never displayed as sold
-  out. `PublicEventDto.soldOut` is true only when all on-sale ticket types are sold out.
-- **Banners** are served by the api only while they are stored on local disk (development). In AWS
-  the URL in `BannerDto.url` points at the CDN.
+  out. `PublicEventDto.soldOut` is true only when all on-sale ticket types are sold out, and
+  `PublicEventDto.spotsLeft` sums the on-sale types too, so a type that opens later never makes a
+  full event look available (BE-7). When nothing is on sale, both count every type.
+- **Banners** are always served by the api at `BannerDto.url` (`WEB_URL/api/public/banners/<key>`),
+  from local disk in development and the uploads bucket in AWS. A found banner is
+  `public, max-age=31536000, immutable` (every upload gets a new key) and Cloudflare caches it; a
+  404 is `no-store`.
 - **Caching (QA 3.2).** A found event and every browse page send
   `Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300`: shared caches may keep
   them for a minute, browsers always revalidate. A 404, an error and every other api response send

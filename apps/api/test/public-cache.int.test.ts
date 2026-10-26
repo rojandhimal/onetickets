@@ -123,6 +123,11 @@ describe('public caching and revalidation', () => {
     expect(signedOut.headers['cache-control']).toBe('no-store');
     const health = await anon().get('/health/live').expect(200);
     expect(health.headers['cache-control']).toBe('no-store');
+    // A banner not there yet (or a bad key) must not be cached at the edge as gone.
+    for (const key of ['6f1c2a5e-8b3d-4f7a-9c10-2d3e4f5a6b7c.webp', 'not-a-key.png']) {
+      const banner = await anon().get(`/public/banners/${key}`).expect(404);
+      expect(banner.headers['cache-control']).toBe('no-store');
+    }
   });
 
   it('says nothing while an event is a draft', async () => {

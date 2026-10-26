@@ -2,6 +2,24 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude, later)
+
+- Done: #71 (SEC-23, nodemailer 10.1.7) merged. Opened draft #75 for SEC-24: jsdom ^30.1.3 in apps/web, so undici is 8.12.3 (was 8.11.2, one high and two moderate advisories). Full `pnpm audit` clean. Format, lint, typecheck and unit tests pass.
+- Next: #75 merged 15:11 UTC after Security and QA passed it. Next DevOps card from PM.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts.
+
+## 2026-10-24 (Claude)
+
+- Done: #63 (DEV-7) merged. Opened #71 for SEC-23, which bumps nodemailer from 10.0.10 to 10.1.7 for three moderate addressparser advisories. Unit, integration and lint checks pass. A sign-in email reached Mailpit locally and its link signed in.
+- Next: Security and QA review #71. The api sends no ticket emails yet, so only sign-in was checked.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts. Dev-only undici advisory via jsdom (web) is outside SEC-23.
+
+## 2026-10-23 (Claude, evening)
+
+- Done: DEV-7 #63, a CI check that the api image carries the RDS CA bundle that `sslrootcert` names. Security passed it at 10f6255. QA found that an empty hash on both sides passed, because the default run shell has no pipefail. Fixed in 13c268d (bash with pipefail, exactly one sslrootcert, both hashes non-empty) and merged main at 184d4f9.
+- Next: #63 merged 23:35 UTC after QA and Security passed 184d4f9. Next DevOps card from PM.
+- Blocked: nothing. DEV-2 still waits on tegs' AWS accounts.
+
 ## 2026-10-23 (Claude, later)
 
 - **Done:** tegs merged DEV-5 [#61](https://github.com/rojandhimal/onetickets/pull/61), after I merged main (#56) into it to clear the conflict. Security and QA passed the delta check.

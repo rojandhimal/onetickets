@@ -14,10 +14,10 @@ cookie is first-party. Every error is `ApiErrorBody` (`{ statusCode, code, messa
 
 ## Magic link
 
-| Method and path                | Body                        | Success                        |
-| ------------------------------ | --------------------------- | ------------------------------ |
-| `POST /auth/magic-link`        | `{ email, organiserName? }` | 202, no body                   |
-| `POST /auth/magic-link/verify` | `{ token }`                 | 200 `Session` + session cookie |
+| Method and path                | Body                                         | Success                        |
+| ------------------------------ | -------------------------------------------- | ------------------------------ |
+| `POST /auth/magic-link`        | `{ email, organiserName?, turnstileToken? }` | 202, no body                   |
+| `POST /auth/magic-link/verify` | `{ token }`                                  | 200 `Session` + session cookie |
 
 - The answer to `POST /auth/magic-link` is the same whether or not the email exists.
 - The email contains `WEB_URL/auth/verify#token=<token>`. The token is in the fragment so it never
@@ -26,6 +26,11 @@ cookie is first-party. Every error is `ApiErrorBody` (`{ statusCode, code, messa
   verify answers 410 with `link_expired`, `link_used` or `link_invalid`.
 - `organiserName` names the user's first organisation if they have none. The web app does not send
   it: a user with `organisation: null` is sent to `/organiser/setup`.
+- With `TURNSTILE_ENABLED=true` ([ADR 0021](../adr/0021-turnstile-on-magic-link-requests.md)), the
+  api checks `turnstileToken` with Cloudflare before anything is sent. A missing or rejected token is
+  403 `challenge_failed`. If Cloudflare can't answer, the request fails closed with 503
+  `challenge_unavailable`. The per-IP limit is counted before the check, and the per-email limit and
+  hourly cap only after it passes.
 - Limits: 5 links per email and 30 per IP every 15 minutes, and `MAGIC_LINK_HOURLY_CAP` (300)
   for the whole service in a rolling hour; 30 verify attempts per IP every 15 minutes. The IP is
   the one the load balancer appended (see `TRUST_PROXY_HOPS`), never one the client sent.

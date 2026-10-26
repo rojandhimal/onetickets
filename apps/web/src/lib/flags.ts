@@ -26,3 +26,17 @@ export function isBookingEnabled(): boolean {
 export function isTicketsEnabled(): boolean {
   return process.env.FEATURE_TICKETS === 'true';
 }
+
+/** Pages that carry the Turnstile widget (SEC-10). Only these get Cloudflare in their CSP. */
+export const TURNSTILE_PATHS: readonly string[] = ['/signin', '/signup'];
+
+/**
+ * SEC-10 Turnstile on sign-in. The site key when it's on, else null. The api checks the token
+ * only when it has the matching TURNSTILE_ENABLED and secret, so turn both on together.
+ */
+export function turnstileSiteKey(): string | null {
+  if (process.env.TURNSTILE_ENABLED !== 'true') return null;
+  const key = process.env.TURNSTILE_SITE_KEY;
+  if (!key) throw new Error('TURNSTILE_ENABLED=true needs TURNSTILE_SITE_KEY');
+  return key;
+}

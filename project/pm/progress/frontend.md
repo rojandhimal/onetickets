@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-26 (Codex, S2-2 merge conflict resolution, #59)
+
+- **Done:** Merged current `main` into PR #59, preserving the held-versus-sold availability wording, checkout entry point, and both branches' progress history. Formatting, lint, type checks, graph validation and 31 event-page/checkout tests pass.
+- **Next:** CI and independent QA/Security re-reviews on the updated PR.
+- **Blocked:** QA and Security re-reviews remain pending.
+
 ## 2026-10-26 (S2-2 checkout rework & QA/Security blocker resolution, #59)
 
 - **Done:** Addressed Claude QA's fail review and Security findings on PR #59:
@@ -13,6 +19,55 @@ Newest first. Format: date, Done, Next, Blocked.
   6. All 46 Playwright E2E tests, 146 integration tests against PostgreSQL, 200 web unit tests, 49 api unit tests, 43 shared tests pass with 0 axe violations.
 - **Next:** Push to `frontend/s2-2-free-checkout`, update PR #59, request QA and Security re-reviews for diff `3c2ff43..head`.
 - **Blocked:** None.
+
+## 2026-10-24 (Claude, SEC-10 Turnstile on sign-in)
+
+- **Done:**
+  - #74 (DES-9) merged.
+  - SEC-10 (#77) adds Cloudflare Turnstile to /signin, /signup and resend, behind `TURNSTILE_ENABLED` on both the web app and the api, off by default.
+  - The api checks the token with siteverify before it sends a link, and fails closed with 503 `challenge_unavailable` when Cloudflare can't answer. The per-IP limit is counted before the check, and the per-email limit only after it passes.
+  - The enforced CSP allows challenges.cloudflare.com only on the two sign-in pages with the flag on.
+  - Cloudflare's test keys are used in Docker and tests, and the api refuses them in production.
+  - Written up in ADR 0021.
+  - Checks: unit tests (api, web) and api integration tests pass. A real-browser run with a stand-in Cloudflare script showed no CSP violations at 375 or 1280 px, and the fail-closed message appeared.
+- **Next:** Security, QA and ProductDesign review. Then the ticket screen against the order API tegs keeps.
+- **Blocked:** Real Turnstile keys come from tegs at launch. Nothing blocks the PR.
+
+## 2026-10-24 (Claude, DES-9 share-image fonts)
+
+- **Done:** #72 (SEC-16) merged. DES-9: the event share image now uses Bricolage Grotesque 800 and Figtree 700, as static WOFF cuts of the site's own latin subsets (42 KB together), read once per server. Render time and PNG size are unchanged (warm about 40 ms, 47 KB). Event page e2e checks the image renders.
+- **Next:** ProductDesign and QA review. Then wire the ticket screen to real orders once tegs picks the order API.
+- **Blocked:** Nothing.
+
+## 2026-10-24 (Claude, SEC-16 organiser sign-out)
+
+- **Done:** #70 (DES-8) merged. SEC-16: "Sign out" in the organiser header calls `POST /auth/sign-out`, then `clearDeviceDrafts()` even when the api fails or is offline, then loads `/signin`. Unit tests for the failure paths, and `e2e/tests/sign-out.spec.ts` at 375 and 1280 px (drafts database gone, old session cookie no longer signs in).
+- **Next:** Security, QA and ProductDesign review the PR, including where the control sits.
+- **Blocked:** Nothing. Wiring the ticket screen to real orders still waits on tegs's order API choice.
+
+## 2026-10-24 (Claude, DES-8 hero buttons, #70)
+
+- **Done:** #66 (DES-10) merged. DES-8 in #70: from 768 px the event page's Back and Share buttons line up with the 1040 px content column instead of the window edges. The event page e2e checks the alignment at 375 and 1280 px; it fails without the fix (16 px against 144 px at 1280).
+- **Next:** ProductDesign reviews #70. Then wire the ticket screen to real orders once tegs picks the order API.
+- **Blocked:** Nothing.
+
+## 2026-10-23 (Claude, DES-10 sold-out bar and price note, #66)
+
+- **Done:** #62 (S2-4a) merged. Claimed DES-10 with draft #66: the event page shows "Sold out" only when the api says every ticket is sold, and "All taken right now. Check back in a few minutes." with Get tickets kept while checkout holds fill the event (ARCH-2). Unit tests for both states.
+- **Next:** ProductDesign confirms the two copy defaults ("All taken" with no number, held copy in the price row), then Design and QA review #66.
+- **Blocked:** Nothing. Wiring the ticket screen to real orders still waits on tegs's order API choice.
+
+## 2026-10-23 (Claude, S2-4a ready for review, #62)
+
+- **Done:** Built "Remove tickets from this device" and 7-day expiry for saved tickets behind `FEATURE_TICKETS`, with Design's copy and Security's four adjustments. The worker checks expiry before serving and fails closed. Remove works offline and without the key, and takes the tickets off the screen. Unit tests, plus e2e at 375 and 1280 px for remove, reload after remove, and expiry on the next visit. All checks and 48/48 e2e pass.
+- **Next:** QA, Security and Design review #62.
+- **Blocked:** Nothing.
+
+## 2026-10-23 (Claude, S2-4a claimed)
+
+- **Done:** #56 (S2-3 ticket screen) merged. Claimed S2-4a, "Remove from this device" and expiring saved tickets, which Security made a condition of ADR 0020. PM split it out of S2-4 because it needs no order API.
+- **Next:** Agree the expiry window with Design and Security, get Design's copy, and build it behind `FEATURE_TICKETS`.
+- **Blocked:** Nothing. Wiring the ticket screen to the real order API waits on tegs's choice between #58 and #59.
 
 ## 2026-10-23 (Claude, S2-3 QA fixes, #56)
 

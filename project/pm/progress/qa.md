@@ -2,6 +2,34 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (Claude)
+
+- **Done:**
+  - [#66](https://github.com/rojandhimal/onetickets/pull/66) DES-10 **passes** at c695a7c. Verdict posted after tegs merged it (e0f33b1). Web tests 193/193. The held and sold states follow the handoff. "All tickets taken" has no count because the public DTO has no capacity.
+  - Follow-up for the api: soldOut covers on-sale types only, while spotsLeft sums every type. A hold-full on-sale type plus an off-sale type shows "N spots left".
+  - [#68](https://github.com/rojandhimal/onetickets/pull/68) PM sync was merged before review. Main's graph is restored and valid (121 nodes). Nits: DES-10 and the #66 node, and meta.main.
+  - [#69](https://github.com/rojandhimal/onetickets/pull/69) PM sync **passes** at bc2bb16 (123 nodes, valid). Nits: record qa pass@c695a7c on #66; add a card for the soldOut follow-up.
+    - Passes at 5845310 with the nits fixed. BE-7 has been added for the soldOut follow-up.
+    - 4ad5e65 (tegs merged main in, and #69 merged as 28c1069) passes after merge. No records are lost. meta.main, DES-8 and the frontend role are stale for the next sync.
+  - [#71](https://github.com/rojandhimal/onetickets/pull/71) SEC-23 nodemailer 10.1.7 **passes** at f388e02, as long as the rest of CI goes green. The audit is clean, api tests are 49/49, and a send to Mailpit worked. Nits: the #71 node has no head; meta.main is stale.
+    - Re-check at 86f2e48 (main merged in) passes. Suggestion: keep main's meta line, because it conflicts with #73 if #73 merges first.
+    - 4a8e85c passes: the meta line is restored, and it merges cleanly with #73.
+  - [#70](https://github.com/rojandhimal/onetickets/pull/70) DES-8 hero buttons on the 1040 px column **pass** at d396981. The event-page e2e passes at 375, 800, 1280 and 1600 px, and CI is 7/7 green.
+  - [#72](https://github.com/rojandhimal/onetickets/pull/72) SEC-16 sign out **fails** at 9872a88.
+    - Blocker: if POST /auth/sign-out fails, /signin redirects back to /organiser, so the person is still signed in with no message. The probe is in qa/scripts/qa72.spec.ts.
+    - What works: drafts clear, and the happy-path e2e passes. A second tab holding the db doesn't hang sign-out.
+    - bde4678: **passes**, as long as E2E goes green. A failed sign-out shows an alert and stays on the page. sign-out.spec passes 6/6, unit tests are 199/199, and the retry probe (qa72b) passes.
+  - [#73](https://github.com/rojandhimal/onetickets/pull/73) PM sync and the state.mjs meta stamp **pass** at 5eb3b88. The new test fails on main and passes here (15/15), and a probe confirms only set meta stamps line 1.
+  - [#74](https://github.com/rojandhimal/onetickets/pull/74) DES-9 share-image fonts **pass** at f9ade3b. Logged reads show both woff files load at runtime, and both are traced into standalone. CI is 7/7 green.
+  - [#75](https://github.com/rojandhimal/onetickets/pull/75) SEC-24 jsdom 30.1.3 / undici 8.12.3 **passes** at 44fc332: the full audit is clean, web 199/199, api 49/49.
+  - [#76](https://github.com/rojandhimal/onetickets/pull/76) PM sync **passes** at d72531b: the merge SHAs are verified, and trial merges with #74 and #75 are clean in every order.
+  - [#78](https://github.com/rojandhimal/onetickets/pull/78) PM sync and the insertNode change to `add` **pass** at 31083a5: tests 16/16, 132 nodes valid, trial merges with #75 and #77 clean.
+    - 67c7bdc (no-item PRs go after their branch's last PR) passes. Trial merges with #64, #75 and #77 are clean. Nit: the test doesn't tell the branch rule from appending.
+  - [#79](https://github.com/rojandhimal/onetickets/pull/79) BE-7 spotsLeft over on-sale types **passes** at 0dc9c73, as long as the rest of CI goes green: unit 60/60, integration 128/128.
+  - Docs finding: AGENTS.md's integration URL user `onetickets` fails auth. The owner is onetickets_owner. Sent to PM.
+- **Next:** re-check #59 when fixes land; review ticket issuing (rows 3.6 and 3.7).
+- **Blocked:** nothing.
+
 ## 2026-10-23 (Claude)
 
 - **Done:** Re-checked [#60](https://github.com/rojandhimal/onetickets/pull/60) for `f227cd1..e862049`: pass.
@@ -14,6 +42,22 @@ Newest first. Format: date, Done, Next, Blocked.
     - The tool and docs pass: I drove next, claim, release, the stale list and the validate guard on a scratch graph, and the 14 tests pass.
     - The fix: S2-4a is on the board as [claude] but missing from graph.jsonl.
     - Asked PM to get tegs's confirmation that "one at a time" means per agent and role.
+    - f0c8c29 (S2-3 released while it waits on the order API) is fine. The S2-4a fix is still open.
+    - Passes at b4bc226, the merged head: S2-4a is now in the graph.
+  - [#62](https://github.com/rojandhimal/onetickets/pull/62) S2-4a remove-from-device and expiry **fails** at 7d8f61d.
+    - What works: the remove flow, focus, expiry in both the page and the worker, and unit tests (189/189).
+    - Blocker: a partial offline save keeps the order on the device with no Remove button. The probe is in qa/scripts/qa62.test.tsx.
+    - Blocker: graph.jsonl conflicts with main.
+    - Copy: "We couldn't remove your tickets." doesn't match the code.
+    - eebd9b7: the copy is fixed. The partial-save blocker is still open, and graph.jsonl conflicts with main again.
+    - d99df5f: **passes**, as long as E2E goes green. hasSavedOrder fixes the partial-save case (the probe passes), it merges cleanly into main, and web tests are 192/192.
+  - [#65](https://github.com/rojandhimal/onetickets/pull/65) PM sync **passes** at 23d630b: the state check is valid, tests are 14/14 and it merges cleanly. Nits: #62 qa node, stale qa role node.
+    - Passes at 0a18399 with the nits fixed. E2E on #62 at d99df5f is green, so the #62 pass has no remaining condition.
+    - 28a4805: the content is correct (#62 merged as f11ab57, S2-4a done), but it conflicts with main in graph.jsonl after #63 merged (bcded67). It needs main merged in and #63 recorded as merged.
+  - [#63](https://github.com/rojandhimal/onetickets/pull/63) DEV-7 CA bundle image check **fails** at 10f6255.
+    - Without pipefail, two empty hashes compare equal, so a tf path naming a file missing from both certs and the image passes.
+    - Fix: pipefail plus test -n on both hashes.
+    - Passes at 184d4f9: pipefail, exactly one sslrootcert and test -n are in, and the empty-hash case now fails. This depends on the api image job.
   - Re-checked [#56](https://github.com/rojandhimal/onetickets/pull/56) for `c3c54ac..8dfed02`: pass.
     - A 404 with a key shows the bad-link message and drops the saved copy.
     - With no key, the page makes one request, so online it shows nothing and the saved copy appears only with no signal.

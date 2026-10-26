@@ -16,19 +16,20 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
 
 ## Environment variables
 
-| Variable                                            | Where it's read         | What it does                                                                                                                                                           |
-| --------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time.                                                          |
-| `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404. |
-| `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages and browse cards show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                      |
-| `FEATURE_BOOKING`                                   | server, at request time | `true` turns "Tickets open soon" on event pages into a Get tickets link. Off until booking ships in Sprint 2.                                                          |
-| `FEATURE_TICKETS`                                   | server, at request time | `true` turns on the ticket screen at `/tickets/{orderId}` (S2-3). Anything else returns 404 there.                                                                     |
-| `WEB_URL`                                           | server, at request time | Public address of the site, used for absolute share-image links in event link previews.                                                                                |
-| `REVALIDATE_SECRET`                                 | server, at request time | Bearer secret the api sends to `POST /internal/revalidate`. Unset turns the route off (404).                                                                           |
-| `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                                                                         |
-| `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                                                                                     |
-| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                                                                               |
-| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | build time only         | Upload source maps to Sentry. Without a token, source maps aren't uploaded.                                                                                            |
+| Variable                                            | Where it's read         | What it does                                                                                                                                                                           |
+| --------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `API_URL`                                           | build time and server   | Where Next forwards `/api/*` and where server components call the api. Baked into the rewrites at build time.                                                                          |
+| `FEATURE_EVENT_WIZARD`                              | server, at request time | `true` turns on the create-event wizard and makes the templates on `/organiser` into links. Anything else shows them as "Coming soon" and the wizard pages return 404.                 |
+| `FEATURE_EVENT_BANNER`                              | server, at request time | Event pages and browse cards show the organiser's banner unless this is `false`, which shows the template colour instead (design 2 `showBanner`).                                      |
+| `FEATURE_BOOKING`                                   | server, at request time | `true` turns "Tickets open soon" on event pages into a Get tickets link. Off until booking ships in Sprint 2.                                                                          |
+| `FEATURE_TICKETS`                                   | server, at request time | `true` turns on the ticket screen at `/tickets/{orderId}` (S2-3). Anything else returns 404 there.                                                                                     |
+| `TURNSTILE_ENABLED`, `TURNSTILE_SITE_KEY`           | server, at request time | `true` and a site key put the Cloudflare Turnstile widget on `/signin` and `/signup` and let Cloudflare into those pages' CSP (SEC-10). Turn on the api's `TURNSTILE_ENABLED` with it. |
+| `WEB_URL`                                           | server, at request time | Public address of the site, used for absolute share-image links in event link previews.                                                                                                |
+| `REVALIDATE_SECRET`                                 | server, at request time | Bearer secret the api sends to `POST /internal/revalidate`. Unset turns the route off (404).                                                                                           |
+| `APP_ENV`                                           | server, at request time | Sentry environment for server errors (`development`, `staging`, `production`).                                                                                                         |
+| `NEXT_PUBLIC_SENTRY_DSN`                            | build time              | Turns Sentry on. Empty keeps it off, which is the default for local dev and tests.                                                                                                     |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`             | build time              | Share of requests traced, `0` to `1`. Defaults to `0.1`.                                                                                                                               |
+| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | build time only         | Upload source maps to Sentry. Without a token, source maps aren't uploaded.                                                                                                            |
 
 ## Pages
 
@@ -56,6 +57,11 @@ The api must be running on `API_URL` for sign-up to work. Without it, sign-up sh
    ([ADR 0001](../adr/0001-magic-link-token-in-url-fragment.md)). The api sets an HttpOnly session cookie.
 3. `/organiser` calls `GET /me` on the server with that cookie. An organiser with no organisation is sent
    to `/organiser/setup` first.
+
+With Turnstile on ([ADR 0021](../adr/0021-turnstile-on-magic-link-requests.md)), step 1 first asks the
+widget (`src/components/Turnstile.tsx`) for a token and sends it as `turnstileToken`. The widget runs only
+then and shows itself only when Cloudflare wants an interaction. Resending from "Check your email" gets a
+fresh token. If the check fails or the api can't reach Cloudflare, the form says so and nothing is sent.
 
 Google sign-in starts at `/api/auth/google/start` and returns to `/organiser`. When it fails, the api redirects back to `/signin`
 with `?error=google`, `google_unverified` or `google_unavailable`, and the form shows the matching message.
@@ -133,6 +139,16 @@ opens on Drafts when nothing is coming up. Each card has the date, title, a Live
 booked of capacity for live events, and one action: "Open event page", or "Finish setting up",
 which returns to the step the draft was left on. The step is saved as soon as it changes.
 
+The organiser header has "View site" and "Sign out" (SEC-16). Sign out calls `POST /auth/sign-out`,
+then `clearDeviceDrafts()` whether or not the api answered. Only when the api confirms does it load
+`/signin` in full. If the call fails (offline or an error), the session may still be live, so the
+page stays put with "We couldn't sign you out. Check your connection and try again." and the button
+comes back, rather than looking signed out on a shared computer. The api also sends
+`Clear-Site-Data: "storage"`.
+`e2e/tests/sign-out.spec.ts` checks that the drafts database is gone, that the old session cookie no
+longer signs anyone in, and that a failed call (offline or a 500) keeps the organiser on the page with the alert and still
+clears the drafts.
+
 Pages behind a flag call `connection()` before reading it, so the flag is read per request and a
 build made with it off still picks it up when it's turned on.
 
@@ -154,10 +170,24 @@ banner, date, title, organiser, then the key facts (price and spots left, venue 
 cancellations, accessibility). The ticket bar sticks to the bottom on phones and becomes a card in a
 right-hand column from 768 px. Online events never show their link; buyers get it with their ticket.
 
+Sold out and held are kept apart (DES-10, ARCH-2). Only `soldOut` from the api, true when every
+ticket on sale is sold, shows sold out: the bar reads "All tickets taken" (no number; the public api
+has no capacity) with a grey "Sold out" label in place of Get tickets, and the price row reads "Sold
+out; spots that are released go back on sale here." When `spotsLeft` is 0 but nothing is sold out,
+checkout holds have the tickets for now: the bar reads "All taken right now", the price row "All
+taken right now. Check back in a few minutes." and Get tickets stays, so checkout can report what's
+left. With `FEATURE_BOOKING=true`, Get tickets opens the one-screen checkout at
+`/e/{slug}/tickets`, including while other checkouts temporarily hold all remaining tickets.
+
 Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image
 fetches the api's 1200 × 630 JPEG rendition of the banner (`banner.ogUrl`) itself; with no banner,
 or if that fetch fails, it falls back to the template colour.
+Its text uses the page's fonts (DES-9): Bricolage Grotesque 800 and Figtree 700, as static WOFF
+cuts in `src/fonts` (`*-800-latin.woff`, `*-700-latin.woff`, 42 KB together), because the renderer
+can't read WOFF2 or variable fonts. They were made from the site's latin subsets with fontTools
+(`fonttools varLib.instancer`, wght 800 and opsz 96 for Bricolage, wght 700 for Figtree), under
+the same OFL licences. If a file can't be read, the image falls back to the built-in font.
 
 `e2e/tests/event-page.spec.ts` publishes an event through the wizard, then opens its page in a
 fresh browser with no session. It checks the enforced nonce CSP, `private, no-store`, the share
@@ -241,6 +271,14 @@ for 60 seconds under the `browse` tag) using the URL query parameters (`?city=`,
 - **Saved copy**: the page always asks the api first (with no key header if it has no key). The
   copy saved on the phone shows only when that request fails. A refused link never shows it, and a
   refused keyed link deletes it.
+- **Remove and expiry** (S2-4a): whenever the order is saved on the device (even if the rest of
+  the save failed), "Remove tickets from this device"
+  appears under Find more events. It opens an inline confirm card. "Remove" deletes the order's
+  saved copy, its page, and the tab's key and stashed order, with or without signal. With no other
+  order saved, it also deletes the cache and unregisters the worker. The page then shows "Removed
+  from this device." in place of the tickets. If storage is blocked, the card says it couldn't remove them
+  and the tickets stay. A saved order is never served after 7 days past its
+  event's end, by the page or the worker. It is dropped on the next visit or when the worker starts.
 - **Errors**: no signal and nothing saved shows "We couldn't load your tickets." with Try again. A
   missing, wrong or expired key shows "That link doesn't work any more."
 - **Add to calendar**: a menu, a bottom sheet under 640 px and a popover above, with "Apple Calendar
@@ -267,6 +305,8 @@ someone else opens the wizard or the organiser signs out, and they expire after 
 - `Content-Security-Policy-Report-Only` (report-only until Next's inline scripts get nonces)
 - On `/e/{slug}` only, an enforced `Content-Security-Policy` with a per-request script nonce
   ([ADR 0018](../adr/0018-enforced-nonce-csp-on-event-pages.md))
+- With Turnstile on, `/signin` and `/signup` alone add `https://challenges.cloudflare.com` to
+  `script-src` and `frame-src` in the enforced policy (`src/proxy.ts`, ADR 0021)
 - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, HSTS, `Permissions-Policy`
 - `Referrer-Policy: strict-origin-when-cross-origin`, and `no-referrer` on `/auth/verify` and
   `/tickets/*`

@@ -4,6 +4,7 @@ import { Logo } from '@/components/Logo';
 import styles from '@/components/screen.module.css';
 import { getSession } from '@/lib/session';
 import { parseInitialError } from '@/lib/auth-errors';
+import { turnstileSiteKey } from '@/lib/flags';
 import { SignupForm } from '../signup/SignupForm';
 import local from '../signup/signup.module.css';
 
@@ -28,7 +29,11 @@ export default async function SigninPage({ searchParams }: Props) {
           </div>
         </div>
       </header>
-      <SignupForm mode="signin" initialError={parseInitialError(error)} />
+      <SignupForm
+        mode="signin"
+        initialError={parseInitialError(error)}
+        turnstileSiteKey={turnstileSiteKey()}
+      />
     </div>
   );
 }

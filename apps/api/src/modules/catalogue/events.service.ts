@@ -33,7 +33,7 @@ import { PlacesProvider } from './places.js';
 import { allInPriceCents } from './pricing.js';
 import { missingForPublish, slugFor } from './publish-check.js';
 import { PublicPageRevalidator } from './revalidation.js';
-import { onSale, windowIsValid, type EventTimes } from './sales-window.js';
+import { eventAvailability, onSale, windowIsValid, type EventTimes } from './sales-window.js';
 import { starterTicketType } from './templates.js';
 
 /** Who is acting: the signed-in organiser, inside the organisation from the route. */
@@ -608,11 +608,7 @@ export class EventsService {
       maxPerOrder: t.max_per_order,
       soldOut: t.sold >= t.capacity,
     }));
-    const onSaleTypes = ticketTypes.filter((t) => t.onSale);
-    const soldOut =
-      onSaleTypes.length > 0
-        ? onSaleTypes.every((t) => t.soldOut)
-        : ticketTypes.length > 0 && ticketTypes.every((t) => t.soldOut);
+    const { spotsLeft, soldOut } = eventAvailability(ticketTypes);
     return {
       slug: row.slug,
       name: row.name,
@@ -628,7 +624,7 @@ export class EventsService {
       hasContactEmail: row.has_contact_email,
       banner: this.bannerDto(row),
       priceFromAllInCents: allInPriceCents(fromCents),
-      spotsLeft: ticketTypes.reduce((sum, t) => sum + t.spotsLeft, 0),
+      spotsLeft,
       soldOut,
       ticketTypes,
     };

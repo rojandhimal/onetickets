@@ -14,12 +14,14 @@
 //                                             k= deletes; dotted keys reach nested objects
 //                                             (reviews.qa=pass@abc1234). Values parse as JSON when
 //                                             they can, so prs+=55 adds a number
-//   node scripts/state.mjs add '<json>'       append a node
+//   node scripts/state.mjs add '<json>'       add a node: a PR goes after its item (or its branch's
+//                                             last PR), anything else at the end
 //   node scripts/state.mjs next [agent] [role] your unfinished items, then unassigned ready ones
 //   node scripts/state.mjs claim <id> [agent] take an item: one at a time per agent and role
 //   node scripts/state.mjs release <id>       PM: take the agent off an item (inactive > 5 days)
 //   node scripts/state.mjs check              validate; exits 1 on an error (runs in pnpm lint)
-// set and add also stamp meta.updated with today's date and meta.by with $STATE_BY when it is set.
+// set meta also stamps meta.updated with today's date and meta.by with $STATE_BY when it is set.
+// Other edits leave the meta line alone, so PRs that change different nodes don't collide on it.
 // $STATE_BY is <agent>/<role>, e.g. codex/frontend; next and claim read their defaults from it.
 
 import { execFileSync } from 'node:child_process';
@@ -297,6 +299,26 @@ export function claim(nodes, id, agent, now = today()) {
   return item;
 }
 
+/**
+ * Adds a node, in place. A PR goes after its item and that item's other PRs, or with no item after
+ * the last PR from its branch, so PRs for different work land on different lines and don't conflict
+ * at the end of the file. Anything else goes last.
+ */
+export function insertNode(nodes, node) {
+  const sameWork = node.item
+    ? (n) => n.id === node.item || (n.type === 'pr' && n.item === node.item)
+    : (n) => n.type === 'pr' && n.branch === node.branch;
+  let at = -1;
+  if (node.type === 'pr') {
+    nodes.forEach((n, i) => {
+      if (sameWork(n)) at = i;
+    });
+  }
+  if (at === -1) nodes.push(node);
+  else nodes.splice(at + 1, 0, node);
+  return node;
+}
+
 /** Takes the agent off an item, in place, so another agent can claim it. */
 export function release(nodes, id) {
   const item = nodes.find((n) => n.id === id);
@@ -498,7 +520,6 @@ function main(argv) {
   if (parseErrors.length) fail(parseErrors);
 
   const save = () => {
-    stamp(nodes);
     const errors = validate(nodes);
     if (errors.length) fail(['Not saved:', ...errors]);
     writeFileSync(GRAPH, serialise(nodes));
@@ -557,7 +578,8 @@ function main(argv) {
       if (!node) fail([`no node "${id}"; add it with: node scripts/state.mjs add '<json>'`]);
       const before = node.agent;
       for (const edit of edits) applyEdit(node, edit);
-      if (node.type !== 'meta' && node.type !== 'decision') node.updated = today();
+      if (node.type === 'meta') stamp(nodes);
+      else if (node.type !== 'decision') node.updated = today();
       stampClaim(
         node,
         before,
@@ -570,7 +592,7 @@ function main(argv) {
     case 'add': {
       const node = JSON.parse(rest.join(' '));
       if (node.type === 'item' || node.type === 'role') node.updated ??= today();
-      nodes.push(node);
+      insertNode(nodes, node);
       save();
       console.log(JSON.stringify(node));
       break;

@@ -1,12 +1,18 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
+import { EXPIRES_HEADER, TICKETS_CACHE, stashConfirmedOrder } from '@/lib/tickets';
+import { fakeCaches } from '@/test/fake-caches';
 import { orderFixture, ticketFixture } from '@/test/order-fixture';
 import { TicketScreen } from './TicketScreen';
 
 const KEY = 'tk_abcdefghijklmnop'; // gitleaks:allow (fake ticket key)
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+/** A copy saved on the phone, still within its date. */
+const saved = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    headers: { [EXPIRES_HEADER]: '2099-01-01T00:00:00.000Z' },
+  });
 
 function api(handler: () => Response | Promise<Response>) {
   const fetch = vi.fn(async () => handler());
@@ -157,6 +163,8 @@ describe('ticket screen', () => {
     );
     expect(google).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.queryByRole('button', { name: /wallet/i })).not.toBeInTheDocument();
+    // Nothing saved here (no Cache Storage), so nothing to remove.
+    expect(screen.queryByRole('button', { name: /Remove tickets/ })).not.toBeInTheDocument();
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('link', { name: 'Google Calendar' })).not.toBeInTheDocument();
@@ -273,7 +281,7 @@ describe('ticket screen', () => {
   it('opens the copy saved on this phone when there is no signal', async () => {
     const order = orderFixture();
     vi.stubGlobal('caches', {
-      match: vi.fn(async () => json(order)),
+      match: vi.fn(async () => saved(order)),
       open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(async () => undefined) })),
     });
     api(() => {
@@ -312,7 +320,7 @@ describe('ticket screen', () => {
     function savedCopy() {
       const deleted = vi.fn(async () => true);
       vi.stubGlobal('caches', {
-        match: vi.fn(async () => json(orderFixture())),
+        match: vi.fn(async () => saved(orderFixture())),
         open: vi.fn(async () => ({ put: vi.fn(), match: vi.fn(), delete: deleted })),
       });
       return deleted;
@@ -353,5 +361,110 @@ describe('ticket screen', () => {
       render(<TicketScreen orderId="ord_1" />);
       expect(await screen.findByRole('heading', { name: "You're going!" })).toBeInTheDocument();
     });
+  });
+
+  it('removes the tickets from this device after a confirm, and from the screen', async () => {
+    const { storage, stores } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    const unregister = vi.fn(async () => true);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: vi.fn(async () => ({})),
+        ready: Promise.resolve({}),
+        getRegistrations: async () => [
+          { scope: `${location.origin}/tickets/`, unregister },
+          { scope: `${location.origin}/other/`, unregister: vi.fn() },
+        ],
+      },
+      configurable: true,
+    });
+    api(() => json(orderFixture()));
+    const user = userEvent.setup();
+    render(<TicketScreen orderId="ord_1" />);
+    expect(await screen.findByText('Works offline')).toBeInTheDocument();
+    expect(stores.get(TICKETS_CACHE)?.has('/api/public/orders/ord_1/tickets')).toBe(true);
+
+    const start = screen.getByRole('button', { name: 'Remove tickets from this device' });
+    await user.click(start);
+    const group = screen.getByRole('group', {
+      name: "Remove these tickets from this device? They'll still be in your email.",
+    });
+    expect(screen.getByText(/They'll still be in your email/)).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Keep' }));
+    expect(group).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove tickets from this device' })).toHaveFocus();
+    expect(stores.has(TICKETS_CACHE)).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Remove tickets from this device' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(await screen.findByRole('heading', { name: 'Removed from this device.' })).toHaveFocus();
+    expect(screen.getByText('Your tickets are still in your email.')).toBeInTheDocument();
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+    expect(screen.queryByText(/jordan@example\.test/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Find more events' })).toBeInTheDocument();
+    expect(stores.has(TICKETS_CACHE)).toBe(false);
+    expect(sessionStorage.getItem('onetickets:ticket-key:ord_1')).toBeNull();
+    expect(unregister).toHaveBeenCalledTimes(1);
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
+
+  it('keeps the tickets on screen and says so when removing fails', async () => {
+    const { storage } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { register: vi.fn(async () => ({})), ready: Promise.resolve({}) },
+      configurable: true,
+    });
+    api(() => json(orderFixture()));
+    const user = userEvent.setup();
+    render(<TicketScreen orderId="ord_1" />);
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove tickets from this device' }),
+    );
+    // Storage blocked from here on.
+    vi.stubGlobal('caches', {
+      open: async () => {
+        throw new DOMException('blocked', 'SecurityError');
+      },
+    });
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "We couldn't remove your tickets. Clear this site's data in your browser settings instead.",
+    );
+    expect(screen.getByRole('article', { name: 'Ticket 1 of 2' })).toBeInTheDocument();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
+
+  it('offers Remove when the order is saved even if a built file could not be', async () => {
+    const { storage, stores } = fakeCaches();
+    vi.stubGlobal('caches', storage);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { register: vi.fn(async () => ({})), ready: Promise.resolve({}) },
+      configurable: true,
+    });
+    // A chunk from an earlier deploy that the server no longer has.
+    const entries = vi
+      .spyOn(performance, 'getEntriesByType')
+      .mockReturnValue([
+        { name: `${location.origin}/_next/static/chunks/old-deploy.js` } as PerformanceEntry,
+      ]);
+    api(() => json(orderFixture()));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        String(url).includes('/_next/static/')
+          ? new Response('gone', { status: 404 })
+          : json(orderFixture()),
+      ),
+    );
+    render(<TicketScreen orderId="ord_1" />);
+    expect(
+      await screen.findByRole('button', { name: 'Remove tickets from this device' }),
+    ).toBeInTheDocument();
+    expect(stores.get(TICKETS_CACHE)?.has('/api/public/orders/ord_1/tickets')).toBe(true);
+    // Not everything is saved, so it doesn't claim to work offline.
+    expect(screen.queryByText('Works offline')).not.toBeInTheDocument();
+    entries.mockRestore();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
   });
 });

@@ -6,6 +6,9 @@ import type { OrganisationDto } from './organisations.js';
  * app reaches them through its /api rewrite so the session cookie is first-party.
  *
  * POST /auth/magic-link          MagicLinkRequest -> 202, no body. Same answer for any email.
+ *                                With Turnstile on (SEC-10): 403 challenge_failed when the token is
+ *                                missing or rejected, 503 challenge_unavailable when Cloudflare
+ *                                can't be asked. No link is sent in either case.
  * POST /auth/magic-link/verify   MagicLinkVerify  -> 200 Session + session cookie;
  *                                410 link_expired | link_used | link_invalid
  * GET  /auth/google/start?organiserName=&returnTo=  -> 302 to Google; the callback 302s to
@@ -29,6 +32,8 @@ export const magicLinkRequest = z.object({
    * new user signs in with organisation: null and the web app asks for a name.
    */
   organiserName: organiserNameSchema.optional(),
+  /** The Turnstile widget's token. Required only when the api has Turnstile on (SEC-10). */
+  turnstileToken: z.string().min(1).max(2048).optional(),
 });
 export type MagicLinkRequest = z.infer<typeof magicLinkRequest>;
 

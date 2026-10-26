@@ -2,6 +2,56 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-24 (15:25 UTC, Claude)
+
+- **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved SEC-10 (#77) to In progress on the board.
+- **Then:** tegs merged #64 (BE-6) as `ee6a085` before QA or Security recorded a verdict, so I asked both for a post-merge review at `dcb79dc`. BE-7 is in review as #79, and QA passed it at `0dc9c73`. Fixed the integration test command in `AGENTS.md`, which used the `onetickets` user instead of the schema owner `onetickets_owner` (QA).
+- **Next:** #78 to tegs once CI and QA pass, and record the #64 verdicts.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (15:10 UTC, Claude)
+
+- **Done:** tegs merged #76 as `f911a01` and #74 (DES-9) as `d59771a`. Recorded both and marked DES-9 done. `state.mjs add` now puts a PR node right after its item, not at the end of the file, so PRs for different items stop colliding on the last line. There's a test for it. I also removed the stale SEC-20 part 2 backlog line, which shipped in #48.
+- **Then:** FrontendDev is free, so I gave it SEC-10, Turnstile on sign-in, behind a flag. BackendDev's only branch is held by draft #64 (BE-6), which has had no CI runs or reviews since 23 Oct, and that's blocking BE-7. I've asked BackendDev to merge main and get #64 reviewed.
+- **Next:** record #75 (SEC-24) when tegs merges it.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (15:00 UTC, Claude)
+
+- **Done:** tegs merged #71 (SEC-23, `nodemailer` 10.1.7) as `185c3b6`, #72 (SEC-16, sign out) as `970aefc` and PM sync #73 as `06cf06d`, with no conflicts. Recorded all three, marked SEC-23 and SEC-16 done and set `meta.main` to `06cf06d`.
+- **Next:** DevOps claims SEC-24 (`undici` via `jsdom`). FrontendDev opens DES-9 (share-image font), with ProductDesign and QA review. BackendDev's BE-7 waits for a free branch.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (01:50 UTC, Claude)
+
+- **Done:** tegs merged #70 (DES-8) as `acf8a74`, then merged main into PM sync #69 on GitHub and merged it as `28c1069`. No records were lost, but the merge put `meta.main` back to `f380c8f`. I've recorded both PRs, marked DES-8 done, added QA to DES-8's reviewers (I had left it off) and set `meta.main` to `28c1069`.
+- **Then:** every `state.mjs set` and `add` stamped the meta line, so any two PRs that touched the graph conflicted on its first line (#69, #70 and #71 all did). Now only `set meta` stamps it, with a test. I also added SEC-24 for DevOps: the dev-only `undici` advisory DevOps found on #71.
+- **Next:** QA reviews this sync. Record #71 (SEC-23) and #72 (SEC-16) when tegs merges them. DevOps can claim SEC-24.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-24 (00:50 UTC, Claude)
+
+- **Done:** tegs merged #66 (DES-10, sold-out bar and price note) as `e0f33b1` and the PM sync #68 as `d2f11d1`. #68 kept the restored graph records. Recorded both, DES-10 done, and promoted DES-8 (hero buttons on the 1040 px column) to ready for FrontendDev, which is free again.
+- **Then:** QA passed #66 after merge. From QA's review, added BE-7 (event `spotsLeft` should count only on-sale types, like `soldOut`) as ready for BackendDev.
+- **Next:** DevOps claims SEC-23, FrontendDev DES-8, BackendDev BE-7.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (23:40 to 23:50 UTC, Claude)
+
+- **Done:** tegs merged #62 as `f11ab57`, so S2-4a is done and the ticket screen meets Security's ADR 0020 condition. Merged main into #65 and recorded it. FrontendDev (Claude) is free, so I pointed it at DES-10, the only unassigned ready frontend item.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). tegs's CI-fix thread already opened #67 with the fix, so I recorded it as SEC-22 (DevOps, Security and QA review). tegs merged #65 as `04e7da7`, but the main merge on GitHub kept main's older graph lines, so this sync restores #62, #63, S2-4a, DEV-7 and the role lines. Removed the stale DEV-6 backlog card (done in #45).
+- **Then:** tegs merged #67 as `f380c8f`, so SEC-22 is done and Dependency audit is green again.
+- **Next:** QA reviews this sync. FrontendDev claims DES-10. DevOps (free) can claim SEC-23, the `nodemailer` follow-up I added as ready.
+- **Then:** tegs merged #63 as `bcded67`, so DEV-7 is done. Dependency audit went red on `main` and every PR: new high advisories in `zod`, `body-parser` and `multer` (api dependencies). Opened SEC-22 for DevOps, the free role, with Security and QA review. Removed the stale DEV-6 backlog card (done in #45).
+- **Next:** DevOps lands SEC-22, then I merge main into #65 so it goes green. FrontendDev claims DES-10.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
+## 2026-10-23 (19:50 UTC, Claude)
+
+- **Done:** tegs merged #60 as `2787073`, so the agent assignment rule (D19) is live. Recorded the merge with QA's pass at `b4bc226`, QA's fail on #62 at `eebd9b7` (partial offline save). FrontendDev fixed it at `4d117c6`, and QA, Security and Design pass `d99df5f` and #63 (DEV-7): QA failed it at `10f6255` and passed the fix at `184d4f9`. Added DEV-7 and BE-6 (#64) to the board; their graph items come in their own PRs.
+- **Next:** #62 (all 7 checks green) and #63 (Security's pass holds at `184d4f9`) are ready for tegs, and so is this sync, #65. Release claims idle for more than 5 days at each daily check.
+- **Blocked:** tegs's order API choice for S2-2 and the rest of S2-3.
+
 ## 2026-10-23 (15:40 UTC, Claude)
 
 - **Done:** Fixed QA's finding on #60: the graph now has S2-4a (`agent` claude, in review with #62) and a #62 PR node, using the same S2-4a line #62 adds, so the board and graph agree. Moved S2-4a to Review on the board.
