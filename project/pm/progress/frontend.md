@@ -2,6 +2,24 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-26 (Codex, S2-2 merge conflict resolution, #59)
+
+- **Done:** Merged current `main` into PR #59, preserving the held-versus-sold availability wording, checkout entry point, and both branches' progress history. Formatting, lint, type checks, graph validation and 31 event-page/checkout tests pass.
+- **Next:** CI and independent QA/Security re-reviews on the updated PR.
+- **Blocked:** QA and Security re-reviews remain pending.
+
+## 2026-10-26 (S2-2 checkout rework & QA/Security blocker resolution, #59)
+
+- **Done:** Addressed Claude QA's fail review and Security findings on PR #59:
+  1. Replaced unauthenticated `/tickets/:orderRef` lookup with 256-bit URL-safe ticket key passed in URL hash fragment (`/tickets/:orderId#key=...`) and stored as SHA-256 hash in `checkout.order_keys`. Unauthenticated public lookup dropped; read requires bearer token.
+  2. Replaced `orders_public_select` with strict RLS policies on `checkout.orders` (`orders_tenant` and `orders_buyer`).
+  3. Integrated with `stashConfirmedOrder` and `confirmationPath` from `@onetickets/shared` and PR #56's `/tickets/[orderId]` ticket screen.
+  4. Placed checkout page `/e/[slug]/tickets` behind `FEATURE_BOOKING` runtime flag.
+  5. Trimmed footnote copy per ProductDesign's review.
+  6. All 46 Playwright E2E tests, 146 integration tests against PostgreSQL, 200 web unit tests, 49 api unit tests, 43 shared tests pass with 0 axe violations.
+- **Next:** Push to `frontend/s2-2-free-checkout`, update PR #59, request QA and Security re-reviews for diff `3c2ff43..head`.
+- **Blocked:** None.
+
 ## 2026-10-24 (Claude, SEC-10 Turnstile on sign-in)
 
 - **Done:**

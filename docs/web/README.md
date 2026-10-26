@@ -176,7 +176,8 @@ has no capacity) with a grey "Sold out" label in place of Get tickets, and the p
 out; spots that are released go back on sale here." When `spotsLeft` is 0 but nothing is sold out,
 checkout holds have the tickets for now: the bar reads "All taken right now", the price row "All
 taken right now. Check back in a few minutes." and Get tickets stays, so checkout can report what's
-left.
+left. With `FEATURE_BOOKING=true`, Get tickets opens the one-screen checkout at
+`/e/{slug}/tickets`, including while other checkouts temporarily hold all remaining tickets.
 
 Organiser text is plain text and is rendered as text only (SEC-3). The map tile is drawn, not a map
 provider's tile, and links to Google Maps, which opens the phone's maps app. The link preview image

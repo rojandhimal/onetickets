@@ -8,6 +8,7 @@ import {
   type EventDraftDto,
   type EventDraftPatch,
   type EventTemplate,
+  type OrderEventDto,
   type PlaceDto,
   type PublicEventDto,
   type PublishNotReadyBody,
@@ -337,6 +338,21 @@ export class EventsService {
       const fromCents = await this.events.fromPriceCents(tx, event.id, now);
       return this.toPublicDto(event, types, fromCents, now);
     });
+  }
+
+  /** The event as a buyer's ticket screen shows it, in the caller's transaction. */
+  async ticketEvent(tx: pg.PoolClient, eventId: string): Promise<OrderEventDto | null> {
+    const row = await this.events.findPublishedById(tx, eventId);
+    if (!row) return null;
+    return {
+      slug: row.slug,
+      name: row.name,
+      startsAt: row.starts_at.toISOString(),
+      endsAt: row.ends_at.toISOString(),
+      timeZone: row.time_zone,
+      organiser: { name: row.organiser_name ?? '' },
+      venue: row.venue,
+    };
   }
 
   async browse(query: BrowseQuery): Promise<BrowseResponse> {
