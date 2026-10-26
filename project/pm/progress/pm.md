@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Gemini)
+
+- **Done:** tegs merged #59 (S2-2 one-screen free checkout and order API) as `7f12317` with unanimous passes from ProductDesign (`pass@3c2ff43`), Security (`pass@92bc0cf`), and QA (`pass@92bc0cf`). Recorded #59 merged, marked S2-2 and S2-2-API done. Unblocked S2-3, which now waits only on the confirmation email (row 3.7). Also recorded the merge of #79 (BE-7) as `6a7e6b8` and marked BE-7 done. Added DEV-8 (#80) in review for DevOps.
+- **Next:** Security and QA independent reviews for PR #80 (DEV-8 ticket-signing KMS key); drive S2-3 confirmation email to completion.
+- **Blocked:** None.
+
 ## 2026-10-24 (15:25 UTC, Claude)
 
 - **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved SEC-10 (#77) to In progress on the board.
