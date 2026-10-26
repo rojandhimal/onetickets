@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { config, proxy } from './proxy';
 
 describe('site-wide proxy (SEC-14)', () => {
@@ -40,5 +40,27 @@ describe('site-wide proxy (SEC-14)', () => {
 
   it('skips only router prefetches, so browser document prefetches get the policy', () => {
     expect(config.matcher[0]!.missing).toEqual([{ type: 'header', key: 'next-router-prefetch' }]);
+  });
+});
+
+describe('CSP for Turnstile (SEC-10)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  const csp = (path: string) =>
+    proxy(new NextRequest(`http://localhost${path}`)).headers.get('content-security-policy') ?? '';
+
+  it('lets Cloudflare in on the sign-in pages only, and only with the flag on', () => {
+    expect(csp('/signin')).not.toContain('challenges.cloudflare.com');
+
+    vi.stubEnv('TURNSTILE_ENABLED', 'true');
+    for (const path of ['/signin', '/signup']) {
+      expect(csp(path)).toMatch(
+        /script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' https:\/\/challenges\.cloudflare\.com[;' ]/,
+      );
+      expect(csp(path)).toContain('frame-src https://challenges.cloudflare.com;');
+    }
+    for (const path of ['/', '/e/screen-printing', '/organiser', '/signin/elsewhere']) {
+      expect(csp(path)).not.toContain('challenges.cloudflare.com');
+    }
   });
 });

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GoogleMark, Icon } from '@/components/Icon';
 import screen from '@/components/screen.module.css';
+import { Turnstile, type TurnstileHandle } from '@/components/Turnstile';
 import { GOOGLE_START_URL, requestMagicLink } from '@/lib/auth-client';
 import type { InitialError } from '@/lib/auth-errors';
 import { validateEmail } from '@/lib/validation';
@@ -10,7 +11,7 @@ import { SentPanel } from './SentPanel';
 import styles from './signup.module.css';
 
 type Step = 'form' | 'sent';
-type Banner = InitialError | 'rate-limited' | 'failed' | null;
+type Banner = InitialError | 'rate-limited' | 'challenge' | 'unavailable' | 'failed' | null;
 
 const bannerText: Record<Exclude<Banner, null>, string> = {
   google: "Google sign-in didn't finish. Try again, or use your email instead.",
@@ -19,6 +20,9 @@ const bannerText: Record<Exclude<Banner, null>, string> = {
   google_unavailable: "Signing in with Google isn't available right now. Use your email instead.",
   link: 'That sign-in link has expired or was already used. Send yourself a new one.',
   'rate-limited': "You've asked for a few links in a row. Wait a minute, then try again.",
+  challenge: "We couldn't finish the security check. Try again.",
+  unavailable:
+    "We can't send sign-in links for a moment. Try again in a minute, or continue with Google.",
   failed: "We couldn't send the link. Check your connection and try again.",
 };
 
@@ -26,9 +30,11 @@ type Props = {
   /** Same form either way: everyone starts with just an email (PM decision, 8 Oct). */
   mode?: 'signup' | 'signin';
   initialError: InitialError | null;
+  /** Cloudflare Turnstile site key when SEC-10 is on, else null. */
+  turnstileSiteKey?: string | null;
 };
 
-export function SignupForm({ mode = 'signup', initialError }: Props) {
+export function SignupForm({ mode = 'signup', initialError, turnstileSiteKey = null }: Props) {
   const isSignup = mode === 'signup';
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
@@ -37,6 +43,7 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
   const [sending, setSending] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
   const returningToForm = useRef(false);
 
   // Coming back from the Sent state, put focus where the person will type.
@@ -61,7 +68,13 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
     setEmailError(null);
 
     setSending(true);
-    const result = await requestMagicLink(email.trim());
+    const token = turnstileSiteKey ? await turnstile.current?.getToken() : undefined;
+    if (turnstileSiteKey && !token) {
+      setSending(false);
+      setBanner('challenge');
+      return;
+    }
+    const result = await requestMagicLink(email.trim(), token ?? undefined);
     setSending(false);
 
     if (result.ok) {
@@ -80,7 +93,13 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
   }
 
   if (step === 'sent') {
-    return <SentPanel email={email.trim()} onUseDifferentEmail={backToForm} />;
+    return (
+      <SentPanel
+        email={email.trim()}
+        onUseDifferentEmail={backToForm}
+        turnstileSiteKey={turnstileSiteKey}
+      />
+    );
   }
 
   return (
@@ -123,6 +142,8 @@ export function SignupForm({ mode = 'signup', initialError }: Props) {
             </span>
           )}
         </div>
+
+        {turnstileSiteKey && <Turnstile ref={turnstile} siteKey={turnstileSiteKey} action={mode} />}
 
         {isSignup && (
           <div className={`${screen.notice} ${screen.noticeInfo}`}>

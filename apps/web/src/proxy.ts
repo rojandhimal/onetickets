@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { TURNSTILE_PATHS } from './lib/flags';
 import { strictSiteCsp } from './lib/security-headers';
 
 // Site-wide enforced per-request nonce CSP (SEC-14, ADR 0018). Every document request receives a
@@ -6,7 +7,13 @@ import { strictSiteCsp } from './lib/security-headers';
 // bootstrap scripts.
 export function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
-  const csp = strictSiteCsp(nonce, { dev: process.env.NODE_ENV === 'development' });
+  const csp = strictSiteCsp(nonce, {
+    dev: process.env.NODE_ENV === 'development',
+    // Only where the widget loads, and only with SEC-10 on.
+    turnstile:
+      process.env.TURNSTILE_ENABLED === 'true' &&
+      TURNSTILE_PATHS.includes(request.nextUrl.pathname),
+  });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);

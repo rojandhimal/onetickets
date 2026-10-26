@@ -1,7 +1,7 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 15:00 UTC, by Claude PM (tegs merged #71 (SEC-23), #72 (SEC-16) and PM sync #73. Ready: SEC-24 for DevOps and BE-7 for BackendDev. FrontendDev has built DES-9 and opens it from main next. The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 24 Oct 2026, 15:25 UTC, by Claude PM (tegs merged #75 (SEC-24) and #64 (BE-6). #64 merged before QA or Security recorded a verdict, so both are asked for a post-merge review. DEV-8 is ready for DevOps. FrontendDev is on SEC-10 (#77), and BE-7 is in review (#79). The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
@@ -11,7 +11,7 @@ Last updated: 24 Oct 2026, 15:00 UTC, by Claude PM (tegs merged #71 (SEC-23), #7
 
 **Merge queue for tegs:**
 
-- _(No open PRs in queue)_
+- [#78](https://github.com/rojandhimal/onetickets/pull/78) PM sync: records #74, #75 and #76, and `add` puts PR nodes next to their item
 
 **Review follow-up:** #42 QA-3 post-merge review completed with explicit verdict `QA: pass at 532c207` ([comment](https://github.com/rojandhimal/onetickets/pull/42#issuecomment-6236214571)). All open PRs now have explicit independent QA and Security verdicts.
 
@@ -66,8 +66,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - QA-3 Post-merge DEV-4 review (QA): verify #42 at `532c207` against the Docker-image CI criteria and record an explicit verdict. Security/DevOps passes and seven successful checks are present; they do not replace the required QA review
 - BE-5 Ticket-create retry hardening evaluation (BackendDev with FrontendDev; QA and Security review): compare current main's per-tab queue with a lost successful POST response or two tabs replaying a kept new type (ADR 0016). Reproduce before proposing a narrow fix; evaluate the preserved local idempotency receipt approach without importing its duplicate UI. Use a fresh migration number and current-main tests if adopted. This is a follow-up, not a new Sprint 1 acceptance blocker
 
-- DES-9 Optional #23 follow-up (FrontendDev): bundle Bricolage Grotesque in the share image if cheap; no new service or cost is authorised. Same design review; not a Sprint 1 blocker. FrontendDev (Claude) built it on 24 Oct: static WOFF cuts of Bricolage 800 and Figtree 700, read once per server, render time and PNG size unchanged; PR opens from main next
-- SEC-20 Contact-email default, part 2 (BackendDev and FrontendDev; QA, Security and ProductDesign review; before Sprint 2 sends attendee emails): part 1 merged in #41, removing the silent publisher-email fallback. Publishing without an email is still allowed. Complete the agreed saved-email publish check (`contact_email` in `missing`, checklist item "Contact email for attendees"), visible editable prefill with the signed-in user's email and Review's "Replies from attendees go to {email} · Change". No backfill for existing drafts
 - SEC-17 Optional hardening from #16 / #19 (BackendDev, Security review): use column-scoped update grants so `ot_app` cannot change `ticket_types.event_id`, and document how owner backfills work under FORCE RLS. [Security notes](/project/pm/progress/security.md); not a Sprint 1 blocker
 - ARCH-1 Blocking fix: Stripe charges use on_behalf_of so the organiser is the seller. Fold into S4-3 acceptance criteria before Sprint 4 planning ([architecture review](https://claude.ai/code/artifact/01a2857b-b93c-4784-bffa-af9f6962663f))
 - ARCH-2 Blocking fix: waiting room must not show "sold out" while tickets are only held. Fold into S9-1 acceptance criteria
@@ -78,7 +76,6 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - SEC-7 Before S3-1/S6-6 reach real users: member invites become pending invites that need acceptance (BackendDev)
 - SEC-8 Before S7 payouts: user-level security log (audit log is per organisation) that emails and logs recovery-code use and MFA reset. The MFA-enabled email already shipped in #10 (BackendDev)
 - SEC-9 Before launch: scheduled cleanup of spent magic links (they hold emails, so Privacy Act retention), OAuth states, rate-limit rows and expired sessions (BackendDev)
-- SEC-10 Before public launch: Turnstile on sign-in (FrontendDev). The MAGIC_LINK_HOURLY_CAP setting and its alarm are in [PR #21](https://github.com/rojandhimal/onetickets/pull/21) (DevOps). The Cloudflare rate limits and sentry-trace stripping moved to SEC-5
 - SEC-11 First staging deploy: QA checks that a spoofed X-Forwarded-For through the ALB still gets a 429 (QA)
 - SEC-13 Later: forwarded "Ask the organiser" contact form with rate limits, no email disclosure, abuse reporting (Security shapes; FrontendDev, BackendDev). Attendee confirmation emails carry the organiser's address in Reply-To only
 - SEC-14 Must-have before Sprint 2 free checkout ships: enforce CSP across the whole site, not only /e/:slug, and review 'unsafe-inline' styles (ADR 0018) (FrontendDev, Security)
@@ -93,23 +90,26 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
-- `[unassigned]` SEC-24 Bump `undici` to 8.12.2 or later in the web app's dev tools (DevOps; Security and QA review). Found on #71: the full `pnpm audit` lists `undici` 8.11.2 through `apps/web` > `jsdom`, one high (GHSA-xjj6-f33q-929c) and two moderate (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472). It is a dev dependency, so the production audit and CI stay green. Bump `jsdom`, or add a pnpm override if no `jsdom` release carries the fix
-- `[unassigned]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` (BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
+- `[unassigned]` DEV-8 Ticket-signing key in Terraform (DevOps; Security and QA review). Per ADR 0011: one Ed25519 KMS signing key per environment with an alias, and a separate task role for the signing worker that may only call `kms:Sign` and `kms:GetPublicKey` on it. The api's task role gets no `kms:Sign`. No ECS service until BackendDev writes the worker. Written only, never applied; rotation by key id goes in `infra/README.md` and the key in the cost estimate (about US$1 a month per environment)
 
 ### In progress
 
 - `[codex]` **S2-2 One-screen free checkout** (FrontendDev in the other tool, with ProductDesign and QA review): single checkout screen at `/e/:slug/tickets` with hold notice (`role="status"`), ticket stepper per type, attendee details (name, email), opt-in, summary, and idempotency key (INV-5). [Draft PR #59](https://github.com/rojandhimal/onetickets/pull/59), behind `FEATURE_BOOKING`, has the checkout screen (Design approved) and its own order API, which Claude QA failed and Claude Security sent back at `3c2ff43`: the 40-bit order ref in the URL exposes the buyer's name and email, and the public select policies let any organiser read other organisers' orders. The Claude BackendDev built a second order API (`563a3a6`, since cut out of [draft PR #58](https://github.com/rojandhimal/onetickets/pull/58) and kept as a patch) built to Security's rules (`POST /public/orders`, then `GET /public/orders/:orderId/tickets` with the ticket key as a bearer header, never in a URL). Both add `0009_orders.sql`, so one goes. **tegs is choosing;** PM recommends keeping the Claude order API, with #59 keeping only the checkout screen and sending buyers to `confirmationPath(orderId, ticketKey)`
 - `[unassigned]`, blocked on the order API choice: **S2-3 Signed QR tickets and confirmation** (Claude BackendDev and FrontendDev; QA, Security and ProductDesign review). On main since 23 Oct: the ticket stub (artboard 4) with the QR, pager, offline copy, Wake Lock note and Add to calendar, behind `FEATURE_TICKETS` ([#56](https://github.com/rojandhimal/onetickets/pull/56), `da8d689`), and the ticket token codec, an Ed25519 signer behind an interface (local key in dev and CI only, AWS KMS later per R6), ticket keys in the redactor and ADR 0011 Accepted with one signing key per environment ([#58](https://github.com/rojandhimal/onetickets/pull/58), `0a4ce89`). Still to do: issuing and signing tickets, and the confirmation email (row 3.7), on whichever order API tegs keeps
-- `[claude]` **BE-6 S3 banner adapter for `BANNER_STORAGE=s3`** (BackendDev; QA and Security review), [draft PR #64](https://github.com/rojandhimal/onetickets/pull/64). The api side of DEV-5, needed before the first AWS staging
+- `[claude]` SEC-10 Turnstile on sign-in ([draft #77](https://github.com/rojandhimal/onetickets/pull/77), FrontendDev; Security, QA and ProductDesign review), behind a flag that is off by default
 - (tegs) RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - `[unassigned]`, blocked: PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-_(No items currently in review)_
+- `[claude]` BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` ([#79](https://github.com/rojandhimal/onetickets/pull/79), BackendDev; QA review). From QA on #66: `toPublicDto` works out `soldOut` over on-sale types but sums `spotsLeft` over every type, so an event whose only on-sale type is full of holds, with another type not on sale yet, shows "N spots left" and Get tickets
 
 ### Done
 
+- BE-6 S3 banner adapter for `BANNER_STORAGE=s3` ([#64](https://github.com/rojandhimal/onetickets/pull/64)), merged 24 Oct as `ee6a085`. The api side of DEV-5: banners at `banners/<key>` in the uploads bucket when `BANNER_STORAGE=s3`. Merged before QA or Security recorded a verdict; post-merge QA and Security reviews at `dcb79dc` are asked for
+- SEC-24 `jsdom` 30.1.3, so `undici` is 8.12.3 ([#75](https://github.com/rojandhimal/onetickets/pull/75)), merged 24 Oct as `f85c097`; Security pass (`afeac8f`), QA pass (`44fc332`). The full `pnpm audit`, dev dependencies included, is clean
+- DES-9 Share image uses the page's fonts ([#74](https://github.com/rojandhimal/onetickets/pull/74)), merged 24 Oct as `d59771a`; ProductDesign and QA pass (`f9ade3b`). Static WOFF cuts of Bricolage 800 and Figtree 700 (42 KB), read once per server; render time and PNG size unchanged
+- PM sync recording #71 to #73 ([#76](https://github.com/rojandhimal/onetickets/pull/76)), merged 24 Oct as `f911a01`; QA pass (`d72531b`)
 - SEC-16 Sign out on the organiser dashboard ([#72](https://github.com/rojandhimal/onetickets/pull/72)), merged 24 Oct as `970aefc`; Security and ProductDesign pass (`d018f02`), QA pass (`bde4678`). "Sign out" next to "View site" calls `POST /auth/sign-out` and clears the device drafts either way. A failed sign-out stays on the page with "We couldn't sign you out. Check your connection and try again."
 - SEC-23 `nodemailer` 10.1.7 ([#71](https://github.com/rojandhimal/onetickets/pull/71)), merged 24 Oct as `185c3b6`; Security pass (`f388e02`), QA pass (`4a8e85c`)
 - PM sync with the meta-line fix ([#73](https://github.com/rojandhimal/onetickets/pull/73)), merged 24 Oct as `06cf06d`; QA pass (`5eb3b88`). `state.mjs` edits no longer rewrite the graph's first line, so role PRs stop conflicting on it
