@@ -2,6 +2,20 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-26 (Gemini)
+
+**Done**
+
+- S2-2 [#59](https://github.com/rojandhimal/onetickets/pull/59) (free checkout) re-reviewed for diff `3c2ff43..92bc0cf`: **pass**.
+  - Access control & tokens: 256-bit URL-safe ticket key generated via `randomBytes(32).toString('base64url')` (43 chars); stored at rest solely as SHA-256 hash in `checkout.order_keys`. Authentication on `GET /public/orders/:orderId/tickets` requires `Authorization: Bearer <key>`. Key lifetime capped to 7 days post-event (`KEY_DAYS_AFTER_EVENT`). Error masking verified: non-existent orders, wrong key, expired key, or malformed UUID all return identical 404 `order_not_found` ("That link doesn't work any more.").
+  - Row-Level Security: Dropped permissive `orders_public_select` and `tickets_public_select`. Enforced `checkout.orders` RLS with `orders_tenant` (`organisation_id = identity.current_organisation_id()`) and `orders_buyer` (`id = checkout.current_order_id()`). Enforced `ticketing.tickets` RLS with `tickets_tenant` and `tickets_order`. Insert policies verify the order is in scope, event is published, and matches the organisation. No public cross-tenant reads or updates possible; `DELETE` not granted; update column-scoped with trigger `ticketing.tickets_sign_once` preventing modification of existing signatures.
+  - Personal Data & Privacy: Attendee name and email are stored in `checkout.orders` and protected behind RLS. QR token carries only version, key ID, event ID, ticket ID, issued-at, and Ed25519 signature (no personal data, no order ID). Ticket keys delivered via URL hash fragment (`/tickets/:orderId#key=...`), stripped immediately from the address bar via `history.replaceState()`, and kept only in `sessionStorage` (never in `localStorage`, cache storage, or query string). Strict per-request CSP nonces with `Cache-Control: private, no-store`. Redactor covers ticket keys, signing keys, and PII in logs/sinks.
+  - Idempotency & Tampering: `checkout.order_requests` enforces holds digest verification (`INV-5`) via `holdsDigest` SHA-256 hashing and `timingSafeEqual()`, preventing idempotency key hijacking or tamper attacks.
+
+**Next**
+
+- Orders/tickets table diff once tegs picks #58's patch or #59. Shape SEC-13.
+
 ## 2026-10-24 (Claude)
 
 **Done**

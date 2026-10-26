@@ -2,6 +2,20 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-26 (Gemini)
+
+- **Done:** Re-reviewed [#59](https://github.com/rojandhimal/onetickets/pull/59) (S2-2 one-screen free checkout) for diff `3c2ff43..92bc0cf`: **pass**.
+  - **Blocker 1 resolved:** Removed unauthenticated public lookup via 40-bit ref. Access to order tickets now requires a 256-bit URL-safe ticketKey delivered via hash fragment (`/tickets/:orderId#key=...`), stripped immediately from the address bar to `sessionStorage`. The API stores only a SHA-256 hash in `checkout.order_keys` and requires `Authorization: Bearer <ticketKey>` on `GET /public/orders/:orderId/tickets`. Missing/invalid/expired keys return generic 404 with `Cache-Control: no-store`.
+  - **Blocker 2 resolved:** Dropped permissive `orders_public_select` and `tickets_public_select` RLS policies. Access is scoped via `checkout.current_order_id()`: buyers read only their scoped order (`orders_buyer`) and tickets (`tickets_order`), while organisers read only their tenant's orders (`orders_tenant`) and tickets (`tickets_tenant`). Cross-tenant leakage verified impossible.
+  - **Checklist Rows 2.1 - 2.8 & P.3 verified:** Single-screen layout at 375 px and 1280 px with 0 axe violations; stepper min/max bounds and initial count; non-stressful hold notice; "Sold out" / "all taken" chip; ran-out-on-submit alert banner with focus shift; INV-5 idempotency; S0 form validation with inline error announcements; submission button disabled state and clean redirection to confirmation; P.3 PII protection.
+  - **Verification:**
+    - Unit tests: 44/44 checkout & ticket tests pass (`Checkout.test.tsx`, `checkout.test.ts`, `tickets.test.ts`, `TicketScreen.test.tsx`).
+    - Integration tests: 146/146 pass, including `orders.int.test.ts` (10/10) and `tickets.int.test.ts` (8/8) covering RLS scoping, token authorization, INV-5 parallel races, and tampering resistance.
+    - E2E tests: 6/6 pass on mobile (375 px) and desktop (1280 px) across `checkout.spec.ts` and `event-page.spec.ts`, plus 8/8 pass on `tickets.spec.ts`.
+    - Code hygiene: `pnpm format:check && pnpm lint && pnpm typecheck` all green (0 errors, 0 boundary violations).
+- **Next:** Review S2-3 QR issuing follow-up and #58 once tegs decides on the order API.
+- **Blocked:** Staging checks wait on tegs's AWS account and Google OAuth client.
+
 ## 2026-10-24 (Claude)
 
 - **Done:**
