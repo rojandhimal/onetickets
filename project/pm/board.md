@@ -1,19 +1,21 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 24 Oct 2026, 15:25 UTC, by Claude PM (tegs merged #75 (SEC-24) and #64 (BE-6). #64 merged before QA or Security recorded a verdict, so both are asked for a post-merge review. DEV-8 is ready for DevOps. FrontendDev is on SEC-10 (#77), and BE-7 is in review (#79). The S2-2 order API choice between #58's reference build and #59 is still with tegs). Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 27 Oct 2026, by Codex PM. Recorded merged #59, #77, #78 and #79 against main `7f12317`, and the completed post-merge reviews of #64. The next feature is S2-3 confirmation email; ticket issuance and local signing already exist. DEV-8 belongs to Claude in #80. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
 **Phase:** Sprint 1 closed 18 Oct ([QA acceptance](/project/qa/sprint-1-acceptance.md)). Sprint 2 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
-**Health:** 🟢 Sprint 1 is complete and merged to main. Sprint 2 foundations are in: S2-1 (#50) free ticket holds & inventory, SEC-14 (#52) site-wide CSP, and S2-2 (#59) one-screen free checkout with orders API have all merged to main. S2-3 (signed offline QR tickets, confirmation screen and email) is unblocked.
-**Next milestone:** Sprint 2 (Free tickets: S2-3 signed offline QR tickets and confirmation email, S2-4 My tickets attendee portal).
+**Health:** 🟡 Sprint 1 is accepted. Sprint 2 holds, free checkout, ticket screen, issuance and local signing are merged. Confirmation email and My tickets remain. Merged checkout still needs independent post-merge re-review; Sprint 2 is not accepted.
+**Next milestone:** Sprint 2 (Free tickets: S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal).
 
-**Merge queue for tegs:**
+**Merge queue for tegs:** empty. [#81](https://github.com/rojandhimal/onetickets/pull/81) needs independent QA; [#80](https://github.com/rojandhimal/onetickets/pull/80) remains DevOps' draft.
 
-- [#78](https://github.com/rojandhimal/onetickets/pull/78) PM sync: records #74, #75 and #76, and `add` puts PR nodes next to their item
+**Review follow-up:**
 
-**Review follow-up:** #42 QA-3 post-merge review completed with explicit verdict `QA: pass at 532c207` ([comment](https://github.com/rojandhimal/onetickets/pull/42#issuecomment-6236214571)). All open PRs now have explicit independent QA and Security verdicts.
+- #59 merged at `7f12317` with seven green checks at head `d3bed8a`. The author reports fixes for the earlier privacy/RLS findings, but GitHub has no independent QA/Security re-review of `3c2ff43..d3bed8a`. Design's approval is also at `3c2ff43`; confirm the changed confirmation flow. Keep the historical verdicts in the graph; do not treat CI or this PM check as acceptance.
+- #77 merged at `d7e6553`: Security passed `334d233`, Design approved `61f18af`, and seven checks passed at `61f18af`. No QA verdict is recorded; Security follow-up covers the final UI changes. The real Turnstile challenge/layout check stays deferred to staging before enabling the flag.
+- #64 post-merge reviews are complete: [QA](https://github.com/rojandhimal/onetickets/pull/64#issuecomment-6385936970) checked `ee6a085` and confirmed equivalence to `dcb79dc` in #78; Security passed `dcb79dc` on `ee6a085`.
 
 **Local branch reconciliation:** the unfinished `codex/frontend-s1-ticket-editor` work predates #31/#35 and is preserved separately. Its editor must not replace the merged implementation. BE-5 tracks evaluating its safe-create-retry idea against current main; the old migration number 0007 is already used by #34. Its earlier local test results are not evidence for current main or Sprint 1 acceptance.
 
@@ -90,23 +92,26 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
+- `[unassigned]` **S2-3 Confirmation email** (BackendDev; QA, Security and ProductDesign review). Build checklist row 3.7 on the merged order API: transactional email to the buyer, event details and cancellation policy, organiser contact in Reply-To, and scoped ticket links. The ticket screen, issuance and post-commit local signing are already implemented; do not rebuild them. See [implementation handoff](/docs/backend/ticketing.md#remaining-s2-3-work). Claim S2-3 with a draft PR before building. AWS signing still needs a worker; #80 provides infrastructure only. Post-merge checkout reviews remain required before acceptance.
+
 ### In progress
 
-- **S2-3 Signed QR tickets, confirmation screen and email** (BackendDev and FrontendDev; QA, Security and ProductDesign review). On main: ticket stub with QR (#56), token codec & signer (#58), and orders API (#59). Still to do: confirmation email (checklist row 3.7).
-- `[claude]` SEC-10 Turnstile on sign-in ([draft #77](https://github.com/rojandhimal/onetickets/pull/77), FrontendDev; Security, QA and ProductDesign review), behind a flag that is off by default
 - (tegs) RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - `[unassigned]`, blocked: PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-- `[claude]` DEV-8 Ticket-signing key in Terraform ([draft #80](https://github.com/rojandhimal/onetickets/pull/80), DevOps; Security and QA review). Per ADR 0011: one Ed25519 KMS signing key per environment with an alias, and a separate task role for the signing worker that may only call `kms:Sign` and `kms:GetPublicKey` on it.
+- `[codex]` PM-1 Merge reconciliation and S2-3 handoff ([#81](https://github.com/rojandhimal/onetickets/pull/81), PM; independent QA required).
+- `[claude]` DEV-8 Ticket-signing KMS key and sign-only worker role ([draft #80](https://github.com/rojandhimal/onetickets/pull/80), DevOps; Security and QA review). Already claimed; written infrastructure only, never applied. Does not implement or deploy the signing worker.
 
 ### Done
 
-- S2-2 One-screen free checkout and order API ([#59](https://github.com/rojandhimal/onetickets/pull/59)), merged 27 Oct as `7f12317`; ProductDesign pass (`3c2ff43`), Security pass (`92bc0cf`), QA pass (`92bc0cf`), 46/46 e2e checks green. High-entropy 256-bit URL-safe ticket key delivered in URL hash fragment, strict RLS on `checkout.orders` and `ticketing.tickets`, and INV-5 idempotency with hold digests.
-- BE-7 Event `spotsLeft` counts only on-sale ticket types, like `soldOut` ([#79](https://github.com/rojandhimal/onetickets/pull/79)), merged 26 Oct as `6a7e6b8`; QA pass (`0dc9c73`).
+- S2-2 / S2-2-API Free checkout and order API ([#59](https://github.com/rojandhimal/onetickets/pull/59)), merged 26 Oct as `7f12317`. Includes ticket issuance and local signing; behind `FEATURE_BOOKING`. Independent re-review remains outstanding as described above; this records the merge, not Sprint 2 acceptance.
+- BE-7 Availability counts only on-sale ticket types ([#79](https://github.com/rojandhimal/onetickets/pull/79)), merged 26 Oct as `6a7e6b8`. QA passed `0dc9c73`; final head `4619e57` merges main.
+- SEC-10 Turnstile sign-in ([#77](https://github.com/rojandhimal/onetickets/pull/77)), merged 25 Oct as `d7e6553`, behind `TURNSTILE_ENABLED` (off by default). Review and staging follow-ups above remain open.
+- PM sync ([#78](https://github.com/rojandhimal/onetickets/pull/78)), merged 25 Oct as `4866b05`; QA passed `c589e81`.
 
-- BE-6 S3 banner adapter for `BANNER_STORAGE=s3` ([#64](https://github.com/rojandhimal/onetickets/pull/64)), merged 24 Oct as `ee6a085`. The api side of DEV-5: banners at `banners/<key>` in the uploads bucket when `BANNER_STORAGE=s3`. Merged before QA or Security recorded a verdict; post-merge QA and Security reviews at `dcb79dc` are asked for
+- BE-6 S3 banner adapter for `BANNER_STORAGE=s3` ([#64](https://github.com/rojandhimal/onetickets/pull/64)), merged 24 Oct as `ee6a085`. The api side of DEV-5: banners at `banners/<key>` in the uploads bucket when `BANNER_STORAGE=s3`. Post-merge QA and Security reviews passed; see the review follow-up above
 - SEC-24 `jsdom` 30.1.3, so `undici` is 8.12.3 ([#75](https://github.com/rojandhimal/onetickets/pull/75)), merged 24 Oct as `f85c097`; Security pass (`afeac8f`), QA pass (`44fc332`). The full `pnpm audit`, dev dependencies included, is clean
 - DES-9 Share image uses the page's fonts ([#74](https://github.com/rojandhimal/onetickets/pull/74)), merged 24 Oct as `d59771a`; ProductDesign and QA pass (`f9ade3b`). Static WOFF cuts of Bricolage 800 and Figtree 700 (42 KB), read once per server; render time and PNG size unchanged
 - PM sync recording #71 to #73 ([#76](https://github.com/rojandhimal/onetickets/pull/76)), merged 24 Oct as `f911a01`; QA pass (`d72531b`)
@@ -122,7 +127,7 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 - DEV-7 CI check that the api image carries the RDS CA bundle ([#63](https://github.com/rojandhimal/onetickets/pull/63)), merged 23 Oct as `bcded67`; QA and Security pass (`184d4f9`). CI fails if the certificate `sslrootcert` names is missing from the image or differs from `apps/api/certs`
 - S2-4a Remove from this device and expiring saved tickets ([#62](https://github.com/rojandhimal/onetickets/pull/62)), merged 23 Oct as `f11ab57`; QA, Security and ProductDesign pass (`d99df5f`), 7 CI checks green. "Remove tickets from this device" on the ticket screen deletes the saved order, its page and the tab's key, and a saved order is never served more than 7 days after its event ends. This meets Security's ADR 0020 condition for turning `FEATURE_TICKETS` on
 - D19 agent assignment rule and PM sync ([#60](https://github.com/rojandhimal/onetickets/pull/60)), merged 23 Oct as `2787073`: every task names its agent, one task at a time per agent and role, `next`, `claim` and `release` in `scripts/state.mjs`, and PM releases claims idle for more than 5 days. QA pass at the merged head `b4bc226`, which added S2-4a to the graph
-- S2-3 parts 1 and 2: ticket screen ([#56](https://github.com/rojandhimal/onetickets/pull/56), `da8d689`; QA, Security and Design pass at `8dfed02`) and ticket signing ([#58](https://github.com/rojandhimal/onetickets/pull/58), `0a4ce89`; QA and Security pass at `eda1451`), merged 23 Oct. The story stays in progress for issuing and the email
+- S2-3 parts 1 and 2: ticket screen ([#56](https://github.com/rojandhimal/onetickets/pull/56), `da8d689`; QA, Security and Design pass at `8dfed02`) and ticket signing ([#58](https://github.com/rojandhimal/onetickets/pull/58), `0a4ce89`; QA and Security pass at `eda1451`), merged 23 Oct. Ticket issuance and local signing subsequently landed in #59; confirmation email remains
 - DEV-5 Banner storage, infra side ([#61](https://github.com/rojandhimal/onetickets/pull/61)), merged 23 Oct as `8331dbf`; QA and Security pass (`302d454`): banners in the private uploads bucket behind `banner_storage`, a task role limited to `banners/*`, 30-day version expiry and a Cloudflare cache rule instead of CloudFront. Before the next `infra/edge` apply, tegs adds Zone: Cache Rules Edit to the Cloudflare token. BackendDev's S3 adapter in `apps/api` is still to do before staging
 - SEC-21 Next.js 16.4.2 (GHSA-2464-fhr4-w9xw and GHSA-673q-mjm6-r5xr, critical RCE; GHSA-p3m5-59mp-jv5r, high DoS), shipped inside [#56](https://github.com/rojandhimal/onetickets/pull/56), merged 23 Oct as `da8d689`; QA and Security pass on the bump (`8dfed02`, and `e862049` in #60)
 - STATE-1 Shared project state graph ([#57](https://github.com/rojandhimal/onetickets/pull/57)), merged 22 Oct as `782b791`; QA pass (`60eb483`). The same merge carried the board syncs [#55](https://github.com/rojandhimal/onetickets/pull/55) (QA pass `cf466f6`) and [#53](https://github.com/rojandhimal/onetickets/pull/53)

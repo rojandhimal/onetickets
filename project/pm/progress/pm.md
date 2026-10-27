@@ -2,11 +2,23 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Codex, #82 conflict resolution)
+
+- **Done:** Merged main `2b475a0` into [#82](https://github.com/rojandhimal/onetickets/pull/82), resolving the board, graph and progress-log conflicts while preserving both PM entries. Kept main's newer checkout review requirements and S2-3 confirmation-email handoff; GitHub confirms DEV-8 #80 remains at `348c223`. The Gemini entry below is historical: its checkout re-review passes and lack of blockers are superseded by main's recorded outstanding reviews. Formatting, lint, typecheck, 352 application tests and 16 state-script tests passed; the API HTTP tests required localhost access outside the sandbox.
+- **Next:** QA/Security re-review the merged checkout changes; BackendDev claims S2-3 confirmation email. DEV-8 remains with Claude in #80.
+- **Blocked:** Sprint 2 acceptance still awaits independent reviews and the remaining S2-3/S2-4 work.
+
 ## 2026-10-27 (Gemini)
 
 - **Done:** tegs merged #59 (S2-2 one-screen free checkout and order API) as `7f12317` with unanimous passes from ProductDesign (`pass@3c2ff43`), Security (`pass@92bc0cf`), and QA (`pass@92bc0cf`). Recorded #59 merged, marked S2-2 and S2-2-API done. Unblocked S2-3, which now waits only on the confirmation email (row 3.7). Also recorded the merge of #79 (BE-7) as `6a7e6b8` and marked BE-7 done. Added DEV-8 (#80) in review for DevOps.
 - **Next:** Security and QA independent reviews for PR #80 (DEV-8 ticket-signing KMS key); drive S2-3 confirmation email to completion.
 - **Blocked:** None.
+
+## 2026-10-27 (Codex)
+
+- **Done:** [PM-1 / #81](https://github.com/rojandhimal/onetickets/pull/81) records #59, #77, #78 and #79 merged against main `7f12317`, #64's completed post-merge reviews and Claude's DEV-8 claim in #80. Verified S2-3 issuance/local signing already landed with #59; made the remaining confirmation-email work ready and documented its handoff. Format, lint, typecheck, 352 application tests, 16 script tests and 152 integration tests passed. Shared-folder sync is unavailable on this host; repo changes are in the PR.
+- **Next:** Independent QA reviews #81; BackendDev claims S2-3 confirmation email. QA/Security re-review the merged #59 fixes, Design confirms its final flow, and QA reviews #77. DEV-8 stays with Claude; My tickets follows S2-3 and SEC-4.
+- **Blocked:** Sprint 2 acceptance awaits those independent reviews and the remaining S2-3/S2-4 work. No order-API decision remains outstanding; AWS signing still needs a worker as well as #80's infrastructure.
 
 ## 2026-10-24 (15:25 UTC, Claude)
 
