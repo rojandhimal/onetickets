@@ -167,7 +167,7 @@ pnpm format            # fix formatting
 pnpm lint              # ESLint and module boundaries
 pnpm typecheck
 pnpm test              # unit tests
-pnpm test:integration  # needs Postgres: docker compose up -d postgres
+pnpm test:integration  # needs Postgres + Mailpit: docker compose up -d postgres mailpit
 ```
 
 Add a migration by creating the next numbered file in `apps/api/migrations` (for example
@@ -206,3 +206,16 @@ it after changing anything in `packages/shared`.
 
 **Start again with an empty database.** `docker compose down -v` deletes the data volume. Then
 repeat the migrate and login-role steps.
+
+### Testing ticket confirmation emails
+
+`pnpm test:integration` now includes a real SMTP delivery check against Mailpit, in addition to
+Postgres. Start both with `docker compose up -d postgres mailpit`. Mailpit exposes SMTP on
+`127.0.0.1:1025` and its inbox/API on `http://localhost:8025`. The test uses a unique fake buyer and
+never clears the inbox. For a separate test inbox, set `TEST_SMTP_PORT` and `TEST_MAILPIT_URL`.
+CI starts its own Mailpit service for integration tests.
+
+Free checkout sends the ticket email to Mailpit, including organiser Reply-To and the order's
+secure ticket link. `MAIL_TRANSPORT=console` deliberately omits confidential ticket contents;
+use SMTP to inspect them. Email failure keeps the booking and allows retry with the same checkout
+request. See [delivery limits and retry semantics](backend/ticketing.md#confirmation-email-s2-3).

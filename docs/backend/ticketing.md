@@ -46,28 +46,53 @@ future signing worker) may read tickets and write only the signature columns.
 will use KMS; until then tickets there stay unsigned. The redactor scrubs `ticketKey`,
 `TICKET_SIGNING_KEY` and `#key=` in links.
 
-## Remaining S2-3 work
+## Confirmation email (S2-3)
 
-As of main `7f12317` (#59), order creation already issues ticket rows and calls
-`TicketsService.signOrder` after commit. The ticket screen and offline controls landed in #56
-and #62. Build on these implementations; the earlier competing order-API proposal is obsolete.
+After committing the order and signing its tickets, checkout sends a plain-text confirmation
+through the existing mail transport. It includes the event date and times in the event's time
+zone, venue (including the private joining URL for online events), ticket types/references,
+cancellation policy and a link to the order's ticket screen. Reply-To is the organiser's saved
+contact address. These private delivery fields are never added to the public event DTO.
 
-The next local feature is the transactional confirmation email in
-[Sprint 2 checklist row 3.7](../../project/qa/sprint-2-checklist.md):
+`checkout.order_confirmations` records only `order_id` and `sent_at`, with FORCE RLS restricted
+to the verified order scope. Concurrent requests lock this receipt and check it again before
+sending. Successful idempotent retries do not send another message, even if a retry changes the
+submitted email: delivery uses the saved buyer address. Historic orders are not backfilled or
+emailed automatically; an authenticated checkout retry can create their receipt.
 
-- Send to the buyer with subject “Your tickets for {event}, {date}”. Include event details,
-  cancellation policy and ticket links, using the existing design copy.
-- Put the organiser's contact email in Reply-To. SEC-20 made it an explicit required publish
-  field; do not expose it in public event data or silently substitute another address.
-- Use the existing order-scoped ticket key and `confirmationPath` contract. Bearer keys belong
-  in the link fragment and the API's Authorization header, never a path/query or log.
-- Cover the message, headers and links through Mailpit with fake `example.test` buyers. Preserve
-  order idempotency and test delivery failure/retry behaviour without duplicate orders or tickets.
+The key in the email is one of the already-committed 256-bit ticket keys, stored only as a hash.
+It travels in the URL fragment via `confirmationPath`; ticket reads still require the bearer
+header. There is no plaintext key or message body in the delivery receipt.
 
-Claim S2-3 before implementation and obtain independent QA, Security and ProductDesign review.
-Keep the existing booking/ticket runtime flags until acceptance. The merged checkout's final
-changes still need independent QA/Security re-review; the PM status update is not that review.
+Delivery attempts are limited to 20 per email per rolling hour, 60 per IP per rolling 15 minutes,
+and 300 globally per rolling hour. Email/IP counter keys are SHA-256 hashes. Failed attempts
+consume budget; a previously sent receipt does not. Concurrent retries can conservatively consume
+more than one attempt, but only one sends. The global cap logs a fixed message without personal data.
 
-AWS signing remains separate outstanding work: DEV-8 (#80) defines the key and worker role only.
-It does not create the worker, implement a KMS signer or apply infrastructure. The local signer
-still refuses production, so AWS tickets remain unsigned until that path is implemented and reviewed.
+If SMTP/SES fails, checkout returns `503 confirmation_email_unavailable`; a send cap returns
+`429 rate_limited`. The order, sold stock, tickets and keys remain committed. Retry the **same
+idempotency key and original hold tokens** to finish delivery without booking again. There is no
+background resend worker in this change. A legacy event with no valid organiser contact also
+returns 503 until that address is fixed; no fallback address is invented. SMTP has bounded
+connection/socket timeouts; SES sends have a 10-second abort timeout.
+
+The transport call and Postgres receipt cannot commit atomically. If mail is accepted but the
+connection or database commit fails, a retry can send a duplicate email; it cannot duplicate the
+order or tickets. A delivery receipt means the transport accepted the message, not that the
+recipient opened it.
+
+Use SMTP/Mailpit locally to inspect delivery. The development console transport prints only a
+fixed omission notice for confidential ticket mail, and remains a stub (no delivery). The test
+outbox keeps messages in memory. Neither console, SMTP nor outbox is allowed in production; SES
+supports the same Reply-To header. No new external provider or dependency is introduced.
+
+The email links to the existing ticket screen for QR display, offline saving and calendar actions.
+It does not promise an attached PDF, My tickets portal or release link before those exist. Independent
+ProductDesign review covers the email copy; QA and Security review the delivery and migration.
+Keep booking/ticket runtime flags until acceptance, including the outstanding checkout re-review.
+
+## AWS signing
+
+DEV-8 (#80) defines the key and worker role only. It does not create the worker, implement a KMS
+signer or apply infrastructure. The local signer still refuses production, so AWS tickets remain
+unsigned until that path is implemented and reviewed.

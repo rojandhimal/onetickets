@@ -340,6 +340,11 @@ export class EventsService {
     });
   }
 
+  /** Private email-only fields. Call only after resolving an authorised order. */
+  async ticketEmailDetails(tx: pg.PoolClient, eventId: string) {
+    return this.events.ticketEmailDetails(tx, eventId);
+  }
+
   /** The event as a buyer's ticket screen shows it, in the caller's transaction. */
   async ticketEvent(tx: pg.PoolClient, eventId: string): Promise<OrderEventDto | null> {
     const row = await this.events.findPublishedById(tx, eventId);

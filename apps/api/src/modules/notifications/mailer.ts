@@ -6,6 +6,9 @@ export interface Email {
   to: string;
   subject: string;
   text: string;
+  replyTo?: string;
+  /** Bearer links must never be printed by the local console transport. */
+  confidential?: boolean;
 }
 
 /**
@@ -51,6 +54,12 @@ export class ConsoleMailer extends Mailer {
   }
 
   async send(email: Email): Promise<void> {
+    if (email.confidential) {
+      process.stderr.write(
+        '\nConfidential mail omitted from console; use SMTP to inspect ticket emails.\n',
+      );
+      return;
+    }
     // Straight to the terminal, not the logger: the log redactor would mask the address and the
     // sign-in link, which is the whole point of this transport.
     process.stderr.write(
@@ -77,6 +86,7 @@ export class SesMailer extends Mailer {
       new SendEmailCommand({
         FromEmailAddress: this.from,
         Destination: { ToAddresses: [email.to] },
+        ...(email.replyTo ? { ReplyToAddresses: [email.replyTo] } : {}),
         Content: {
           Simple: {
             Subject: { Data: email.subject, Charset: 'UTF-8' },
@@ -84,6 +94,7 @@ export class SesMailer extends Mailer {
           },
         },
       }),
+      { abortSignal: AbortSignal.timeout(10_000) },
     );
   }
 }
@@ -108,6 +119,9 @@ export class SmtpMailer extends Mailer {
       port: Number(process.env.SMTP_PORT ?? 1025),
       secure: false,
       ignoreTLS: true,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
   }
 
@@ -115,6 +129,7 @@ export class SmtpMailer extends Mailer {
     await this.transport.sendMail({
       from: 'OneTickets <no-reply@onetickets.local>',
       to: email.to,
+      replyTo: email.replyTo,
       subject: email.subject,
       text: email.text,
     });

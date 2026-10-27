@@ -7,6 +7,7 @@ import { EventsService } from '../catalogue/index.js';
 import { ApiError } from '../identity/index.js';
 import { HoldsService } from '../inventory/index.js';
 import { TicketsService } from '../ticketing/index.js';
+import { ConfirmationEmails } from './confirmation-emails.js';
 import { OrdersRepository } from './orders.repository.js';
 import { hashTicketKey, holdsDigest, newTicketKey, TICKET_KEY_PATTERN } from './secrets.js';
 
@@ -25,6 +26,7 @@ export class OrdersService {
     private readonly holds: HoldsService,
     private readonly catalogue: EventsService,
     private readonly tickets: TicketsService,
+    private readonly confirmations: ConfirmationEmails,
   ) {}
 
   /**
@@ -32,7 +34,7 @@ export class OrdersService {
    * transaction. The same idempotency key with the same holds returns the same order (INV-5),
    * with a fresh ticket key, since only hashes of earlier keys are kept.
    */
-  async create(body: CreateOrderBody, now = new Date()): Promise<CreatedOrderDto> {
+  async create(body: CreateOrderBody, now = new Date(), ip = 'unknown'): Promise<CreatedOrderDto> {
     const digest = holdsDigest(body.holds);
     const ticketKey = newTicketKey();
     const orderId = await this.uow.run({}, async (tx) => {
@@ -97,6 +99,7 @@ export class OrdersService {
     // Signed after the commit, so a signer that is slow or down never loses an order.
     await this.tickets.signOrder(orderId);
     const view = await this.uow.run({ orderId }, (tx) => this.view(tx, orderId));
+    await this.confirmations.send(view, ticketKey, ip);
     return { ...view, ticketKey };
   }
 
