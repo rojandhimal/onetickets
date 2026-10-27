@@ -118,3 +118,12 @@ export type {
   OrderEventDto,
   OrderTicketsDto,
 } from './api/orders.js';
+
+export { attendeeLinkRequest, attendeeLinkVerify, attendeeOrdersQuery } from './api/attendee.js';
+export type {
+  AttendeeLinkRequest,
+  AttendeeLinkVerify,
+  AttendeeOrdersQuery,
+  AttendeeSession,
+  AttendeeOrdersDto,
+} from './api/attendee.js';

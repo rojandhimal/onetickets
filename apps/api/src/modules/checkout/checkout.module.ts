@@ -5,6 +5,7 @@ import { InventoryModule } from '../inventory/index.js';
 import { TicketingModule } from '../ticketing/index.js';
 import { IdentityModule } from '../identity/index.js';
 import { NotificationsModule } from '../notifications/index.js';
+import { AttendeeOrdersController } from './attendee-orders.controller.js';
 import { ConfirmationEmails } from './confirmation-emails.js';
 import { OrdersController } from './orders.controller.js';
 import { OrdersRepository } from './orders.repository.js';
@@ -20,7 +21,7 @@ import { OrdersService } from './orders.service.js';
     IdentityModule,
     NotificationsModule,
   ],
-  controllers: [OrdersController],
+  controllers: [OrdersController, AttendeeOrdersController],
   providers: [OrdersRepository, OrdersService, ConfirmationEmails],
   exports: [OrdersService],
 })

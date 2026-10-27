@@ -2,11 +2,11 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
-## 2026-10-27 (Codex), SEC-4 claim
+## 2026-10-27 (Codex), SEC-4 attendee access
 
-- **Done:** Claimed SEC-4 from current main after confirming no competing pull request. Defined a separate read-only attendee session and frontend handoff.
-- **Next:** Implement and test hashed single-use links, session isolation, email-scoped ticket reads and privacy controls; keep disabled until S2-4 frontend is ready.
-- **Blocked:** Independent QA and Security review after implementation. The attendee portal remains S2-4.
+- **Done:** [#84](https://github.com/rojandhimal/onetickets/pull/84) adds 15-minute single-use attendee links, separate hashed sessions/cookies, revocation, send limits and email-scoped ticket reads. Migration 0012 uses SELECT-only attendee policies rather than the order scope that permits signing. Added confidential mail, privacy headers, pagination, runtime flag and API/frontend handoff docs. Passed format, lint/boundaries, typecheck, 364 application unit tests, 16 script tests, 184 integration tests, production builds and 56 browser/axe/CSP tests on isolated ports. All 17 mutation probes were caught (expiry, replay, session limits/revocation/rotation, scope reset, runtime flag, send/verify caps, confidential mail and order/ticket RLS); guards restored.
+- **Next:** Independent QA, Security and ProductDesign review of #84. FrontendDev can use the documented S2-4 contract for its request form, fragment-clearing redemption page and portal. PM should reconcile the board's older “longer-lived” wording with QA/design's 15-minute login link and the separate existing order keys.
+- **Blocked:** Keep `FEATURE_ATTENDEE_TICKETS` off until S2-4 is implemented and reviewed; browser token-removal acceptance remains there. Ticket release needs separate authorisation because this session grants read-only access. Review verdicts and CI are required before tegs merges; author-side subagents are not independent reviewers.
 
 ## 2026-10-27 (Codex), S2-3 confirmation email
 

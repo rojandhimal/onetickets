@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
       // Ticket pages carry their key in the fragment, which browsers never send; this also keeps
       // the order id out of any Referer (S2-3).
       { source: '/tickets/:path*', headers: verifyPageHeaders },
+      // SEC-4 reserves the attendee link landing path before the portal is enabled.
+      { source: '/my-tickets/:path*', headers: verifyPageHeaders },
     ];
   },
   async rewrites() {

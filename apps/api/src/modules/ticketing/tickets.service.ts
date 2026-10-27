@@ -85,7 +85,7 @@ export class TicketsService {
 
   /**
    * The order's tickets for its buyer, in the caller's transaction. The caller has already checked
-   * the order's key and put the order in scope.
+   * the order's key or restricted attendee session and set the corresponding RLS scope.
    */
   async forOrder(tx: pg.PoolClient, orderId: string): Promise<TicketDto[]> {
     return (await this.tickets.forOrder(tx, orderId)).map(toTicketDto);

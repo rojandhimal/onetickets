@@ -7,7 +7,12 @@ async function headersFor(path: string) {
   // Later rules win, matching how Next applies duplicate keys.
   const out = new Map<string, string>();
   for (const rule of rules) {
-    const matches = rule.source === '/:path*' || rule.source === path;
+    const matches =
+      rule.source === '/:path*' ||
+      rule.source === path ||
+      (rule.source.endsWith('/:path*') &&
+        (path === rule.source.slice(0, -'/:path*'.length) ||
+          path.startsWith(`${rule.source.slice(0, -'/:path*'.length)}/`)));
     if (matches) for (const h of rule.headers) out.set(h.key, h.value);
   }
   return out;
@@ -35,6 +40,12 @@ describe('security headers', () => {
 
   it('sends no referrer from the magic-link landing page', async () => {
     expect((await headersFor('/auth/verify')).get('Referrer-Policy')).toBe('no-referrer');
+  });
+});
+
+describe('attendee privacy headers', () => {
+  it.each(['/my-tickets', '/my-tickets/verify'])('sends no referrer from %s', async (path) => {
+    expect((await headersFor(path)).get('Referrer-Policy')).toBe('no-referrer');
   });
 });
 
