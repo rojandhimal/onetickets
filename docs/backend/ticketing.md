@@ -45,3 +45,29 @@ future signing worker) may read tickets and write only the signature columns.
 `TICKET_SIGNING_KEY` and refuses to exist outside development and test. In AWS the signing worker
 will use KMS; until then tickets there stay unsigned. The redactor scrubs `ticketKey`,
 `TICKET_SIGNING_KEY` and `#key=` in links.
+
+## Remaining S2-3 work
+
+As of main `7f12317` (#59), order creation already issues ticket rows and calls
+`TicketsService.signOrder` after commit. The ticket screen and offline controls landed in #56
+and #62. Build on these implementations; the earlier competing order-API proposal is obsolete.
+
+The next local feature is the transactional confirmation email in
+[Sprint 2 checklist row 3.7](../../project/qa/sprint-2-checklist.md):
+
+- Send to the buyer with subject “Your tickets for {event}, {date}”. Include event details,
+  cancellation policy and ticket links, using the existing design copy.
+- Put the organiser's contact email in Reply-To. SEC-20 made it an explicit required publish
+  field; do not expose it in public event data or silently substitute another address.
+- Use the existing order-scoped ticket key and `confirmationPath` contract. Bearer keys belong
+  in the link fragment and the API's Authorization header, never a path/query or log.
+- Cover the message, headers and links through Mailpit with fake `example.test` buyers. Preserve
+  order idempotency and test delivery failure/retry behaviour without duplicate orders or tickets.
+
+Claim S2-3 before implementation and obtain independent QA, Security and ProductDesign review.
+Keep the existing booking/ticket runtime flags until acceptance. The merged checkout's final
+changes still need independent QA/Security re-review; the PM status update is not that review.
+
+AWS signing remains separate outstanding work: DEV-8 (#80) defines the key and worker role only.
+It does not create the worker, implement a KMS signer or apply infrastructure. The local signer
+still refuses production, so AWS tickets remain unsigned until that path is implemented and reviewed.
