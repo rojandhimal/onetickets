@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Codex), SEC-4 claim
+
+- **Done:** Claimed SEC-4 from current main after confirming no competing pull request. Defined a separate read-only attendee session and frontend handoff.
+- **Next:** Implement and test hashed single-use links, session isolation, email-scoped ticket reads and privacy controls; keep disabled until S2-4 frontend is ready.
+- **Blocked:** Independent QA and Security review after implementation. The attendee portal remains S2-4.
+
 ## 2026-10-27 (Codex), S2-3 confirmation email
 
 - **Done:** [#83](https://github.com/rojandhimal/onetickets/pull/83) sends transactional ticket confirmations through SMTP/SES with event-local times, venue, cancellation policy, organiser Reply-To and a working order-scoped ticket link. Migration 0011 adds a FORCE-RLS delivery receipt; parallel retries send once, and transport failure preserves the booking for the same checkout to retry. Added hashed per-email/IP send limits and a global cap; confidential ticket mail is omitted from the development console. Updated API/backend/local-development docs and added Mailpit to integration CI. Passed format, lint/boundaries, typecheck, 357 application tests, 16 script tests, 160 integration tests, production build and 56 browser/axe/CSP tests. Mutation probes proved all three send caps and the receipt RLS guard fail closed; guards restored and focused tests passed.
