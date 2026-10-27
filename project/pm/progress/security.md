@@ -2,6 +2,27 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27
+
+**Done**
+
+- #80 DEV-8 (ticket-signing key in KMS and sign-only task role): **pass** at `348c223` (implementation `c4de54c`).
+  - KMS key spec is `ECC_NIST_EDWARDS25519` with `SIGN_VERIFY`, enforcing `ED25519_SHA_512` and `RAW` message type for pure Ed25519 signing per ADR 0011.
+  - Least privilege: Account root gets administrative actions and verify, but explicitly NO `kms:Sign` (preventing any IAM policy from escalating permissions or granting signing to the API task role).
+  - API task role has no KMS signing permissions.
+  - Signer task role is strictly scoped: `kms:Sign` only on the active key generation and `kms:GetPublicKey` across all generations.
+  - Signer role trust policy is restricted to `ecs-tasks.amazonaws.com` with `aws:SourceAccount` condition matching the account ID.
+  - Key rotation by generation documented in `infra/README.md` with 30-day deletion window (`deletion_window_in_days = 30`).
+  - Rule 2 compliance: infrastructure written and validated only; tests execute offline with mock credentials in CI.
+
+**Next**
+
+- Review S2-3 ticket issuance, signing worker, and confirmation email implementation when PR opens. Shape SEC-13.
+
+**Blocked**
+
+- None.
+
 ## 2026-10-24 (Claude)
 
 **Done**

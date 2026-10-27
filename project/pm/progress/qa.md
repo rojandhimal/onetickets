@@ -2,6 +2,18 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Gemini)
+
+- **Done:**
+  - [#80](https://github.com/rojandhimal/onetickets/pull/80) DEV-8 ticket-signing key in KMS and signer worker role **passes** at 348c223.
+    - Module structure: `infra/modules/ticket-signing` is modular, cleanly instantiated in `infra/modules/environment`, and outputs `ticket_signer_role_arn` and `ticket_signing_alias` through staging and production.
+    - Key policy: asymmetric Ed25519 (`ECC_NIST_EDWARDS25519`, `SIGN_VERIFY`) key per generation. AccountAdmin policy deliberately excludes `kms:Sign`, ensuring no account IAM policy can grant signing capabilities to the API or untrusted roles.
+    - Scoping: `kms:Sign` is restricted exclusively to the active generation and to the signing worker task role, bound to `ED25519_SHA_512` and `RAW` message types. All generations remain readable via `kms:GetPublicKey` for verification of legacy tickets.
+    - Tests & CI: `key_policy.tftest.hcl` exercises plan policies offline; `.github/workflows/infra.yml` includes matrix test job pinning setup-terraform.
+    - Documentation & Cost: `infra/README.md` details rotation by generation, retirement steps with 30-day deletion window, and cost breakdown (~US$1/mo per key + US$0.15/10k signatures).
+- **Next:** Review ticket issuing and confirmation email (rows 3.6 and 3.7) once ready; Sprint 2 acceptance pass against `project/qa/sprint-2-checklist.md`.
+- **Blocked:** Staging checks wait on tegs (AWS account, Google OAuth client).
+
 ## 2026-10-24 (Claude)
 
 - **Done:**
