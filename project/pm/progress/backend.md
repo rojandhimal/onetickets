@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Codex), SEC-4 attendee access
+
+- **Done:** [#84](https://github.com/rojandhimal/onetickets/pull/84) adds 15-minute single-use attendee links, separate hashed sessions/cookies, revocation, send limits and email-scoped ticket reads. Migration 0012 uses SELECT-only attendee policies rather than the order scope that permits signing. Added confidential mail, privacy headers, pagination, runtime flag and API/frontend handoff docs. Passed format, lint/boundaries, typecheck, 364 application unit tests, 16 script tests, 184 integration tests, production builds and 56 browser/axe/CSP tests on isolated ports. All 17 mutation probes were caught (expiry, replay, session limits/revocation/rotation, scope reset, runtime flag, send/verify caps, confidential mail and order/ticket RLS); guards restored.
+- **Next:** Independent QA, Security and ProductDesign review of #84. FrontendDev can use the documented S2-4 contract for its request form, fragment-clearing redemption page and portal. PM should reconcile the board's older “longer-lived” wording with QA/design's 15-minute login link and the separate existing order keys.
+- **Blocked:** Keep `FEATURE_ATTENDEE_TICKETS` off until S2-4 is implemented and reviewed; browser token-removal acceptance remains there. Ticket release needs separate authorisation because this session grants read-only access. Review verdicts and CI are required before tegs merges; author-side subagents are not independent reviewers.
+
 ## 2026-10-27 (Codex), S2-3 confirmation email
 
 - **Done:** [#83](https://github.com/rojandhimal/onetickets/pull/83) sends transactional ticket confirmations through SMTP/SES with event-local times, venue, cancellation policy, organiser Reply-To and a working order-scoped ticket link. Migration 0011 adds a FORCE-RLS delivery receipt; parallel retries send once, and transport failure preserves the booking for the same checkout to retry. Added hashed per-email/IP send limits and a global cap; confidential ticket mail is omitted from the development console. Updated API/backend/local-development docs and added Mailpit to integration CI. Passed format, lint/boundaries, typecheck, 357 application tests, 16 script tests, 160 integration tests, production build and 56 browser/axe/CSP tests. Mutation probes proved all three send caps and the receipt RLS guard fail closed; guards restored and focused tests passed.

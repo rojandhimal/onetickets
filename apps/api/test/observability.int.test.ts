@@ -102,6 +102,58 @@ describe('api request logs', () => {
     expect((membersDone!.req as { url: string }).url).toBe(`/organisations/${orgId}/members`);
   });
 
+  it('keeps attendee link, session and transport-error secrets out of request logs', async () => {
+    vi.stubEnv('FEATURE_ATTENDEE_TICKETS', 'true');
+    const email = `${crypto.randomUUID()}@example.test`;
+    const headers = {
+      origin: WEB,
+      'x-forwarded-for': `2001:db8:84::${randomInt(1, 65535).toString(16)}`,
+    };
+    try {
+      const issued = await request(app.getHttpServer())
+        .post('/attendee/magic-link')
+        .set(headers)
+        .send({ email })
+        .expect(202);
+      expect(issued.headers['referrer-policy']).toBe('no-referrer');
+      const token = outbox.lastTo(email)!.text.match(/#token=([\w-]+)/)![1]!;
+      const verified = await request(app.getHttpServer())
+        .post('/attendee/magic-link/verify')
+        .set(headers)
+        .send({ token })
+        .expect(200);
+      const cookie = verified.headers['set-cookie']![0]!.split(';')[0]!;
+      await request(app.getHttpServer())
+        .get('/attendee/orders')
+        .set({
+          cookie,
+          referer: `${WEB}/my-tickets/verify#token=${token}`,
+          'x-request-id': 'req-attendee-logs-01',
+        })
+        .expect(200);
+      const failingMailer = vi
+        .spyOn(outbox, 'send')
+        .mockRejectedValueOnce(
+          new Error(`Delivery failed for ${email}: /my-tickets/verify#token=${token}`),
+        );
+      const failed = await request(app.getHttpServer())
+        .post('/attendee/magic-link')
+        .set(headers)
+        .send({ email })
+        .expect(503);
+      failingMailer.mockRestore();
+      expect(failed.headers['referrer-policy']).toBe('no-referrer');
+      const output = written.join('');
+      // Boolean assertions avoid echoing credentials even when a mutation proves this fails.
+      expect(output.includes(email)).toBe(false);
+      expect(output.includes(token)).toBe(false);
+      expect(output.includes(cookie.split('=')[1]!)).toBe(false);
+      expect(logLines().some((line) => line.requestId === 'req-attendee-logs-01')).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('gives every request an id and returns it', async () => {
     const res = await request(app.getHttpServer())
       .get('/me')

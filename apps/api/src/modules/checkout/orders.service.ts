@@ -1,6 +1,11 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import type { CreatedOrderDto, CreateOrderBody, OrderTicketsDto } from '@onetickets/shared';
+import type {
+  AttendeeOrdersDto,
+  CreatedOrderDto,
+  CreateOrderBody,
+  OrderTicketsDto,
+} from '@onetickets/shared';
 import type pg from 'pg';
 import { setScope, UnitOfWork } from '../../database/unit-of-work.js';
 import { EventsService } from '../catalogue/index.js';
@@ -112,6 +117,25 @@ export class OrdersService {
       await setScope(tx, { orderId });
       return this.view(tx, orderId);
     });
+  }
+
+  /** Restricted attendee reads preserve SELECT-only RLS; they never set order/tenant scope. */
+  async attendeeOrders(email: string, after?: string): Promise<AttendeeOrdersDto> {
+    return this.uow.run({ attendeeEmail: email }, async (tx) => {
+      const { rows } = await tx.query<{ id: string }>(
+        `select id from checkout.orders where ($1::uuid is null or id > $1::uuid)
+         order by id limit 101`,
+        [after ?? null],
+      );
+      const page = rows.slice(0, 100);
+      const orders: OrderTicketsDto[] = [];
+      for (const row of page) orders.push(await this.view(tx, row.id));
+      return { orders, nextCursor: rows.length > 100 ? page[99]!.id : null };
+    });
+  }
+
+  async attendeeTickets(email: string, orderId: string): Promise<OrderTicketsDto> {
+    return this.uow.run({ attendeeEmail: email }, (tx) => this.view(tx, orderId));
   }
 
   private async addKey(tx: pg.PoolClient, orderId: string, eventId: string, key: string) {

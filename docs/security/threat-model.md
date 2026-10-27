@@ -73,7 +73,7 @@ Likelihood and impact are H/M/L. "Story" is where the control should land as acc
 - No open redirect: the post-sign-in `next` parameter accepts relative paths only.
 - Security headers on web: CSP (start in report-only), `X-Content-Type-Options`, `frame-ancestors 'none'`, HSTS.
 
-**Buyer "My tickets" magic link (S2-4):** this link sits in an email that people forward. Make it open a read-only ticket view scoped to that order, expire it (for example 30 days, re-requestable by email), and never let it change the order email or refund.
+**Buyer ticket access (SEC-4/S2-4):** confirmation links open one order and expire seven days after the event ends. A separately requested My tickets login link expires in 15 minutes, works once, and starts a restricted read-only session bound to the verified email (7 days idle, 30 days absolute). It grants no organiser, release, refund or email-change permission. Both kinds of link use fragments, confidential mail and no-referrer pages. The attendee backend stays disabled until S2-4 implements its fragment-clearing redemption page and portal; see [attendee access](../backend/attendee-access.md).
 
 **Door staff (S3-1):** scanner session is scoped to one organisation's events, short-lived (ends after the event day), and revocable remotely.
 

@@ -2,6 +2,10 @@ import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common
 import { APP_GUARD } from '@nestjs/core';
 import { NotificationsModule } from '../notifications/index.js';
 import { AccessGuard } from './access.js';
+import { AttendeeAuthController } from './attendee-auth.controller.js';
+import { AttendeeAuthRepository } from './attendee-auth.repository.js';
+import { AttendeeAuthService } from './attendee-auth.service.js';
+import { AttendeeHeadersMiddleware } from './attendee-headers.middleware.js';
 import { AUTH_CONFIG, loadAuthConfig } from './auth.config.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
@@ -20,11 +24,13 @@ import { loadTurnstileSecret, Turnstile } from './turnstile.js';
 
 @Module({
   imports: [NotificationsModule],
-  controllers: [AuthController, OrganisationsController],
-  exports: [RateLimiter],
+  controllers: [AuthController, AttendeeAuthController, OrganisationsController],
+  exports: [RateLimiter, AttendeeAuthService],
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
     AuthService,
+    AttendeeAuthService,
+    AttendeeAuthRepository,
     { provide: GoogleOidc, useClass: OpenIdGoogleOidc },
     GoogleSignInService,
     MagicLinksRepository,
@@ -39,6 +45,8 @@ import { loadTurnstileSecret, Turnstile } from './turnstile.js';
 })
 export class IdentityModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestOriginMiddleware, SessionMiddleware).forRoutes('*path');
+    consumer
+      .apply(AttendeeHeadersMiddleware, RequestOriginMiddleware, SessionMiddleware)
+      .forRoutes('*path');
   }
 }

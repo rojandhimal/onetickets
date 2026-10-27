@@ -83,6 +83,8 @@ services:
       # Nothing in front adds X-Forwarded-For locally (the web rewrite passes it through), so
       # trusting any hop would let clients spoof their IP past rate limits.
       TRUST_PROXY_HOPS: '0'
+      # SEC-4 API only; keep off until S2-4 supplies the attendee portal.
+      FEATURE_ATTENDEE_TICKETS: ${FEATURE_ATTENDEE_TICKETS:-false}
       # Plain http on localhost, so the session cookie can't be Secure.
       SESSION_COOKIE_SECURE: 'false'
       # 32 zero bytes: a placeholder for local data only. Real environments generate their own
