@@ -327,6 +327,18 @@ export class EventsRepository {
     return rows[0] ?? null;
   }
 
+  /** Private delivery fields, never part of the public event projection. */
+  async ticketEmailDetails(tx: pg.PoolClient, eventId: string) {
+    const { rows } = await tx.query<
+      Pick<EventRow, 'contact_email' | 'cancellation_policy' | 'venue'>
+    >(
+      `select contact_email, cancellation_policy, venue from catalogue.events
+       where id = $1 and status = 'published'`,
+      [eventId],
+    );
+    return rows[0] ?? null;
+  }
+
   async findPublishedById(tx: pg.PoolClient, eventId: string): Promise<PublicEventRow | null> {
     const { rows } = await tx.query<PublicEventRow>(
       `select ${PUBLIC_EVENT_COLUMNS} from catalogue.events where id = $1 and status = 'published'`,

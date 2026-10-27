@@ -21,6 +21,7 @@ import { loadTurnstileSecret, Turnstile } from './turnstile.js';
 @Module({
   imports: [NotificationsModule],
   controllers: [AuthController, OrganisationsController],
+  exports: [RateLimiter],
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
     AuthService,

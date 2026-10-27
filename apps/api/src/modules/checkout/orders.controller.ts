@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
 import {
   type CreatedOrderDto,
   createOrderBody,
   type CreateOrderBody,
   type OrderTicketsDto,
 } from '@onetickets/shared';
-import { Public, ZodBody } from '../identity/index.js';
+import { type AppRequest, Public, ZodBody } from '../identity/index.js';
 import { OrdersService } from './orders.service.js';
 
 /**
@@ -21,8 +21,9 @@ export class OrdersController {
   @Public()
   async create(
     @Body(new ZodBody(createOrderBody)) body: CreateOrderBody,
+    @Req() req: AppRequest,
   ): Promise<CreatedOrderDto> {
-    return this.orders.create(body);
+    return this.orders.create(body, new Date(), req.ip ?? 'unknown');
   }
 
   /** The order's tickets, opened by its ticket key as a bearer token, never a query string. */

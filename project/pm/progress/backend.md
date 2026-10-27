@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Codex), S2-3 confirmation email
+
+- **Done:** [#83](https://github.com/rojandhimal/onetickets/pull/83) sends transactional ticket confirmations through SMTP/SES with event-local times, venue, cancellation policy, organiser Reply-To and a working order-scoped ticket link. Migration 0011 adds a FORCE-RLS delivery receipt; parallel retries send once, and transport failure preserves the booking for the same checkout to retry. Added hashed per-email/IP send limits and a global cap; confidential ticket mail is omitted from the development console. Updated API/backend/local-development docs and added Mailpit to integration CI. Passed format, lint/boundaries, typecheck, 357 application tests, 16 script tests, 160 integration tests, production build and 56 browser/axe/CSP tests. Mutation probes proved all three send caps and the receipt RLS guard fail closed; guards restored and focused tests passed.
+- **Next:** Independent QA, Security and ProductDesign review of #83, including email copy, migration, send limits and retry semantics. SMTP acceptance followed by a failed receipt commit can duplicate an email, never the booking; there is no background resend worker. AWS signing still needs its worker in addition to DEV-8's infrastructure.
+- **Blocked:** Review and CI before tegs merges. Sprint 2 acceptance also retains the checkout post-merge review requirements and remaining S2-4 work.
+
 ## 2026-10-24 (Claude), BE-7
 
 - **Done:** #64 (BE-6, S3 banner adapter) merged.

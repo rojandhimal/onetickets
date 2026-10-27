@@ -14,7 +14,10 @@ import {
 import type { NextFunction, Response } from 'express';
 import pg from 'pg';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { Mailer, OutboxMailer } from '../src/modules/notifications/index.js';
+import { SmtpMailer } from '../src/modules/notifications/mailer.js';
+import { confirmationRateKey } from '../src/modules/checkout/confirmation-emails.js';
 import { AppModule } from '../src/app.module.js';
 import type { AppRequest } from '../src/modules/identity/index.js';
 import type { TicketSigner } from '../src/modules/ticketing/signer.js';
@@ -30,6 +33,8 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
   let pool: pg.Pool;
   let owner: string;
   let org: string;
+  let mailer: OutboxMailer;
+  let requestIp = 'unknown';
 
   const server = () => app.getHttpServer();
   const origin = { origin: 'http://localhost:3000' };
@@ -89,7 +94,7 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
       idempotencyKey: randomUUID(),
       holds: holds.map((h) => ({ id: h.id, token: h.token })),
       name: 'Alex Example',
-      email: 'Alex@Example.test',
+      email: uniqueEmail('ticket-buyer'),
       marketingOptIn: false,
       ...overrides,
     };
@@ -127,12 +132,14 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.use((req: AppRequest, _res: Response, next: NextFunction) => {
+      requestIp = req.ip ?? 'unknown';
       const userId = req.header('x-test-user');
       if (userId) req.auth = { userId, mfaVerified: req.header('x-test-mfa') === 'true' };
       next();
     });
     await app.init();
     signer = app.get(TICKET_SIGNER);
+    mailer = app.get(Mailer);
     pool = new pg.Pool({ connectionString: appDatabaseUrl() });
     owner = await seedUser(uniqueEmail('owner'));
     org = await seedOrganisation('Order Test Org', [{ userId: owner, role: 'owner' }]);
@@ -146,11 +153,12 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
   it('turns holds into one order of signed tickets and a key that opens them', async () => {
     const event = await publishedEvent();
     const holds = [await hold(event, 2), await hold(event, 1)];
-    const res = await createOrder(orderBody(holds)).expect(201);
+    const email = uniqueEmail('ticket-buyer').toUpperCase();
+    const res = await createOrder(orderBody(holds, { email })).expect(201);
     expect(res.headers['cache-control']).toBe('no-store');
     const order = res.body as CreatedOrderDto;
 
-    expect(order.email).toBe('alex@example.test');
+    expect(order.email).toBe(email.toLowerCase());
     expect(order.event).toMatchObject({ slug: event.slug, name: 'Order test night' });
     expect(order.event.venue).toEqual({ kind: 'online' });
     expect(order.tickets).toHaveLength(3);
@@ -206,6 +214,149 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
     });
     expect(counts).toEqual({ orders: 1, tickets: 2 });
     expect(await inventory(event)).toEqual({ sold: 2, held: 0 });
+  });
+
+  it('emails one confirmation for concurrent retries, using saved buyer details and a working key', async () => {
+    const event = await publishedEvent();
+    const email = uniqueEmail('ticket-buyer');
+    const body = orderBody([await hold(event, 2)], { email, marketingOptIn: false });
+    const replies = await Promise.all(Array.from({ length: 6 }, () => createOrder(body)));
+    expect(replies.map((r) => r.status)).toEqual(Array(6).fill(201));
+    const order = replies[0]!.body as CreatedOrderDto;
+    const messages = mailer.sent.filter((m) => m.to === email);
+    expect(messages).toHaveLength(1);
+    const message = messages[0]!;
+    expect(message.replyTo).toBe('hello@example.test');
+    expect(message.subject).toMatch(/^Your tickets for Order test night, /);
+    expect(message.text).toContain('Ticket 2 of 2 · General admission · Ref ');
+    expect(message.text).toContain('https://meet.example.test/room');
+    expect(message.text).toContain('Cancellation policy:');
+    const link = new URL(message.text.match(/See your tickets: (\S+)/)![1]!);
+    expect(link.origin).toBe('http://localhost:3000');
+    expect(link.pathname).toBe(`/tickets/${order.orderId}`);
+    expect(link.search).toBe('');
+    const key = new URLSearchParams(link.hash.slice(1)).get('key')!;
+    await readTickets(order.orderId, key).expect(200);
+    const receipt = await withOwner((c) =>
+      c.query('select * from checkout.order_confirmations where order_id = $1', [order.orderId]),
+    );
+    expect(Object.keys(receipt.rows[0])).toEqual(['order_id', 'sent_at']);
+    expect(receipt.rows[0].sent_at).toBeInstanceOf(Date);
+    await createOrder({
+      ...body,
+      email: uniqueEmail('ticket-buyer'),
+      name: 'Changed Buyer',
+    }).expect(201);
+    expect(mailer.sent.filter((m) => m.to === email)).toHaveLength(1);
+  });
+
+  it('keeps the booking on transport failure and retries delivery without duplicate stock or tickets', async () => {
+    const event = await publishedEvent();
+    const email = uniqueEmail('ticket-buyer');
+    const body = orderBody([await hold(event, 2)], { email });
+    const send = vi
+      .spyOn(mailer, 'send')
+      .mockRejectedValueOnce(new Error('private transport details'));
+    try {
+      const failed = await createOrder(body).expect(503);
+      expect(failed.body.code).toBe('confirmation_email_unavailable');
+      expect(JSON.stringify(failed.body)).not.toContain('private transport');
+      expect(await inventory(event)).toEqual({ sold: 2, held: 0 });
+      const order = (await createOrder(body).expect(201)).body as CreatedOrderDto;
+      expect(mailer.sent.filter((m) => m.to === email)).toHaveLength(1);
+      expect(order.tickets).toHaveLength(2);
+      expect(await inventory(event)).toEqual({ sold: 2, held: 0 });
+      await createOrder(body).expect(201);
+      expect(mailer.sent.filter((m) => m.to === email)).toHaveLength(1);
+    } finally {
+      send.mockRestore();
+    }
+  });
+
+  it('fails closed for a legacy event without Reply-To instead of silently substituting an address', async () => {
+    const event = await publishedEvent();
+    await withOwner((c) =>
+      c.query('update catalogue.events set contact_email = null where id = $1', [event.id]),
+    );
+    const email = uniqueEmail('ticket-buyer');
+    const body = orderBody([await hold(event, 1)], { email });
+    await createOrder(body).expect(503);
+    expect(mailer.lastTo(email)).toBeUndefined();
+    await withOwner((c) =>
+      c.query("update catalogue.events set contact_email = 'fixed@example.test' where id = $1", [
+        event.id,
+      ]),
+    );
+    await createOrder(body).expect(201);
+    expect(mailer.lastTo(email)?.replyTo).toBe('fixed@example.test');
+  });
+
+  it.each(['email', 'ip', 'global'] as const)(
+    'caps confirmation sends per %s before calling the transport',
+    async (kind) => {
+      const event = await publishedEvent();
+      const email = uniqueEmail('ticket-buyer');
+      const body = orderBody([await hold(event, 1)], { email });
+      // Express sees the test request on the loopback address; keep the hash out of user data.
+      const key =
+        kind === 'global'
+          ? 'confirmation:global'
+          : confirmationRateKey(kind, kind === 'email' ? email : requestIp);
+      await withOwner((c) =>
+        c.query(
+          `insert into identity.rate_limits (key, window_start, count)
+         values ($1, to_timestamp(floor(extract(epoch from now()) / $2) * $2), 100000)
+         on conflict (key, window_start) do update set count = 100000`,
+          [key, kind === 'ip' ? 900 : 3600],
+        ),
+      );
+      try {
+        const limited = await createOrder(body).set('x-forwarded-for', '198.51.100.1');
+        expect(limited.status, kind).toBe(429);
+        expect(mailer.lastTo(email)).toBeUndefined();
+      } finally {
+        await withOwner((c) => c.query('delete from identity.rate_limits where key = $1', [key]));
+      }
+      await createOrder(body).expect(201);
+    },
+  );
+
+  it('delivers the real SMTP message to Mailpit with Reply-To and a usable ticket link', async () => {
+    const event = await publishedEvent();
+    const email = uniqueEmail('ticket-buyer');
+    vi.stubEnv('SMTP_HOST', '127.0.0.1');
+    vi.stubEnv('SMTP_PORT', process.env.TEST_SMTP_PORT ?? '1025');
+    const smtp = new SmtpMailer();
+    const send = vi.spyOn(mailer, 'send').mockImplementation((message) => smtp.send(message));
+    try {
+      const order = (await createOrder(orderBody([await hold(event, 1)], { email })).expect(201))
+        .body as CreatedOrderDto;
+      const base = process.env.TEST_MAILPIT_URL ?? 'http://127.0.0.1:8025';
+      const response = await fetch(
+        `${base}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`,
+      );
+      expect(response.ok).toBe(true);
+      const found = (await response.json()) as { messages: { ID: string }[] };
+      expect(found.messages).toHaveLength(1);
+      const message = (await (
+        await fetch(`${base}/api/v1/message/${found.messages[0]!.ID}`)
+      ).json()) as {
+        Subject: string;
+        Text: string;
+        ReplyTo: { Address: string }[];
+      };
+      expect(message.Subject).toMatch(/^Your tickets for Order test night, /);
+      expect(message.ReplyTo.map((a) => a.Address)).toEqual(['hello@example.test']);
+      expect(message.Text).toContain('Cancellation policy:');
+      expect(message.Text).toContain('https://meet.example.test/room');
+      const link = new URL(message.Text.match(/See your tickets: (\S+)/)![1]!);
+      await readTickets(order.orderId, new URLSearchParams(link.hash.slice(1)).get('key')!).expect(
+        200,
+      );
+    } finally {
+      send.mockRestore();
+      vi.unstubAllEnvs();
+    }
   });
 
   it('refuses the same idempotency key with other holds', async () => {
@@ -369,6 +520,46 @@ describe('free orders and ticket keys (S2-2, S2-3, INV-5)', () => {
         /row-level security/,
       );
       await asApp(id, (c) => insert(c, id));
+    });
+
+    it('isolates confirmation receipts by order scope and grants only sent_at updates', async () => {
+      const event = await publishedEvent();
+      const order = (
+        await createOrder(
+          orderBody([await hold(event, 1)], { email: uniqueEmail('ticket-buyer') }),
+        ).expect(201)
+      ).body as CreatedOrderDto;
+      for (const scope of ['', randomUUID()]) {
+        const read = await asApp(scope, (c) =>
+          c.query('select * from checkout.order_confirmations where order_id = $1', [
+            order.orderId,
+          ]),
+        );
+        expect(read.rows).toHaveLength(0);
+        const update = await asApp(scope, (c) =>
+          c.query('update checkout.order_confirmations set sent_at = null where order_id = $1', [
+            order.orderId,
+          ]),
+        );
+        expect(update.rowCount).toBe(0);
+        await expect(
+          asApp(scope, (c) =>
+            c.query('insert into checkout.order_confirmations (order_id) values ($1)', [
+              order.orderId,
+            ]),
+          ),
+        ).rejects.toThrow(/row-level security/);
+      }
+      await expect(
+        asApp(order.orderId, (c) =>
+          c.query('update checkout.order_confirmations set order_id = $1', [randomUUID()]),
+        ),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        asApp(order.orderId, (c) =>
+          c.query('delete from checkout.order_confirmations where order_id = $1', [order.orderId]),
+        ),
+      ).rejects.toThrow(/permission denied/);
     });
 
     it('never lets the api change or remove an order or a key', async () => {

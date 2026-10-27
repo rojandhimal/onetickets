@@ -27,6 +27,8 @@ Turns a checkout's holds into one order and its tickets, in one transaction (S2-
   to draw, or null while unsigned or revoked), `status` (`valid` or `revoked`) and `issuedAt`.
 - **Retries (INV-5):** the same `idempotencyKey` with the same holds returns the same order, with a
   fresh `ticketKey`. Earlier keys keep working. Parallel submits make one order.
+- **Email:** before returning success, sends one confirmation to the saved buyer address (SMTP/SES).
+  Successful retries do not resend it. See [delivery semantics](../backend/ticketing.md#confirmation-email-s2-3).
 - **Then:** send the buyer to `confirmationPath(orderId, ticketKey)` from `@onetickets/shared`
   (`/tickets/:orderId#key=…`). The key rides in the fragment, never a query string.
 - **Errors:**
@@ -36,6 +38,11 @@ Turns a checkout's holds into one order and its tickets, in one transaction (S2-
   - `422 holds_mixed_events`: holds from more than one event.
   - `422` validation errors with `field`.
   - `403 bad_origin`: not from the web app.
+  - `503 confirmation_email_unavailable`: booking is saved but email delivery failed (or the event
+    has no valid Reply-To). Retry with the same idempotency key and original holds; do not create
+    another order. A missing organiser address must be fixed before retrying.
+  - `429 rate_limited`: confirmation send budget reached; the booking remains saved. Retry the
+    same request after the window clears.
 
 ## Read an order's tickets (`GET /public/orders/:orderId/tickets`)
 
