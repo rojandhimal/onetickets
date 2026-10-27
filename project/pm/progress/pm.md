@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-27 (Codex)
+
+- **Done:** [PM-1 / #81](https://github.com/rojandhimal/onetickets/pull/81) records #59, #77, #78 and #79 merged against main `7f12317`, #64's completed post-merge reviews and Claude's DEV-8 claim in #80. Verified S2-3 issuance/local signing already landed with #59; made the remaining confirmation-email work ready and documented its handoff. Format, lint, typecheck, 352 application tests, 16 script tests and 152 integration tests passed. Shared-folder sync is unavailable on this host; repo changes are in the PR.
+- **Next:** Independent QA reviews #81; BackendDev claims S2-3 confirmation email. QA/Security re-review the merged #59 fixes, Design confirms its final flow, and QA reviews #77. DEV-8 stays with Claude; My tickets follows S2-3 and SEC-4.
+- **Blocked:** Sprint 2 acceptance awaits those independent reviews and the remaining S2-3/S2-4 work. No order-API decision remains outstanding; AWS signing still needs a worker as well as #80's infrastructure.
+
 ## 2026-10-24 (15:25 UTC, Claude)
 
 - **Done:** tegs merged #75 (SEC-24) as `f85c097`, so the full `pnpm audit` is clean. Recorded it in #78 and marked SEC-24 done. DevOps had no ready card, so I opened DEV-8: the ticket-signing KMS key and a sign-only role for the signing worker, per ADR 0011, written only. I also tightened #78's branch-placement test after QA's nit, and moved SEC-10 (#77) to In progress on the board.
