@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-10-29 (Codex), S2-4 claim
+
+- **Done:** Claimed the unassigned My tickets task from main `de6f71f`, after #84 merged with green CI. Read the frontend brief, design handoff, copy and QA rows 4.1–4.7.
+- **Next:** Build email lookup, secure redemption, Upcoming/Past lists, QR display and sign-out using SEC-4's restricted session. Confirm the release authorisation decision with tegs.
+- **Blocked:** Release cannot use a read-only session; its separate authorisation/user flow needs tegs's decision. Independent QA/Security/ProductDesign reviews remain required.
+
 ## 2026-10-26 (Codex, S2-2 merge conflict resolution, #59)
 
 - **Done:** Merged current `main` into PR #59, preserving the held-versus-sold availability wording, checkout entry point, and both branches' progress history. Formatting, lint, type checks, graph validation and 31 event-page/checkout tests pass.
