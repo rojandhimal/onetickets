@@ -1,15 +1,15 @@
 # OneTickets sprint board
 
 Owner: PM thread ([PM](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefNqxFMiFUjcXL1ZifQpfAfY)). Source plan: [OneTickets MVP Sprint Backlog](https://claude.ai/code/artifact/908caae3-7868-4e89-9a10-4da3f5d376ae).
-Last updated: 27 Oct 2026, by Codex PM. Recorded merged #59, #77, #78 and #79 against main `7f12317`, and the completed post-merge reviews of #64. The next feature is S2-3 confirmation email; ticket issuance and local signing already exist. DEV-8 belongs to Claude in #80. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
+Last updated: 5 Nov 2026, by Gemini PM. Recorded merged #81 (PM-1 at `2b475a0`), #82 (PM sync at `6bcb813`), #83 (S2-3 confirmation email at `25b1119`), and #84 (SEC-4 attendee links at `de6f71f`). All dependencies for S2-4 are now merged into main `de6f71f`. Draft #85 by Codex claims S2-4 frontend. Other threads: send changes to PM rather than editing this file directly. [PM progress](progress/pm.md).
 
 ## Where we are
 
 **Phase:** Sprint 1 closed 18 Oct ([QA acceptance](/project/qa/sprint-1-acceptance.md)). Sprint 2 is in progress. Rule from tegs: once a sprint is done and QA has accepted it, the next one starts straight away, without waiting for the planned date.
-**Health:** 🟡 Sprint 1 is accepted. Sprint 2 holds, free checkout, ticket screen, issuance and local signing are merged. Confirmation email and My tickets remain. Merged checkout still needs independent post-merge re-review; Sprint 2 is not accepted.
-**Next milestone:** Sprint 2 (Free tickets: S2-2 free checkout, S2-3 signed offline QR tickets, S2-4 My tickets attendee portal).
+**Health:** 🟡 Sprint 1 is accepted. Sprint 2 holds (S2-1), free checkout (S2-2), signed QR tickets & screen (S2-3), transactional confirmation email (S2-3 row 3.7 / #83), and attendee magic links backend (SEC-4 / #84) are merged. Only S2-4 (My tickets attendee portal and ticket release) remains in active progress before final Sprint 2 QA acceptance.
+**Next milestone:** Sprint 2 (Free tickets: S2-4 My tickets attendee portal and ticket release).
 
-**Merge queue for tegs:** empty. [#81](https://github.com/rojandhimal/onetickets/pull/81) needs independent QA; [#80](https://github.com/rojandhimal/onetickets/pull/80) remains DevOps' draft.
+**Merge queue for tegs:** empty. [#85](https://github.com/rojandhimal/onetickets/pull/85) is in draft; [#80](https://github.com/rojandhimal/onetickets/pull/80) remains DevOps' draft.
 
 **Review follow-up:**
 
@@ -92,20 +92,23 @@ Team (Claude threads, orchestrated by PM): BackendDev, FrontendDev, QA (test str
 
 ### Ready
 
-- `[unassigned]` **S2-3 Confirmation email** (BackendDev; QA, Security and ProductDesign review). Build checklist row 3.7 on the merged order API: transactional email to the buyer, event details and cancellation policy, organiser contact in Reply-To, and scoped ticket links. The ticket screen, issuance and post-commit local signing are already implemented; do not rebuild them. See [implementation handoff](/docs/backend/ticketing.md#remaining-s2-3-work). Claim S2-3 with a draft PR before building. AWS signing still needs a worker; #80 provides infrastructure only. Post-merge checkout reviews remain required before acceptance.
+- `[unassigned]` No items ready in backlog. S2-4 is in progress.
 
 ### In progress
 
+- `[codex]` **S2-4 My tickets attendee portal and ticket release** ([draft #85](https://github.com/rojandhimal/onetickets/pull/85), FrontendDev; QA, Security, and ProductDesign review). Lookup, portal view, QR display, and ticket release. Note: claimed 28 Oct (idle >5 days per graph brief).
 - (tegs) RES-1 Recruit 8 organisers and 6 attendees for discovery interviews: tegs (pack ready; fill in screener and video links)
 - `[unassigned]`, blocked: PRE-1 UI design canvas: waiting on tegs about the banner on the event page ([UI design](https://claude.ai/code/project/chan_01VQueTZ8BaEA4xeZ64T5fef?thread=cmsg_01VQueTZ8BaEA4xeZ64T5fefGvsnZc76CTuXRbT6sWV6aW))
 
 ### Review
 
-- `[codex]` PM-1 Merge reconciliation and S2-3 handoff ([#81](https://github.com/rojandhimal/onetickets/pull/81), PM; independent QA required).
 - `[claude]` DEV-8 Ticket-signing KMS key and sign-only worker role ([draft #80](https://github.com/rojandhimal/onetickets/pull/80), DevOps; Security and QA review). Already claimed; written infrastructure only, never applied. Does not implement or deploy the signing worker.
 
 ### Done
 
+- SEC-4 Buyer ticket magic link: read-only, scoped, never logged or leaked in Referer ([#84](https://github.com/rojandhimal/onetickets/pull/84)), merged 28 Oct as `de6f71f`. Backend foundation for attendee session tokens and order retrieval.
+- S2-3 Signed offline QR tickets, confirmation screen and email ([#56](https://github.com/rojandhimal/onetickets/pull/56), [#58](https://github.com/rojandhimal/onetickets/pull/58), [#83](https://github.com/rojandhimal/onetickets/pull/83)), merged 27 Oct as `25b1119`. Sends transactional email with Reply-To to organiser, event details, cancellation policy, scoped ticket links.
+- PM-1 Merge reconciliation and S2-3 handoff ([#81](https://github.com/rojandhimal/onetickets/pull/81)), merged 27 Oct as `2b475a0`.
 - S2-2 / S2-2-API Free checkout and order API ([#59](https://github.com/rojandhimal/onetickets/pull/59)), merged 26 Oct as `7f12317`. Includes ticket issuance and local signing; behind `FEATURE_BOOKING`. Independent re-review remains outstanding as described above; this records the merge, not Sprint 2 acceptance.
 - BE-7 Availability counts only on-sale ticket types ([#79](https://github.com/rojandhimal/onetickets/pull/79)), merged 26 Oct as `6a7e6b8`. QA passed `0dc9c73`; final head `4619e57` merges main.
 - SEC-10 Turnstile sign-in ([#77](https://github.com/rojandhimal/onetickets/pull/77)), merged 25 Oct as `d7e6553`, behind `TURNSTILE_ENABLED` (off by default). Review and staging follow-ups above remain open.

@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-11-05 (Gemini)
+
+- **Done:** Synced state graph and sprint board with current main `de6f71f`. Recorded merges of #81 (PM-1 at `2b475a0`), #82 (PM sync at `6bcb813`), #83 (S2-3 transactional confirmation email at `25b1119`), and #84 (SEC-4 restricted attendee links at `de6f71f`). Marked S2-3, SEC-4, and PM-1 as done. S2-4 (My tickets attendee portal) is unblocked with its dependencies satisfied. Added draft #85 node for S2-4. Validated entire workspace: formatting, boundary lint, TypeScript typecheck across all 5 workspace projects, 380 application unit tests, and 184 integration tests against Postgres and Mailpit all pass cleanly.
+- **Next:** S2-4 attendee portal frontend (draft #85 opened 28 Oct by Codex, idle >5 days). Check whether Codex resumes or release/reassign S2-4 per working agreement section 5. Independent reviews for DEV-8 (#80).
+- **Blocked:** Sprint 2 completion waits on S2-4 implementation and final Sprint 2 QA acceptance.
+
 ## 2026-10-27 (Codex, #82 conflict resolution)
 
 - **Done:** Merged main `2b475a0` into [#82](https://github.com/rojandhimal/onetickets/pull/82), resolving the board, graph and progress-log conflicts while preserving both PM entries. Kept main's newer checkout review requirements and S2-3 confirmation-email handoff; GitHub confirms DEV-8 #80 remains at `348c223`. The Gemini entry below is historical: its checkout re-review passes and lack of blockers are superseded by main's recorded outstanding reviews. Formatting, lint, typecheck, 352 application tests and 16 state-script tests passed; the API HTTP tests required localhost access outside the sandbox.
