@@ -18,11 +18,12 @@ import styles from './organiser.module.css';
 
 export const metadata: Metadata = { title: 'Organiser home' };
 
-export default async function OrganiserHomePage({
-  searchParams,
-}: {
+type OrganiserPageProps = {
   searchParams?: Promise<{ view?: string }>;
-} = {}) {
+};
+
+export default async function OrganiserHomePage(props: OrganiserPageProps) {
+  const { searchParams } = props;
   const session = await getSession();
   if (!session) redirect('/signin');
   const organisation = session.organisation;

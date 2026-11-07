@@ -9,9 +9,11 @@ type SearchParams = Promise<{
   price?: string | string[];
 }>;
 
+type Props = { searchParams?: SearchParams };
+
 // S1-5, design artboard 1 Discover: public browse of upcoming published events.
-export default async function Home({ searchParams }: { searchParams?: SearchParams } = {}) {
-  const filters = parseBrowseFilters(await searchParams);
+export default async function Home(props: Props) {
+  const filters = parseBrowseFilters(await props.searchParams);
   const { items } = await browseEvents(filters);
   return <Browse initialFilters={filters} initialItems={items} showBanner={isEventBannerShown()} />;
 }

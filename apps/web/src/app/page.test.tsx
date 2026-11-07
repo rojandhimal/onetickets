@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('public browse page (S1-5)', () => {
   it('renders upcoming events with four-fact card links, Free badge, and all-in pricing', async () => {
-    render(await Home());
+    render(await Home({}));
 
     expect(browseEventsMock).toHaveBeenCalledWith({ city: 'sydney' });
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Coming up near you');
@@ -96,7 +96,7 @@ describe('public browse page (S1-5)', () => {
 
   it('hides banner images and shows the template word when FEATURE_EVENT_BANNER is false', async () => {
     vi.stubEnv('FEATURE_EVENT_BANNER', 'false');
-    const { container } = render(await Home());
+    const { container } = render(await Home({}));
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getByText('Workshop')).toBeInTheDocument();
   });
@@ -118,7 +118,7 @@ describe('public browse page (S1-5)', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(await Home());
+    render(await Home({}));
 
     const whenGroup = screen.getByRole('group', { name: 'When' });
     const tonightChip = within(whenGroup).getByRole('button', { name: 'Tonight' });
@@ -160,7 +160,7 @@ describe('public browse page (S1-5)', () => {
         venueName: '<img src=x onerror=alert(1)>Studio',
       },
     ];
-    const { container } = render(await Home());
+    const { container } = render(await Home({}));
     expect(screen.getByText('<script>alert(1)</script>Ceramics')).toBeInTheDocument();
     expect(
       screen.getByText('Marrickville · <img src=x onerror=alert(1)>Studio'),
