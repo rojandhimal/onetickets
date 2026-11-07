@@ -2,6 +2,17 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-11-07 (Gemini, S2-4 My tickets attendee portal)
+
+- **Done:** Implemented S2-4 attendee portal frontend:
+  1. Added `apps/web/src/lib/attendee.ts` client helpers for attendee magic link requests, token verification, session fetching, sign out, pagination, and date-based upcoming/past order partitioning.
+  2. Built `/my-tickets` with lookup form for signed-out users (Row 4.2: constant confirmation message preventing account enumeration) and portal view for signed-in attendees (Row 4.1: Upcoming and Past tabs, order cards with date eyebrow, venue, ticket count, and Show QR action; Row 4.7: empty states with link to Browse).
+  3. Built `/my-tickets/verify` (Row 4.3): extracts token from hash fragment, immediately strips hash with `history.replaceState` before verification, and redirects to `/my-tickets` or renders expired state.
+  4. Added `isAttendeeTicketsEnabled()` in `apps/web/src/lib/flags.ts` gating both server pages behind `FEATURE_ATTENDEE_TICKETS`.
+  5. Created `docs/web/my-tickets.md` and added 22 new tests across client helpers, server page gating, lookup, verification, and portal views.
+- **Next:** Push branch, open PR for S2-4, and request QA, Security, and ProductDesign reviews.
+- **Blocked:** None.
+
 ## 2026-10-26 (Codex, S2-2 merge conflict resolution, #59)
 
 - **Done:** Merged current `main` into PR #59, preserving the held-versus-sold availability wording, checkout entry point, and both branches' progress history. Formatting, lint, type checks, graph validation and 31 event-page/checkout tests pass.

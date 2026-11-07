@@ -1,5 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { turnstileSiteKey } from './flags';
+import { isAttendeeTicketsEnabled, turnstileSiteKey } from './flags';
+
+describe('isAttendeeTicketsEnabled (S2-4)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('is off by default, and only on when FEATURE_ATTENDEE_TICKETS is exactly true', () => {
+    expect(isAttendeeTicketsEnabled()).toBe(false);
+    vi.stubEnv('FEATURE_ATTENDEE_TICKETS', '1');
+    expect(isAttendeeTicketsEnabled()).toBe(false);
+    vi.stubEnv('FEATURE_ATTENDEE_TICKETS', 'true');
+    expect(isAttendeeTicketsEnabled()).toBe(true);
+  });
+});
 
 describe('turnstileSiteKey (SEC-10)', () => {
   afterEach(() => vi.unstubAllEnvs());

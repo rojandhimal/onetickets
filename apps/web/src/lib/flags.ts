@@ -27,6 +27,14 @@ export function isTicketsEnabled(): boolean {
   return process.env.FEATURE_TICKETS === 'true';
 }
 
+/**
+ * S2-4 attendee portal (`/my-tickets`): find your tickets, attendee session, Upcoming/Past tabs.
+ * Off until S2-4 ships.
+ */
+export function isAttendeeTicketsEnabled(): boolean {
+  return process.env.FEATURE_ATTENDEE_TICKETS === 'true';
+}
+
 /** Pages that carry the Turnstile widget (SEC-10). Only these get Cloudflare in their CSP. */
 export const TURNSTILE_PATHS: readonly string[] = ['/signin', '/signup'];
 
