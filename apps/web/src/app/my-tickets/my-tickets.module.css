@@ -1,0 +1,288 @@
+.container {
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 32px var(--gutter) 64px;
+}
+
+.main {
+  width: 100%;
+  max-width: var(--column);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--slate);
+  font-size: 15px;
+}
+
+.userBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.signOutButton {
+  background: transparent;
+  border: 1px solid var(--line-button);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.signOutButton:hover {
+  background: var(--line-divider);
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line-divider);
+  padding-bottom: 4px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--slate);
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.activeTab {
+  color: var(--indigo);
+  background: var(--indigo-tint);
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 4%);
+}
+
+.cardEyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cardVenue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-divider);
+}
+
+.ticketCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--indigo);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+
+.ctaButton:hover {
+  background: var(--indigo-hover);
+}
+
+.emptyState {
+  background: var(--white);
+  border: 1px dashed var(--line-button);
+  border-radius: var(--radius-card);
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.browseLink {
+  color: var(--indigo);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.browseLink:hover {
+  text-decoration: underline;
+}
+
+.formCard {
+  background: var(--white);
+  border: 1px solid var(--line-divider);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 4%);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line-field);
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 1px;
+}
+
+.submitButton {
+  background: var(--indigo);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--indigo-hover);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alert {
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  font-size: 15px;
+}
+
+.alertSuccess {
+  background: var(--indigo-tint);
+  color: var(--indigo-ink);
+  border: 1px solid rgb(67 56 202 / 20%);
+}
+
+.alertError {
+  background: var(--error-tint);
+  color: var(--error);
+  border: 1px solid rgb(185 28 28 / 20%);
+}
+
+.loadingBox {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--slate);
+  font-size: 15px;
+}

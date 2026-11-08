@@ -37,16 +37,16 @@ afterEach(() => {
 describe('organiser home', () => {
   it('sends signed-out visitors to sign in', async () => {
     getSession.mockResolvedValue(null);
-    await expect(OrganiserHomePage()).rejects.toThrow('redirect:/signin');
+    await expect(OrganiserHomePage({})).rejects.toThrow('redirect:/signin');
   });
 
   it('sends a new organiser with no organisation to name it first', async () => {
     getSession.mockResolvedValue({ ...session, organisation: null, organisations: [] });
-    await expect(OrganiserHomePage()).rejects.toThrow('redirect:/organiser/setup');
+    await expect(OrganiserHomePage({})).rejects.toThrow('redirect:/organiser/setup');
   });
 
   it('greets the organiser and shows templates as coming soon while the wizard is off', async () => {
-    render(await OrganiserHomePage());
+    render(await OrganiserHomePage({}));
     expect(screen.getByRole('heading', { name: 'Welcome, Priya' })).toBeInTheDocument();
     expect(screen.getByText('The Print Shed')).toBeInTheDocument();
     expect(screen.getAllByText('Coming soon')).toHaveLength(4);
@@ -59,7 +59,7 @@ describe('organiser home', () => {
 
   it('links templates to the wizard when the flag is on', async () => {
     vi.stubEnv('FEATURE_EVENT_WIZARD', 'true');
-    render(await OrganiserHomePage());
+    render(await OrganiserHomePage({}));
     expect(screen.getByRole('link', { name: /Workshop/ })).toHaveAttribute(
       'href',
       '/organiser/events/new?template=workshop',
@@ -71,7 +71,7 @@ describe('organiser home', () => {
     vi.stubEnv('FEATURE_EVENT_WIZARD', 'true');
     const finance = { id: 'org_42', name: 'The Print Shed', role: 'finance' as const };
     getSession.mockResolvedValue({ ...session, organisation: finance, organisations: [finance] });
-    render(await OrganiserHomePage());
+    render(await OrganiserHomePage({}));
     expect(
       screen.getByText(
         'Only owners and admins can create events. Ask an owner to add you as an admin.',
@@ -95,7 +95,7 @@ describe('organiser home', () => {
     it('opens Drafts when nothing is coming up, linking back to the last step', async () => {
       vi.stubEnv('FEATURE_EVENT_WIZARD', 'true');
       listEvents.mockResolvedValue([draft]);
-      render(await OrganiserHomePage());
+      render(await OrganiserHomePage({}));
       expect(screen.getByRole('link', { name: /Drafts/ })).toHaveAttribute('aria-current', 'page');
       expect(screen.getByRole('heading', { name: 'Untitled event' })).toBeInTheDocument();
       expect(
