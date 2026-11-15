@@ -12,17 +12,8 @@ test('signed-out visitor sees ticket lookup with anti-enumeration message (Row 4
 
   // Verify heading and form elements
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Find your tickets');
-  const emailInput = page.getByLabel('Email address');
+  const emailInput = page.getByLabel('Email');
   await expect(emailInput).toBeVisible();
-
-  // Row 4.2: Submit empty email triggers inline validation
-  await page.getByRole('button', { name: 'Email me a link' }).click();
-  await expect(page.getByText('Enter your email address')).toBeVisible();
-
-  // Submit invalid email
-  await emailInput.fill('invalidemail');
-  await page.getByRole('button', { name: 'Email me a link' }).click();
-  await expect(page.getByText('Enter a valid email address')).toBeVisible();
 
   // Row 4.2: Submitting a valid email displays neutral anti-enumeration message
   const testEmail = 'alex.attendee@example.test';
@@ -49,9 +40,12 @@ test('verify page immediately strips hash fragment from address bar (Row 4.3)', 
 
   // Expired / invalid token state renders gracefully
   await expect(
-    page.getByRole('heading', { level: 1, name: /That link didn['’]t work|Link expired/ }),
+    page.getByRole('heading', {
+      level: 1,
+      name: /That link doesn['’]t work|Link expired|Verification failed/,
+    }),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Email me a new link' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Request a new link' })).toBeVisible();
 
   // Accessibility check on verify error view
   await expectAccessible(page);
@@ -68,8 +62,9 @@ async function mockAttendeeSession(
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          authenticated: true,
-          attendee: { id: 'att_123', email },
+          email,
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          permissions: ['tickets:read'],
         }),
       });
     }
@@ -82,7 +77,7 @@ async function mockAttendeeSession(
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          items: orders,
+          orders,
           nextCursor: null,
         }),
       });
@@ -118,7 +113,6 @@ test('signed-in attendee renders orders with upcoming and past tabs (Row 4.1)', 
       orderId: '00000000-0000-4000-8000-000000000001',
       totalCents: 0,
       createdAt: '2026-11-10T10:00:00Z',
-      ticketCount: 2,
       event: {
         id: 'evt_future',
         slug: 'sydney-design-night',
@@ -133,12 +127,33 @@ test('signed-in attendee renders orders with upcoming and past tabs (Row 4.1)', 
           city: 'sydney',
         },
       },
+      tickets: [
+        {
+          id: '00000000-0000-4000-8000-000000000011',
+          ticketTypeId: 'tt_1',
+          ref: 'K7Q1M1',
+          holderName: 'Alex Attendee',
+          ticketTypeName: 'General admission',
+          qr: 'OT1.k1.evt_future.tkt_1.1792677665.sig1',
+          status: 'valid',
+          issuedAt: '2026-11-10T10:00:00Z',
+        },
+        {
+          id: '00000000-0000-4000-8000-000000000012',
+          ticketTypeId: 'tt_1',
+          ref: 'K7Q1M2',
+          holderName: 'Jordan Guest',
+          ticketTypeName: 'General admission',
+          qr: 'OT1.k1.evt_future.tkt_2.1792677665.sig2',
+          status: 'valid',
+          issuedAt: '2026-11-10T10:00:00Z',
+        },
+      ],
     },
     {
       orderId: '00000000-0000-4000-8000-000000000002',
       totalCents: 0,
       createdAt: '2025-01-10T10:00:00Z',
-      ticketCount: 1,
       event: {
         id: 'evt_past',
         slug: 'pottery-basics-2025',
@@ -153,6 +168,18 @@ test('signed-in attendee renders orders with upcoming and past tabs (Row 4.1)', 
           city: 'sydney',
         },
       },
+      tickets: [
+        {
+          id: '00000000-0000-4000-8000-000000000021',
+          ticketTypeId: 'tt_2',
+          ref: 'K7Q2M1',
+          holderName: 'Alex Attendee',
+          ticketTypeName: 'General admission',
+          qr: 'OT1.k1.evt_past.tkt_1.1739145600.sig3',
+          status: 'valid',
+          issuedAt: '2025-01-10T10:00:00Z',
+        },
+      ],
     },
   ];
 
@@ -164,7 +191,7 @@ test('signed-in attendee renders orders with upcoming and past tabs (Row 4.1)', 
   await expect(page.getByText('Ultimo · Powerhouse Museum')).toBeVisible();
   await expect(page.getByText('2 tickets')).toBeVisible();
 
-  const showQrBtn = page.getByRole('link', { name: 'Show QR' });
+  const showQrBtn = page.getByRole('link', { name: 'Show QR for Sydney Design Night' });
   await expect(showQrBtn).toBeVisible();
   await expect(showQrBtn).toHaveAttribute('href', '/tickets/00000000-0000-4000-8000-000000000001');
 

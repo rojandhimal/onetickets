@@ -70,7 +70,7 @@ export function VerifyAttendeeClient() {
 
           {state.status === 'expired' && (
             <div role="alert" className={`${styles.alert} ${styles.alertError}`}>
-              <h2 className={styles.emptyTitle}>That link doesn't work any more.</h2>
+              <h1 className={styles.emptyTitle}>That link doesn't work any more.</h1>
               <p className={styles.subtitle}>
                 Attendee ticket links work once, for 15 minutes. You can request a new link at any
                 time.
@@ -85,7 +85,7 @@ export function VerifyAttendeeClient() {
 
           {state.status === 'failed' && (
             <div role="alert" className={`${styles.alert} ${styles.alertError}`}>
-              <h2 className={styles.emptyTitle}>Verification failed</h2>
+              <h1 className={styles.emptyTitle}>Verification failed</h1>
               <p className={styles.subtitle}>{state.message}</p>
               <div style={{ marginTop: '16px' }}>
                 <Link href="/my-tickets" className={styles.ctaButton}>
