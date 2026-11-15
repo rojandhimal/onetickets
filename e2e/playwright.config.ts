@@ -64,6 +64,7 @@ export default defineConfig({
         FEATURE_EVENT_WIZARD: 'true',
         FEATURE_BOOKING: 'true',
         FEATURE_TICKETS: 'true',
+        FEATURE_ATTENDEE_TICKETS: 'true',
         REVALIDATE_SECRET: revalidateSecret,
       },
     },
