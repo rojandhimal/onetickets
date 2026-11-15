@@ -181,7 +181,7 @@ export function MyTicketsClient({ initialSession }: { initialSession?: AttendeeS
           </div>
         </header>
 
-        <nav aria-label="Ticket categories" className={styles.tabs}>
+        <div role="tablist" aria-label="Ticket categories" className={styles.tabs}>
           <button
             type="button"
             className={`${styles.tab} ${activeTab === 'upcoming' ? styles.activeTab : ''}`}
@@ -200,9 +200,9 @@ export function MyTicketsClient({ initialSession }: { initialSession?: AttendeeS
           >
             Past ({past.length})
           </button>
-        </nav>
+        </div>
 
-        <section aria-live="polite" className={styles.orderList}>
+        <section role="tabpanel" aria-live="polite" className={styles.orderList}>
           {displayedOrders.length === 0 ? (
             <div className={styles.emptyState}>
               {activeTab === 'upcoming' ? (

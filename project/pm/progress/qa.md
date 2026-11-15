@@ -2,6 +2,18 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-11-15 (Gemini)
+
+- **Done:**
+  - Ran the full Sprint 2 integrated acceptance pass against `main` at `c8cb168`.
+  - Added `e2e/tests/my-tickets.spec.ts` testing S2-4 attendee portal (Row 4.1 upcoming/past tabs, Row 4.2 anti-enumeration email lookup, Row 4.3 fragment token stripping via replaceState, and Row 4.7 empty state with Browse link).
+  - Configured `e2e/playwright.config.ts` with runtime flag `FEATURE_ATTENDEE_TICKETS=true`.
+  - Verified all Sprint 2 acceptance criteria across S2-1 (INV-1, INV-4, INV-15), S2-2 (free checkout), S2-3 (signed QR tickets, offline caching, Mailpit confirmation emails), and S2-4 (My tickets portal).
+  - Updated `project/qa/sprint-2-checklist.md` and authored acceptance evidence in `project/qa/sprint-2-acceptance.md`.
+  - Marked Sprint 2 **Accepted** (`status=done`) in `project/state/graph.jsonl`.
+- **Next:** Sprint 3 test strategy and check-in / door scanner acceptance criteria (`project/qa/sprint-3-checklist.md`).
+- **Blocked:** None.
+
 ## 2026-10-24 (Claude)
 
 - **Done:**
