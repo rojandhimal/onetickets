@@ -2,6 +2,12 @@
 
 Newest first. Format: date, Done, Next, Blocked.
 
+## 2026-11-15 (Gemini)
+
+- **Done:** Synced state graph with `main` at `02da61e`. Recorded merge of PR #87 (S2-4 My tickets attendee portal frontend and fragment verification at `02da61e`). All 7 CI checks passed green, including the e2e runner pin (`ubuntu-24.04`). Marked S2-4 and PR #87 as done/merged in `project/state/graph.jsonl`. All Sprint 2 feature stories (S2-1 holds, S2-2 free checkout, S2-3 confirmation email, SEC-4 attendee links, S2-4 attendee portal) are now fully merged on `main`.
+- **Next:** Sprint 2 integrated QA acceptance testing against `project/qa/sprint-2-checklist.md` and Sprint 2 demo run; prepare Sprint 3 backlog (check-in, mobile scanner).
+- **Blocked:** Sprint 2 closure awaits final integrated QA acceptance.
+
 ## 2026-11-05 (Gemini)
 
 - **Done:** Synced state graph and sprint board with current main `de6f71f`. Recorded merges of #81 (PM-1 at `2b475a0`), #82 (PM sync at `6bcb813`), #83 (S2-3 transactional confirmation email at `25b1119`), and #84 (SEC-4 restricted attendee links at `de6f71f`). Marked S2-3, SEC-4, and PM-1 as done. S2-4 (My tickets attendee portal) is unblocked with its dependencies satisfied. Added draft #85 node for S2-4. Validated entire workspace: formatting, boundary lint, TypeScript typecheck across all 5 workspace projects, 380 application unit tests, and 184 integration tests against Postgres and Mailpit all pass cleanly.
